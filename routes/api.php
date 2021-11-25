@@ -1,0 +1,29 @@
+<?php
+
+use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\QuotetController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
+*/
+
+Route::group([ 'namespace' => 'App\Http\Controllers\Api', 'prefix' => "", 'middleware' => 'check.token.success'], function () {
+    Route::post('connect-payment', [BaseController::class, 'connectPayment']);
+});
+
+Route::group([ 'namespace' => 'App\Http\Controllers\Api', 'prefix' => ""], function () {
+    Route::post('save-account', [AccountController::class, 'saveAccount']);
+    Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
+    Route::post('save-quote', [QuotetController::class, 'saveQuote']);
+    Route::get('detail-quote/{email}', [QuotetController::class, 'detailQuote']);
+});
