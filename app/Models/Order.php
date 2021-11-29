@@ -9,7 +9,7 @@ class Order extends Model
 {
     use HasFactory;
     protected $table = 'orders';
-    protected $fillable = ['booking_id', 'bookingReference', 'accessToken', 'order_id'];
+    protected $fillable = ['booking_id', 'bookingReference', 'accessToken', 'order_id', "request_url", "return_url"];
 
     public function storeOrder($request)
     {
@@ -18,6 +18,8 @@ class Order extends Model
             'bookingReference' => $request->bookingReference,
             'accessToken' => $request->accessToken,
             'order_id' => $request->order_id,
+            'request_url' => $request->request_url,
+            'return_url' => $request->return_url,
         ];
         return $this->create($params);
     }
