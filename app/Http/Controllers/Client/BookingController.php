@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Session;
 
 class BookingController extends Controller
 {
-    public function paymentSuccess($lug, Request $request)
+    public function paymentSuccess($slug, Request $request)
     {
         $bookingReference = substr($request->cmsgw_OrderInfo, 4);
         $sessions = Session::put("order_" . $bookingReference . "", [[
-            'slug' => $lug,
+            'slug' => $slug,
             'bookingReference' => $bookingReference,
             'message' => $request->cmsgw_Message,
             'status' => $request->status,
@@ -27,7 +27,7 @@ class BookingController extends Controller
         $session = Session::get("order_" . $bookingReference . "");
         Session::forget("order_" . $bookingReference . "");
         $bookingOrder = $order->getAccessToken($session[0]['bookingReference']);
-        dd($session[0], $bookingOrder);
+        // dd($session[0], $bookingOrder);
         return view('payment', ['order' => $session[0], 'bookingOrder' => $bookingOrder]);
     }
 }
