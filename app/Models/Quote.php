@@ -53,4 +53,6 @@ class Quote extends Model
     {
         return $this->where('email', $email)->first();
     }
+
+    
 }

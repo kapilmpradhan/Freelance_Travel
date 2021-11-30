@@ -30,4 +30,15 @@ class BookingController extends Controller
         dd($session[0], $bookingOrder->created_at);
         return view('payment', ['order' => $session[0], 'bookingOrder' => $bookingOrder]);
     }
+
+    public function bookingDetail($bookingReference, Order $order)
+    {
+        $booking = $order->getAccessToken($bookingReference);
+        if ( $booking ) {
+            $result = $order->CallApiDetailBooking($booking->accessToken, $booking->order_id);
+            return view('email.email', [ 'data' => $result ]);
+        }
+        return back();
+    }
+    
 }
