@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([ 'namespace' => 'App\Http\Controllers\Client', 'prefix' => "" ], function () {
     Route::get('payment-success/{slug}', [BookingController::class, 'paymentSuccess'])->name('payment.success');
     Route::get('payment-detail/{bookingReference}', [BookingController::class, 'paymentDetail'])->name('payment.detail');
+    Route::get('/booking/{bookingReference}', [BookingController::class, 'bookingDetail'])->name('bookingDetail');
 });
 
 Route::get('/', function () {

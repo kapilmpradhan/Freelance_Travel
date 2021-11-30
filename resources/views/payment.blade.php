@@ -15,6 +15,7 @@
 
 </html>
 <?php
+use App\Jobs\sendMail;
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, $bookingOrder->request_url . "/order/" . $order['bookingReference'] . "/convertQuote");
 curl_setopt($curl, CURLOPT_HTTPHEADER, array(
@@ -26,9 +27,14 @@ curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 $result = curl_exec($curl);
 $header_data = curl_getinfo($curl);
+$email = 'nam.bui@adamosoft.com';
+$data = 'test';
+dispatch(new sendMail( $email, $data ));
 switch ($order['slug']) {
     case 'customer':
-        //
+        //redirect other view
+        $rs_url = route('bookingDetail',$referenceId); // thay reference id
+        header("Location:" . $rs_url);
         break;
     case 'agent':
         if ( $order['status'] != 1 ) {

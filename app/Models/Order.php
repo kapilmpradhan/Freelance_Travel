@@ -28,4 +28,20 @@ class Order extends Model
     {
         return $this->where('bookingReference', $bookingReference)->first();
     }
+
+
+    public function CallApiDetailBooking($token, $orderId)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "".env('API_URL')."voucher/".$orderId."");
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            "Authorization: Bearer ".$token."",
+            "Content-Type: application/json",
+        ));
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        $result = curl_exec($curl);
+        return $result;
+    }
 }

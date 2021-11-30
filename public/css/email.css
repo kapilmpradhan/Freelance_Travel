@@ -1,0 +1,196 @@
+body {
+    background: #E5E5E5;
+}
+.header-box {
+    background: #FFFFFF;
+    padding: 20px 0;
+}
+.container-custom {
+    max-width: 800px;
+    margin: auto;
+}
+.header-top h1{
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 28px;
+    line-height: 36px;
+    text-align: center;
+    color: #31B4B9;
+}
+.header-top .title-voucher {
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+    color: #000000;
+}
+.date_of_purchase {
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+    color: #4F4F4F;
+}
+.agent-box h3, .agent-box span{
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 141.5%;
+    /* or 23px */
+    text-align: center;
+    color: #000000;
+}
+.agent-box,
+.addition-box {
+    margin-top: 30px;
+    background: #fff;
+    padding: 30px 50px;
+    text-align: center;
+}
+.addition-box h3 {
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 23px;
+    text-align: center;
+
+    /* Black */
+
+    color: #090A18;
+}
+.agent-box p{
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 141.5%;
+    text-align: center;
+    color: #333333;
+}
+.lead h4 {
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 21px;
+    color: #090A18;
+}
+.lead p {
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 21px;
+    color: #333333;
+    margin-bottom: 10px;
+}
+.voucher-box {
+    margin-top: 30px;
+    background: #fff;
+    padding: 30px 50px;
+    text-align: left;
+    text-transform: uppercase;
+    font-family: DM Sans;
+    font-style: normal;
+}
+.voucher-box h4 {
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 160%;
+    color: #31B4B9;
+}
+.voucher-box h5 {
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 21px;
+    color: #090A18;
+}
+.font-bold {
+    font-weight: 600;
+}
+.voucher-box p {
+    font-size: 14px;
+    line-height: 160%;
+    color: #333333;
+    font-weight: normal;
+}
+.customer-detail {
+    font-size: 14px;
+    line-height: 160%;
+    color: #333333;
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+hr {
+    color: #E0E0E0;
+    width: 100%;
+    height: 1px;
+}
+.term-condition {
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 160%;
+    text-decoration-line: underline;
+    color: #090A18;
+}
+.term-text {
+    text-transform: none;
+}
+
+.footer-top {
+    background: #090A18;
+    height: 120px;
+}
+.footer-freelance {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-freelance .logo-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    height: 120px;
+}
+.footer-right .v349_637 {
+    font-family: DM Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+    line-height: 26px;
+    width: 85%;
+    color: #20DEE5;
+    display: inline-block;
+    text-align: right;
+    margin-right: 100px;
+    margin-bottom: 10px;
+}
+
+.footer-left, .footer-right {
+    width: 50%;
+}
+.icon-item {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+.icon-item a {
+    margin-right: 20px;
+}
+.footer-bottom {
+    background: #31B4B9;
+    height: 36px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 160%;
+    color: #FFFFFF;
+}
