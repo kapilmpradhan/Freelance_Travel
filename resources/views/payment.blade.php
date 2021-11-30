@@ -38,7 +38,7 @@ switch ($order['slug']) {
         }
         if ( $header_data['http_code'] == 200 || $header_data['http_code'] == 201 ) {
             $rs_url = $bookingOrder->return_url . "?" . $order['param'];
-            header("Location:" . $rs_url);
+            header("Location:" . $rs_url . "&date=" date("d M Y", strtotime($bookingOrder->created_at)));
             exit();
         }
         $dataFail = json_decode($result, true);
