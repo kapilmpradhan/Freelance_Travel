@@ -27,6 +27,7 @@ class BookingController extends Controller
         $session = Session::get("order_" . $bookingReference . "");
         Session::forget("order_" . $bookingReference . "");
         $bookingOrder = $order->getAccessToken($session[0]['bookingReference']);
+        dd($session[0], $bookingOrder);
         return view('payment', ['order' => $session[0], 'bookingOrder' => $bookingOrder]);
     }
 }
