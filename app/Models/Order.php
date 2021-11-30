@@ -26,6 +26,6 @@ class Order extends Model
 
     public function getAccessToken($bookingReference)
     {
-        return $this->where('bookingReference', $bookingReference)->pluck('accessToken')->toArray();
+        return $this->where('bookingReference', $bookingReference)->first();
     }
 }
