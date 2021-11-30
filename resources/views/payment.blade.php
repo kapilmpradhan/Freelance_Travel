@@ -38,7 +38,7 @@ if ( $header_data['http_code'] == 200 || $header_data['http_code'] == 201 ) {
             $url = "";
             break;
         case 'agent':
-            $url = "" ;
+            $url = $order['request_url'];
             break;
     }
     $rs_url = $url."?".$order['param'];

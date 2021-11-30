@@ -19,11 +19,11 @@ class CheckTokenSuccess
     {
         $token = AccessToken::first()->pluck('token');
         $header = $request->header('token_access');
-        if($token[0] != $header){
-            return response()->json([
-                'message'=>__('auth.unauthenticated')
-            ], 401);
-        }
+        // if($token[0] != $header){
+        //     return response()->json([
+        //         'message'=>__('auth.unauthenticated')
+        //     ], 401);
+        // }
         return $next($request);
     }
 }
