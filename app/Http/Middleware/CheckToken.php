@@ -24,8 +24,8 @@ class CheckToken
      */
     public function handle(Request $request, Closure $next)
     {
-        $token = $request->header('token_access');
-        $url = $request->header('request_url');
+        $token = $request->token_access;
+        $url = $request->request_url;
 
         dd($url, $token);
         $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
