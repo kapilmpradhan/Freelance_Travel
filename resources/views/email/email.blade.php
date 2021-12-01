@@ -10,7 +10,7 @@
     <style>
         .body {
             background: #E5E5E5;
-            padding-top: 45px;
+            padding-top: 1px;
         }
 
         .header-box {
@@ -187,11 +187,10 @@
             font-weight: normal;
             font-size: 20px;
             line-height: 26px;
-            width: 85%;
+            width: 92%;
             color: #20DEE5;
             display: inline-block;
             text-align: right;
-            margin-right: 100px;
             margin-bottom: 10px;
         }
 
@@ -202,9 +201,7 @@
         }
 
         .icon-item {
-            display: flex;
-            justify-content: end;
-            align-items: center;
+            text-align: right;
         }
 
         .icon-item a {
