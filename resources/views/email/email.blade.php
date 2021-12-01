@@ -242,7 +242,7 @@
         }
 
         .col-lg-6 {
-            width: 48%;
+            width: 50%;
         }
 
         .col-lg-12 {
