@@ -107,6 +107,15 @@
             margin-bottom: 10px;
         }
 
+        .lead a {
+            font-style: normal;
+            font-weight: normal;
+            font-size: 16px;
+            line-height: 21px;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
         .voucher-box {
             margin-top: 30px;
             background: #fff;
