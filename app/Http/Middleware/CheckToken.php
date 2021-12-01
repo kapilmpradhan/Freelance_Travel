@@ -27,6 +27,7 @@ class CheckToken
         $token = $request->header('token_access');
         $url = $request->header('request_url');
 
+        dd($url, $token);
         $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
 
         if (!@$checkAuth['bookingReference']) {
