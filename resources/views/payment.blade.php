@@ -27,24 +27,32 @@ curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 $result = curl_exec($curl);
 $header_data = curl_getinfo($curl);
-$email = 'nam.bui@adamosoft.com';
-$data = 'test';
-dispatch(new sendMail( $email, $data ));
+
+$orderDetail = $bookingOrder->CallApiDetailBooking($bookingOrder);
+
+if (isset($orderDetail->bookingReference)) {
+    $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
+    dispatch(new sendMail( $email, $orderDetail ));
+}
+
 switch ($order['slug']) {
     case 'customer':
+        $rs_url = $bookingOrder->return_url . "&error=Some thing when wrong"; // thay reference id
         //redirect other view
-        $rs_url = route('bookingDetail',$referenceId); // thay reference id
+        if (isset($orderDetail->bookingReference)) {
+            $rs_url = route('bookingDetail', $order['bookingReference']); // thay reference id
+        }
         header("Location:" . $rs_url);
-        break;
+        exit();
     case 'agent':
-        if ( $order['status'] != 1 ) {
+        if ( $order['status'] != 1 || isset($orderDetail->bookingReference)) {
             $rs_url = $bookingOrder->return_url . "?" . $order['param'] . "&error=" . $order['message'];
             header("Location:" . $rs_url);
             exit();
         }
         if ( $header_data['http_code'] == 200 || $header_data['http_code'] == 201 ) {
             $rs_url = $bookingOrder->return_url . "?" . $order['param'];
-            header("Location:" . $rs_url . "&date=" date("d M Y", strtotime($bookingOrder->created_at)));
+            header("Location:{$rs_url}&orderId={$bookingOrder->order_id}&date=" . date("d M Y", strtotime($orderDetail->purchaseDate)));
             exit();
         }
         $dataFail = json_decode($result, true);

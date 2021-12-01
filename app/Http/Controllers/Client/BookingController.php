@@ -27,18 +27,18 @@ class BookingController extends Controller
         $session = Session::get("order_" . $bookingReference . "");
         Session::forget("order_" . $bookingReference . "");
         $bookingOrder = $order->getAccessToken($session[0]['bookingReference']);
-        dd($session[0], $bookingOrder->created_at);
+
         return view('payment', ['order' => $session[0], 'bookingOrder' => $bookingOrder]);
     }
 
     public function bookingDetail($bookingReference, Order $order)
     {
         $booking = $order->getAccessToken($bookingReference);
-        if ( $booking ) {
-            $result = $order->CallApiDetailBooking($booking->accessToken, $booking->order_id);
-            return view('email.email', [ 'data' => $result ]);
+        if ($booking) {
+            $result = $order->CallApiDetailBooking($booking);
+            // dd(json_decode($result));
+            return view('email.email', ['data' => json_decode($result)]);
         }
-        return back();
+        return redirect(env("APP_BASE_URL"));
     }
-    
 }

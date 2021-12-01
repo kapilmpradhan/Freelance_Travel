@@ -30,15 +30,14 @@ class Order extends Model
     }
 
 
-    public function CallApiDetailBooking($token, $orderId)
+    public function CallApiDetailBooking($booking)
     {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "".env('API_URL')."voucher/".$orderId."");
+        curl_setopt($curl, CURLOPT_URL, "{$booking->request_url}/voucher/{$booking->order_id}.json");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer ".$token."",
+            "Authorization: Bearer $booking->accessToken",
             "Content-Type: application/json",
         ));
-        curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         $result = curl_exec($curl);
