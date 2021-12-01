@@ -35,9 +35,10 @@ class BookingController extends Controller
     {
         $booking = $order->getAccessToken($bookingReference);
         if ($booking) {
-            $result = $order->CallApiDetailBooking($booking);
-            // dd(json_decode($result));
-            return view('email.email', ['data' => json_decode($result)]);
+            $result = json_decode($order->CallApiDetailBooking($booking));
+            if (isset($result->bookingReference)) {
+                return view('email.email', ['data' => $result]);
+            }
         }
         return redirect(env("APP_BASE_URL"));
     }
