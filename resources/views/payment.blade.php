@@ -29,12 +29,14 @@ $result = curl_exec($curl);
 $header_data = curl_getinfo($curl);
 
 $orderDetail = json_decode($bookingOrder->CallApiDetailBooking($bookingOrder));
-
 if (isset($orderDetail->bookingReference)) {
+
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
+    dump("sent");
 }
 
+dd ($orderDetail, isset($orderDetail->bookingReference))
 switch ($order['slug']) {
     case 'customer':
         $rs_url = $bookingOrder->return_url . "&error=Some thing when wrong"; // thay reference id
