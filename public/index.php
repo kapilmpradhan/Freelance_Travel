@@ -1,6 +1,4 @@
 <?php
-
-echo "1";exit();
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
