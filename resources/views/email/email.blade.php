@@ -8,8 +8,14 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <style>
+        body {
+
+            background: #E5E5E5;
+        }
+
         .body {
             background: #E5E5E5;
+            margin: 20px;
         }
 
         .header-box {
@@ -172,15 +178,11 @@
 
         .footer-freelance {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .footer-freelance .logo-bottom {
             display: flex;
-            align-items: center;
-            justify-content: start;
-            height: 120px;
+            height: 60px;
         }
 
         .footer-right .v349_637 {
@@ -199,6 +201,7 @@
         .footer-left,
         .footer-right {
             width: 50%;
+            margin-top: 30px;
         }
 
         .icon-item {
@@ -215,9 +218,6 @@
             background: #31B4B9;
             height: 36px;
             text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-weight: bold;
             font-size: 14px;
             line-height: 160%;
@@ -375,9 +375,9 @@
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
+            <p class="footer-bottom">
                 Copyright © Freelance Travel. All rights reserved
-            </div>
+            </p>
         </section>
     </div>
 
