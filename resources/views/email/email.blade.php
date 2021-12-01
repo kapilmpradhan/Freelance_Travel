@@ -8,14 +8,9 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <style>
-        body {
-
-            background: #E5E5E5;
-        }
 
         .body {
             background: #E5E5E5;
-            margin: 20px;
         }
 
         .header-box {
@@ -226,7 +221,7 @@
     </style>
 </head>
 
-<body>
+<body class="body">
     <div class="body">
         <section class="header-top mt-5">
             <div class="container-custom">
