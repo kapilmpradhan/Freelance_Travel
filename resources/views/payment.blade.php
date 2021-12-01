@@ -33,7 +33,7 @@ if (isset($orderDetail->bookingReference)) {
 
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
-    dump("sent");
+    dump("sent", $email, $orderDetail);
 }
 
 dd ($orderDetail, isset($orderDetail->bookingReference));
