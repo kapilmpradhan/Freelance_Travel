@@ -30,6 +30,7 @@ $header_data = curl_getinfo($curl);
 
 $orderDetail = $bookingOrder->CallApiDetailBooking($bookingOrder);
 
+dd($orderDetail);
 if (isset($orderDetail->bookingReference)) {
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
@@ -52,7 +53,7 @@ switch ($order['slug']) {
         }
         if ( $header_data['http_code'] == 200 || $header_data['http_code'] == 201 ) {
             $rs_url = $bookingOrder->return_url . "?" . $order['param'];
-            header("Location:{$rs_url}&orderId={$bookingOrder->order_id}&date=" . date("d M Y", strtotime($orderDetail->purchaseDate)));
+            header("Location:{$rs_url}&orderId={$bookingOrder->order_id}&date=" . date("d M Y", strtotime(@$orderDetail->purchaseDate)));
             exit();
         }
         $dataFail = json_decode($result, true);
