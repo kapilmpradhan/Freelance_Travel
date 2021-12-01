@@ -23,7 +23,7 @@ class sendMail implements ShouldQueue
      */
     public function __construct( $email, $data )
     {
-        $this->emal = $email;
+        $this->email = $email;
         $this->data = $data ;
     }
 
