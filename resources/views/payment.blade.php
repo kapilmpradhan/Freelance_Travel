@@ -36,7 +36,7 @@ if (isset($orderDetail->bookingReference)) {
     dump("sent", $email, $orderDetail);
 }
 
-dd ($orderDetail, isset($orderDetail->bookingReference, $header_data['http_code']));
+dd ($orderDetail, isset($orderDetail->bookingReference), $header_data['http_code']);
 switch ($order['slug']) {
     case 'customer':
         $rs_url = $bookingOrder->return_url . "&error=Some thing when wrong"; // thay reference id
