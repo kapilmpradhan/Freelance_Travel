@@ -13,16 +13,16 @@ class QuotetController extends BaseController
     public function saveQuote(Request $request, Quote $quote)
     {
         $header = $request->header('token_access');
-        $checkAuth = json_decode($quote->CallApi($header), true);
 
-        if ( !@$checkAuth['bookingReference'] ) {
+        $checkAuth = json_decode($quote->CallApi($request->request_url, $header), true);
+
+        if (!@$checkAuth['bookingReference']) {
             return response()->json([
-                'message'=>__('auth.unauthenticated')
+                'message' => __('auth.unauthenticated')
             ], 401);
         }
-
         $validate = Validator::make($request->all(), $quote->rule($request));
-        if ( $validate->fails() ) {
+        if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors(), 422);
         }
         $create = $quote->storeQuote($request);
@@ -33,9 +33,9 @@ class QuotetController extends BaseController
     {
         $quote = $quote->getDetailQuote($email);
 
-        if ( $quote ) {
+        if ($quote) {
             return $this->sendResponse(new BaseResource($quote), __('successfully'), 200);
         }
-        return $this->sendResponse( null, __('fail'), 200);
+        return $this->sendResponse(null, __('fail'), 200);
     }
 }

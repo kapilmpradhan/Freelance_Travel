@@ -13,12 +13,12 @@ class Quote extends Model
     protected $fillable = ['email', 'json'];
 
 
-    public function CallApi($token)
+    public function CallApi($url, $token)
     {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "".env('API_URL')."/bookingreference");
+        curl_setopt($curl, CURLOPT_URL, "{$url}/bookingreference");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer ".$token."",
+            "Authorization: Bearer {$token}",
             "Content-Type: application/json",
         ));
         curl_setopt($curl, CURLOPT_POST, 1);
@@ -42,7 +42,7 @@ class Quote extends Model
             'json' => json_encode($request->json)
         ];
         $account = $this->where('email', $request->email)->first();
-        if ( $account ) {
+        if ($account) {
             $account->update($params);
             return $this->where('email', $request->email)->first();
         }
@@ -53,6 +53,4 @@ class Quote extends Model
     {
         return $this->where('email', $email)->first();
     }
-
-    
 }

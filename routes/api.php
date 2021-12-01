@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group([ 'namespace' => 'App\Http\Controllers\Api', 'prefix' => "", 'middleware' => 'check.token.success'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", 'middleware' => 'check.token.success'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
 });
 
-Route::group([ 'namespace' => 'App\Http\Controllers\Api', 'prefix' => ""], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", "middleware" => "checkToken"], function () {
     Route::post('save-account', [AccountController::class, 'saveAccount']);
     Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
     Route::post('save-quote', [QuotetController::class, 'saveQuote']);
