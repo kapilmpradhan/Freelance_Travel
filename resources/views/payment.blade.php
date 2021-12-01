@@ -30,7 +30,6 @@ $header_data = curl_getinfo($curl);
 
 $orderDetail = json_decode($bookingOrder->CallApiDetailBooking($bookingOrder));
 if (isset($orderDetail->bookingReference)) {
-
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
 }
@@ -45,7 +44,7 @@ switch ($order['slug']) {
         header("Location:" . $rs_url);
         exit();
     case 'agent':
-        if ( $order['status'] != 1 || isset($orderDetail->bookingReference)) {
+        if ( $order['status'] != 1 || !isset($orderDetail->bookingReference)) {
             $rs_url = $bookingOrder->return_url . "?" . $order['param'] . "&error=" . $order['message'];
             header("Location:" . $rs_url);
             exit();
