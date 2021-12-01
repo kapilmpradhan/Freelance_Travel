@@ -28,10 +28,9 @@ curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 $result = curl_exec($curl);
 $header_data = curl_getinfo($curl);
 
-$orderDetail = $bookingOrder->CallApiDetailBooking($bookingOrder);
+$orderDetail = json_decode($bookingOrder->CallApiDetailBooking($bookingOrder));
 
 if (isset($orderDetail->bookingReference)) {
-    dd(1);
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
 }
