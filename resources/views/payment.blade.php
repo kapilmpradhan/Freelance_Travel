@@ -36,7 +36,7 @@ if (isset($orderDetail->bookingReference)) {
 
 switch ($order['slug']) {
     case 'customer':
-        $rs_url = $bookingOrder->return_url . "?error=Some thing when wrong"; // thay reference id
+        $rs_url = $bookingOrder->return_url . "?error=Something when wrong"; // thay reference id
         //redirect other view
         if (isset($orderDetail->bookingReference)) {
             $rs_url = route('bookingDetail', $order['bookingReference']); // thay reference id
