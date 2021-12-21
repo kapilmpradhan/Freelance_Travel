@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,3 +28,5 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", "middle
     Route::post('save-quote', [QuotetController::class, 'saveQuote']);
     Route::get('detail-quote/{email}', [QuotetController::class, 'detailQuote']);
 });
+
+Route::post("email-log", [LogController::class, "log"]);

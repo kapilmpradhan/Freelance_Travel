@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Mail\sendMailCustomer;
+use App\Mail\logMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,20 +11,22 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class sendMail implements ShouldQueue
+class sendLogMail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $email;
-    protected $data;
+    protected $mail;
+    protected $title;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($email, $data)
+    public function __construct($email, $mail, $title)
     {
         $this->email = $email;
-        $this->data = $data;
+        $this->mail = $mail;
+        $this->title = $title;
     }
 
     /**
@@ -34,7 +36,7 @@ class sendMail implements ShouldQueue
      */
     public function handle()
     {
-        $email = new sendMailCustomer($this->data);
+        $email = new logMail($this->mail, $this->title);
         Mail::to($this->email)->send($email);
     }
 }
