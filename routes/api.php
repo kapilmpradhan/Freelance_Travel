@@ -31,6 +31,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => ""], functi
     Route::post('favorites/add', [FavoriteController::class, 'addFavorite']);
     Route::get('favorites/{email}', [FavoriteController::class, 'getFavorite']);
     Route::delete('favorites/{email}', [FavoriteController::class, 'removeFavorite']);
+    Route::post('save-favorite', [FavoriteController::class, 'saveFavorite']);
+    Route::get('detail-favorite/{email}', [FavoriteController::class, 'detailFavorite']);
 });
 
 Route::post("email-log", [LogController::class, "log"]);

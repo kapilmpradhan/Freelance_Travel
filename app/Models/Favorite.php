@@ -44,4 +44,23 @@ class Favorite extends Model
         $favorite = $this->where('email', $email)->where('product_id', $product_id);
         $favorite->delete();
     }
+
+    public function storeFavorite($request)
+    {
+        $params = [
+            'email' => $request->email,
+            'json' => json_encode($request->json)
+        ];
+        $account = $this->where('email', $request->email)->first();
+        if ($account) {
+            $account->update($params);
+            return $this->where('email', $request->email)->first();
+        }
+        return $this->create($params);
+    }
+
+    public function getDetailFavorite($email)
+    {
+        return $this->where('email', $email)->first();
+    }
 }
