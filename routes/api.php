@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
 use Illuminate\Http\Request;
