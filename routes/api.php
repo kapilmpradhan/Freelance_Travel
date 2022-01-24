@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
 use Illuminate\Http\Request;
@@ -23,7 +22,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", 'middle
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
 });
 
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => ""], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", "middleware" => "checkToken"], function () {
     Route::post('save-account', [AccountController::class, 'saveAccount']);
     Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
     Route::post('save-quote', [QuotetController::class, 'saveQuote']);
