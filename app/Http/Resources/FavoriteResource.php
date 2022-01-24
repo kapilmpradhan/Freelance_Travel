@@ -14,11 +14,6 @@ class FavoriteResource extends JsonResource
      */
     public function toArray($request)
     {
-        return [
-            'id' => $this->id,
-            'email' => $this->email,
-            'product_id' => $this->product_id,
-            'json' => json_decode($this->json)
-        ];
+        return json_decode($this->json);
     }
 }
