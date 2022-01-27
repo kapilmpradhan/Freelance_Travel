@@ -10,7 +10,7 @@
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <style>
         .body {
-            background: #E5E5E5;
+            background: #f2f2f2;
             padding-top: 1px;
         }
 
@@ -67,7 +67,7 @@
         .addition-box {
             margin-top: 30px;
             background: #fff;
-            padding: 30px 50px;
+            padding: 30px 30px;
             text-align: center;
         }
 
@@ -120,7 +120,7 @@
         .voucher-box {
             margin-top: 30px;
             background: #fff;
-            padding: 30px 50px;
+            padding: 30px 30px;
             text-align: left;
             text-transform: uppercase;
             font-style: normal;
@@ -132,6 +132,12 @@
             font-size: 16px;
             line-height: 160%;
             color: #31B4B9;
+        }
+
+        .voucher-box .voucher-head {
+            background: #e8e8e8;
+            margin: -30px -30px 10px -30px;
+            padding: 30px 30px 1px 30px;
         }
 
         .voucher-box h5 {
@@ -162,8 +168,9 @@
 
         hr {
             color: #E0E0E0;
-            width: 100%;
+            width: calc(100% + 100px);
             height: 1px;
+            margin-left: -30px;
         }
 
         .term-condition {
@@ -249,13 +256,22 @@
         .col-lg-12 {
             width: 100%;
         }
+
+        .voucher-in {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        .text-lower {
+            text-transform: initial;
+        }
     </style>
 </head>
 
 <body class="body">
     <section class="header-top mt-5">
         <div class="container-custom">
-            <div class="header-box">
+            <div class="header-box voucher-in">
                 <div class="logo text-center mb-4">
                     <img src="{{ asset('images/Logo.png') }}" alt="" srcset="">
                 </div>
@@ -289,17 +305,10 @@
             </div>
         </div>
     </section>
-    <section class="additional">
+    <section class="additional ">
         <div class="container-custom">
-            <div class="addition-box">
-                <h3>TRAVEL VOUCHERS</h3>
-            </div>
-        </div>
-    </section>
-    <section class="additional">
-        <div class="container-custom">
-            <div class="addition-box">
-                <div class="row">
+            <div class="addition-box voucher-in">
+                <div class="row ">
                     <div @if(isset($data->products[0]->redeemers[1])) class="col-lg-6" @else class="col-lg-12"
                         @endif>
                         <div class="lead">
@@ -323,47 +332,56 @@
             </div>
         </div>
     </section>
+    <section class="additional">
+        <div class="container-custom">
+            <div class="addition-box">
+                <h3>TRAVEL VOUCHERS</h3>
+            </div>
+        </div>
+    </section>
     <section class="voucher">
         <div class="container-custom">
             @foreach($data->products as $product)
-            <div class="voucher-box">
-                <h4>Voucher number: {{ $product->voucherNumber }}</h4>
-                <h5>{{ $product->name }}</h5>
-                <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
-                <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
+            <div class="voucher-box voucher-in">
+                <div class="voucher-head">
+                    <h4>Voucher number: {{ $product->voucherNumber }}</h4>
+                    <h5>{{ $product->name }}</h5>
+                    <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
+                    <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
+                </div>
                 <p><span class="font-bold">Quantity of fare type:</span> {{ $product->qty }}</p>
-                <p class="customer-detail"><span class="font-bold">Customer Details:</span></p>
-                @foreach($product->redeemers as $redeemer )
-                <p class="customer-detail">{{ $redeemer->name }}</p>
-                @endforeach
-                <hr class="mt-4">
-                @foreach($product->redeemers as $redeemer )
-                @foreach($redeemer->bookingDetails as $bookingDetail )
-                <p><span class="font-bold">Booking date:</span> {{ $bookingDetail->travelDate }}</p>
-                <p><span class="font-bold">Commencement Time:</span> {{ $bookingDetail->pickupTime }}</p>
-                <p> <span class="font-bold">Pick up location</span> {{ $bookingDetail->pickupLocation }}</p>
-                @endforeach
-                @endforeach
-                <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
-                <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
                 <p class="customer-detail"><span class="font-bold">Operator Booking Reference:</span></p>
                 @foreach($product->redeemers as $redeemer )
-                @foreach($redeemer->bookingDetails as $bookingDetail )
                 <p class="customer-detail">{{ $redeemer->name }} -
-                    {{ $bookingDetail->eBookingReferenceId }}</p>
+                    {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
                 @endforeach
-                @endforeach
+                <hr class="mt-4">
+                <p><span class="font-bold">Booking date:</span> {{
+                    @$product->redeemers[0]->$bookingDetails[0]->travelDate }}</p>
+                <p><span class="font-bold">Commencement Time:</span> {{
+                    @$product->redeemers[0]->$bookingDetails[0]->pickupTime }}</p>
+                <p> <span class="font-bold">Pick up location</span> {{
+                    @$product->redeemers[0]->$bookingDetails[0]->pickupLocation }}</p>
+                <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
+                <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
+                <hr>
                 <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
                 <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
                 <p class="customer-detail">{{ @$product->supplier->email }}</p>
                 <p class="customer-detail">{{ @$product->supplier->phone }}</p>
                 <hr>
                 <p><span class="font-bold">important infoRmation</span></p>
-                <p>{!! @$data->termsAndConditions !!}</p>
-
+                <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }} x {{ count($product->redeemers) }}</p>
+                <p>{!! $product->instructions !!}</p>
+                <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
+                <hr>
+                <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through</p>
+                <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in full
+                (excluding any potential levies mentioned in the important information above).
+                If you require assistance in claming this voucher, please contact support@adventium.tech</p>
             </div>
             @endforeach
-            <div class="voucher-box">
+            <div class="voucher-box voucher-in">
                 <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
                     strtotime(@$data->purchaseDate)) ); }})</p>
