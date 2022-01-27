@@ -168,9 +168,8 @@
 
         hr {
             color: #E0E0E0;
-            width: calc(100% + 60px);
+            width: calc(100%);
             height: 1px;
-            transform: translateX(-30px);
         }
 
         .term-condition {
@@ -371,14 +370,17 @@
                 <p class="customer-detail">{{ @$product->supplier->phone }}</p>
                 <hr>
                 <p><span class="font-bold">important infoRmation</span></p>
-                <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }} x {{ count($product->redeemers) }}</p>
+                <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
+                    x {{ count($product->redeemers) }}</p>
                 <p>{!! $product->instructions !!}</p>
                 <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
                 <hr>
-                <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through</p>
-                <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in full
-                (excluding any potential levies mentioned in the important information above).
-                If you require assistance in claming this voucher, please contact support@adventium.tech</p>
+                <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through
+                </p>
+                <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in
+                    full
+                    (excluding any potential levies mentioned in the important information above).
+                    If you require assistance in claming this voucher, please contact support@adventium.tech</p>
             </div>
             @endforeach
             <div class="voucher-box voucher-in">
