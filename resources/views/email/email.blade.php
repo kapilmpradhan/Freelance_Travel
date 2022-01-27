@@ -136,7 +136,7 @@
 
         .voucher-box .voucher-head {
             background: #e8e8e8;
-            margin: -30px -30px 10px -30px;
+            margin: "-30px -30px 10px -30px";
             padding: 30px 30px 1px 30px;
         }
 
@@ -168,9 +168,9 @@
 
         hr {
             color: #E0E0E0;
-            width: calc(100% + 100px);
+            width: calc(100% + 60px);
             height: 1px;
-            margin-left: -30px;
+            margin-left: "-30px";
         }
 
         .term-condition {
