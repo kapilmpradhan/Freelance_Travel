@@ -170,7 +170,7 @@
             color: #E0E0E0;
             width: calc(100% + 60px);
             height: 1px;
-            margin-left: "-30px";
+            transform: translateX(-30px);
         }
 
         .term-condition {
