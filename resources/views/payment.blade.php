@@ -32,8 +32,8 @@ $header_data = curl_getinfo($curl);
 $orderDetail = json_decode($bookingOrder->CallApiDetailBooking($bookingOrder));
 if (isset($orderDetail->bookingReference)) {
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
-    // $agentEmail = @$orderDetail->agentUser->email ?: "james.nguyen@adamosoft.com";
-    $agentEmail = "james.nguyen@adamosoft.com";
+    $agentEmail = @$orderDetail->agentUser->email ?: "james.nguyen@adamosoft.com";
+    // $agentEmail = "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
     dispatch(new sendAgent( $agentEmail, $orderDetail ));
 }
