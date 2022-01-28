@@ -276,7 +276,7 @@
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>
-                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d m Y", strtotime(@$data->purchaseDate)) }}
+                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d M Y", strtotime(@$data->purchaseDate)) }}
                 </h2>
             </div>
         </div>
@@ -355,7 +355,7 @@
                     {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
                 @endforeach
                 <hr class="mt-4">
-                <p><span class="font-bold">Booking date:</span> {{ date("d m Y",
+                <p><span class="font-bold">Booking date:</span> {{ date("d M Y",
                     strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate)) }}</p>
                 @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
                 <p><span class="font-bold">Commencement Time:</span> {{
