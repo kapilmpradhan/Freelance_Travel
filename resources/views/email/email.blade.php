@@ -262,6 +262,10 @@
         .text-lower {
             text-transform: initial;
         }
+
+        .border-line {
+            border-bottom: 1px solid #E0E0E0;
+        }
     </style>
 </head>
 
@@ -352,7 +356,7 @@
                 <p class="customer-detail">{{ $redeemer->name }} -
                     {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
                 @endforeach
-                <hr class="mt-4">
+                <div class="mt-4 border-line"></div>
                 <p><span class="font-bold">Booking date:</span> {{ date("d M Y",
                     strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate) + 3600 * 10) }}</p>
                 @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
@@ -367,12 +371,12 @@
                 @endif
                 <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
                 <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
-                <hr>
+                <div class="border-line"></div>
                 <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
                 <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
                 <p class="customer-detail">{{ @$product->supplier->email }}</p>
                 <p class="customer-detail">{{ @$product->supplier->phone }}</p>
-                <hr>
+                <div class="border-line"></div>
                 <p><span class="font-bold">important infoRmation</span></p>
                 @if(isset($product->redeemers[0]->bookingDetails[0]->levy))
                 <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
@@ -380,7 +384,7 @@
                 @endif
                 <p>{!! $product->instructions !!}</p>
                 <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
-                <hr>
+                <div class="border-line"></div>
                 <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through
                 </p>
                 <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in
