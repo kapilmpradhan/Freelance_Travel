@@ -65,9 +65,8 @@
 
         .agent-box,
         .addition-box {
-            margin-top: 30px;
             background: #fff;
-            padding: 30px 30px;
+            padding: 20px 30px;
             text-align: center;
         }
 
