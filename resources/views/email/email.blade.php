@@ -356,15 +356,15 @@
                 @endforeach
                 <hr class="mt-4">
                 <p><span class="font-bold">Booking date:</span> {{ date("d M Y",
-                    strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate)) }}</p>
+                    strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate) + 3600 * 10) }}</p>
                 @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
                 <p><span class="font-bold">Commencement Time:</span> {{
                     @$product->redeemers[0]->bookingDetails[0]->commencementTime }}</p>
                 @endif
 
                 @if(isset($product->redeemers[0]->bookingDetails[0]->pickupLocation))
-                <p> <span class="font-bold">Pick up
-                        location</span>{{@$product->redeemers[0]->bookingDetails[0]->pickupTime}} - {{
+                <p> <span class="font-bold">Pick up location:
+                    </span> {{@$product->redeemers[0]->bookingDetails[0]->pickupTime}} - {{
                     @$product->redeemers[0]->bookingDetails[0]->pickupLocation }}</p>
                 @endif
                 <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
