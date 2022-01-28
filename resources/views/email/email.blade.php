@@ -135,9 +135,7 @@
         }
 
         .voucher-box .voucher-head {
-            background: #e8e8e8;
-            margin: "-30px -30px 10px -30px";
-            padding: 30px 30px 1px 30px;
+            border-bottom: 1px solid #E0E0E0;
         }
 
         .voucher-box h5 {
