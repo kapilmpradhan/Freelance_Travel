@@ -276,7 +276,7 @@
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>
-                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d M Y", strtotime(@$data->purchaseDate)) }}
+                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d m Y", strtotime(@$data->purchaseDate)) }}
                 </h2>
             </div>
         </div>
@@ -355,12 +355,18 @@
                     {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
                 @endforeach
                 <hr class="mt-4">
-                <p><span class="font-bold">Booking date:</span> {{
-                    @$product->redeemers[0]->$bookingDetails[0]->travelDate }}</p>
+                <p><span class="font-bold">Booking date:</span> {{ date("d m Y",
+                    strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate)) }}</p>
+                @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
                 <p><span class="font-bold">Commencement Time:</span> {{
-                    @$product->redeemers[0]->$bookingDetails[0]->pickupTime }}</p>
-                <p> <span class="font-bold">Pick up location</span> {{
-                    @$product->redeemers[0]->$bookingDetails[0]->pickupLocation }}</p>
+                    @$product->redeemers[0]->bookingDetails[0]->commencementTime }}</p>
+                @endif
+
+                @if(isset($product->redeemers[0]->bookingDetails[0]->pickupLocation))
+                <p> <span class="font-bold">Pick up
+                        location</span>{{@$product->redeemers[0]->bookingDetails[0]->pickupTime}} - {{
+                    @$product->redeemers[0]->bookingDetails[0]->pickupLocation }}</p>
+                @endif
                 <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
                 <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
                 <hr>
@@ -370,8 +376,10 @@
                 <p class="customer-detail">{{ @$product->supplier->phone }}</p>
                 <hr>
                 <p><span class="font-bold">important infoRmation</span></p>
+                @if(isset($product->redeemers[0]->bookingDetails[0]->levy))
                 <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
                     x {{ count($product->redeemers) }}</p>
+                @endif
                 <p>{!! $product->instructions !!}</p>
                 <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
                 <hr>
