@@ -26,8 +26,10 @@ class CheckToken
     {
         $token = $request->token_access;
         $url = $request->request_url;
+        $ftToken = $request->header('FT-token', $token);
+        $ftURL = $request->header('FT-URL', $url);
 
-        $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
+        $checkAuth = json_decode($this->quote->CallApi($ftURL, $ftToken), true);
 
         if (!@$checkAuth['bookingReference']) {
             return response()->json([

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\BCRController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
@@ -19,11 +20,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", 'middleware' => 'check.token.success'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'check.token.success'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
 });
 
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", "middleware" => "checkToken"], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('save-account', [AccountController::class, 'saveAccount']);
     Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
     Route::post('save-quote', [QuotetController::class, 'saveQuote']);
@@ -33,6 +34,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => "", "middle
     Route::delete('favorites/{email}', [FavoriteController::class, 'removeFavorite']);
     Route::post('save-favorite', [FavoriteController::class, 'saveFavorite']);
     Route::get('detail-favorite/{email}', [FavoriteController::class, 'detailFavorite']);
+    Route::get('cancel-requests/{email}', [BCRController::class, 'get']);
+    Route::get('cancel-requests/{email}/{bookingReference}', [BCRController::class, 'getDetail']);
+    Route::post('cancel-requests', [BCRController::class, 'CancelRequest']);
 });
 
 Route::post("email-log", [LogController::class, "log"]);
