@@ -38,7 +38,7 @@ class CheckToken
         $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
 
         if (!@$checkAuth['bookingReference']) {
-            dd($request->hasHeader('FT_token'), $url, $token);
+            dd($request->header(), $url, $token);
             return response()->json([
                 'message' => __('auth.unauthenticated')
             ], 401);
