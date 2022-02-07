@@ -26,10 +26,14 @@ class CheckToken
     {
         $token = $request->token_access;
         $url = $request->request_url;
-        $ftToken = $request->header('FT_token', $token);
-        $ftURL = $request->header('FT_URL', $url);
+        if ($request->hasHeader('FT_token')) {
+            $token = $request->header('FT_token');
+        }
+        if ($request->hasHeader('FT_URL')) {
+            $url = $request->header('FT_URL');
+        }
 
-        $checkAuth = json_decode($this->quote->CallApi($ftURL, $ftToken), true);
+        $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
 
         if (!@$checkAuth['bookingReference']) {
             return response()->json([
