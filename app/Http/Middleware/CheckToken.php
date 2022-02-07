@@ -26,19 +26,16 @@ class CheckToken
     {
         $token = $request->token_access;
         $url = $request->request_url;
-        if ($request->hasHeader('FT_token')) {
-            dump($request->header('FT_token'));
-            $token = $request->header('FT_token');
+        if ($request->hasHeader('fttoken')) {
+            $token = $request->header('fttoken');
         }
-        if ($request->hasHeader('FT_URL')) {
-            dump($request->header('FT_URL'));
-            $url = $request->header('FT_URL');
+        if ($request->hasHeader('fturl')) {
+            $url = $request->header('fturl');
         }
 
         $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
 
         if (!@$checkAuth['bookingReference']) {
-            dd($request->header(), $url, $token);
             return response()->json([
                 'message' => __('auth.unauthenticated')
             ], 401);
