@@ -36,6 +36,7 @@ class CheckToken
         $checkAuth = json_decode($this->quote->CallApi($url, $token), true);
 
         if (!@$checkAuth['bookingReference']) {
+            dd($url, $token);
             return response()->json([
                 'message' => __('auth.unauthenticated')
             ], 401);
