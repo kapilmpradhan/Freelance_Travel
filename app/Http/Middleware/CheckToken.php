@@ -27,9 +27,11 @@ class CheckToken
         $token = $request->token_access;
         $url = $request->request_url;
         if ($request->hasHeader('FT_token')) {
+            dump($request->header('FT_token'));
             $token = $request->header('FT_token');
         }
         if ($request->hasHeader('FT_URL')) {
+            dump($request->header('FT_URL'));
             $url = $request->header('FT_URL');
         }
 
