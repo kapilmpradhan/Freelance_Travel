@@ -26,8 +26,8 @@ class CheckToken
     {
         $token = $request->token_access;
         $url = $request->request_url;
-        $ftToken = $request->header('FT-token', $token);
-        $ftURL = $request->header('FT-URL', $url);
+        $ftToken = $request->header('FT_token', $token);
+        $ftURL = $request->header('FT_URL', $url);
 
         $checkAuth = json_decode($this->quote->CallApi($ftURL, $ftToken), true);
 
