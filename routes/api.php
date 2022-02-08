@@ -34,9 +34,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middle
     Route::delete('favorites/{email}', [FavoriteController::class, 'removeFavorite']);
     Route::post('save-favorite', [FavoriteController::class, 'saveFavorite']);
     Route::get('detail-favorite/{email}', [FavoriteController::class, 'detailFavorite']);
-    Route::get('cancel-requests/{email}', [BCRController::class, 'get']);
-    Route::get('cancel-requests/{email}/{bookingReference}', [BCRController::class, 'getDetail']);
+    Route::get('cancel-requests', [BCRController::class, 'getAll']);
     Route::post('cancel-requests', [BCRController::class, 'CancelRequest']);
+    Route::get('cancel-requests/{bookingReference}', [BCRController::class, 'getDetail']);
 });
 
 Route::post("email-log", [LogController::class, "log"]);

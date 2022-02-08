@@ -18,6 +18,11 @@ class BookingCancelRequest extends Model
         return $this->where('email', $email)->get();
     }
 
+    public function getAllByBookingReference($bookingReference)
+    {
+        return $this->where('bookingReference', $bookingReference)->get();
+    }
+
     public function getOne($email, $bookingReference)
     {
         return $this->where('email', $email)->where('bookingReference', $bookingReference)->get();

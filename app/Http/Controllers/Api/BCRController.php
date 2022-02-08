@@ -13,15 +13,32 @@ class BCRController extends Controller
         return $bookingCancelRequest->getAllByEmail($email);
     }
 
-    public function getDetail($email, $bookingReference, BookingCancelRequest $bookingCancelRequest)
+    public function getAll(BookingCancelRequest $bookingCancelRequest)
     {
-        return $bookingCancelRequest->getOne($email, $bookingReference);
+        return $bookingCancelRequest->get();
+    }
+
+    public function getDetail($bookingReference, BookingCancelRequest $bookingCancelRequest)
+    {
+        return $bookingCancelRequest->getAllByBookingReference($bookingReference);
     }
 
     public function CancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
     {
         $data = [
             "email" => $request->email,
+            "bookingReference" => $request->bookingReference,
+            "voucherNumber" => $request->voucherNumber,
+            "quantity" => $request->quantity,
+            "reason" => $request->reason,
+        ];
+
+        return $bookingCancelRequest->createCancelRequest($data);
+    }
+
+    public function MakeCancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
+    {
+        $data = [
             "bookingReference" => $request->bookingReference,
             "voucherNumber" => $request->voucherNumber,
             "quantity" => $request->quantity,
