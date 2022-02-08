@@ -30,8 +30,7 @@ class BookingCancelRequest extends Model
 
     public function createCancelRequest($data)
     {
-        $cancelRequest = $this->where('email', $data['email'])
-            ->where('bookingReference', $data['bookingReference'])
+        $cancelRequest = $this->where('bookingReference', $data['bookingReference'])
             ->where('voucherNumber',  $data['voucherNumber'])
             ->first();
         if (isset($cancelRequest)) {
