@@ -25,6 +25,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middle
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
+    Route::get('resend-voucher/{orderId}', [QuotetController::class, 'resendVoucher']);
     Route::post('save-account', [AccountController::class, 'saveAccount']);
     Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
     Route::post('save-quote', [QuotetController::class, 'saveQuote']);

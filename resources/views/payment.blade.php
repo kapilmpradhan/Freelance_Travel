@@ -29,7 +29,7 @@ curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 $result = curl_exec($curl);
 $header_data = curl_getinfo($curl);
 
-$orderDetail = json_decode($bookingOrder->CallApiDetailBooking($bookingOrder));
+$orderDetail = json_decode(getBookingDetail($bookingOrder->request_url, $bookingOrder->order_id, $bookingOrder->accessToken));
 if (isset($orderDetail->bookingReference)) {
     $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
     $agentEmail = @$orderDetail->agentUser->email ?: "james.nguyen@adamosoft.com";

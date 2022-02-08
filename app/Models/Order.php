@@ -29,18 +29,8 @@ class Order extends Model
         return $this->where('bookingReference', $bookingReference)->first();
     }
 
-
     public function CallApiDetailBooking($booking)
     {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "{$booking->request_url}/voucher/{$booking->order_id}.json");
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer $booking->accessToken",
-            "Content-Type: application/json",
-        ));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        $result = curl_exec($curl);
-        return $result;
+        return getBookingDetail($booking->request_url, $booking->order_id, $booking->accessToken);
     }
 }
