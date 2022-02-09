@@ -394,7 +394,7 @@
             </div>
             @endforeach
             <div class="voucher-box voucher-in">
-                <h3 class="term-condition">TERMS & CONDITIONS</h3>
+                <a href="https://freelance-travel.com/booking-terms-and-conditions"><h3 class="term-condition">TERMS & CONDITIONS</h3></a>
                 <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
                     strtotime(@$data->purchaseDate)) ); }})</p>
             </div>
