@@ -56,7 +56,7 @@
         .agent-box span {
             font-style: normal;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 24px;
             line-height: 141.5%;
             /* or 23px */
             text-align: center;
@@ -65,9 +65,8 @@
 
         .agent-box,
         .addition-box {
-            margin-top: 30px;
             background: #fff;
-            padding: 30px 30px;
+            padding: 20px 30px;
             text-align: center;
         }
 
@@ -272,132 +271,30 @@
 <body class="body">
     <section class="header-top mt-5">
         <div class="container-custom">
-            <div class="header-box voucher-in">
+            <div class="header-box">
                 <div class="logo text-center mb-4">
                     <img src="{{ asset('images/Logo.png') }}" alt="" srcset="">
                 </div>
-                <p class="title-voucher ">Booking Reference</p>
-                <h1>{{ $data->bookingReference }}</h1>
-                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d M Y", strtotime(@$data->purchaseDate)) }}
-                </h2>
-            </div>
-        </div>
-    </section>
-    <section class="agent-info">
-        <div class="container-custom">
-            <div class="agent-box">
-                <h3>Hi {{ @$data->products[0]->redeemers[0]->name }},</h3>
-                <p>Thank you for your Freelance Travel reservation.</p>
-                <p> Please refer to your tickets which are attached to this email. Please read your tickets
-                    thoroughly
-                    to ensure everything is correct and you understand all additional information relating to your
-                    reservation.</p>
-                <p>We recommend you re-confirm all of your reservations 48 hours in advance using the phone number
-                    listed on each ticket.</p>
-                <p>Please contact your Freelance Travel agent <span>{{ @$data->agent->name }}</span> by phoning
-                    <span>
-                        {{ @$data->agent->phone }} </span> or emailing <span> {{ @$data->agent->email }} </span> if
-                    you
-                    require any
-                    additional information
-                    on your reservation.
-                </p>
-                <p>We hope you enjoy your travels!</p>
-            </div>
-        </div>
-    </section>
-    <section class="additional ">
-        <div class="container-custom">
-            <div class="addition-box voucher-in">
-                <div class="row ">
-                    <div @if(isset($data->products[0]->redeemers[1])) class="col-lg-6 col-12" @else class="col-lg-12"
-                        @endif>
-                        <div class="lead">
-                            <h4 class="name">Lead customer</h4>
-                            <p>{{ @$data->products[0]->redeemers[0]->name }}</p>
-                            <p>{{ @$data->products[0]->redeemers[0]->email }}</p>
-                            <p>{{ @$data->products[0]->redeemers[0]->phone }}</p>
-                        </div>
-                    </div>
-                    @if(isset($data->products[0]->redeemers[1]))
-                    <div class="col-lg-6  col-12">
-                        <div class="lead">
-                            <h4 class="name">Additional customers</h4>
-                            @foreach($data->products[0]->redeemers as $redeemer)
-                            <p>{{ $redeemer->name }}</p>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
+                <div class="agent-box">
+                    <h3>Payment Link Emailed Successfully</h3>
+                    <br/>
+                    <p>
+                        A secure payment link has been successfully emailed to the lead customer
+                        on the booking.
+                        <b>Please note all payment links are for one-time use only.</b> If you
+                        have received a copy of the email we sent the customer,
+                        <b>please do not click the link.</b>
+                    </p>
+                    <p>
+                        If you need to resend a new link or make any changes before payment, the
+                        order can be located in your ‘Quotes’ tab.
+                    </p>
+                    <p>
+                        When your customer pays via the below link, the order will move to your
+                        ‘Bookings’ tab and the confirmation and digital travel vouchers will be
+                        automatically emailed to your customer.
+                    </p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="additional">
-        <div class="container-custom">
-            <div class="addition-box">
-                <h3>TRAVEL VOUCHERS</h3>
-            </div>
-        </div>
-    </section>
-    <section class="voucher">
-        <div class="container-custom">
-            @foreach($data->products as $product)
-            <div class="voucher-box voucher-in">
-                <div class="voucher-head">
-                    <h4>Voucher number: {{ $product->voucherNumber }}</h4>
-                    <h5>{{ $product->name }}</h5>
-                    <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
-                    <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
-                </div>
-                <p><span class="font-bold">Quantity of fare type:</span> {{ $product->qty }}</p>
-                <p class="customer-detail"><span class="font-bold">Operator Booking Reference:</span></p>
-                @foreach($product->redeemers as $redeemer )
-                <p class="customer-detail">{{ $redeemer->name }} -
-                    {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
-                @endforeach
-                <div class="mt-4 border-line"></div>
-                <p><span class="font-bold">Booking date:</span> {{ date("d M Y",
-                    strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate) + 3600 * 10) }}</p>
-                @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
-                <p><span class="font-bold">Commencement Time:</span> {{
-                    @$product->redeemers[0]->bookingDetails[0]->commencementTime }}</p>
-                @endif
-
-                @if(isset($product->redeemers[0]->bookingDetails[0]->pickupLocation))
-                <p> <span class="font-bold">Pick up location:
-                    </span> {{@$product->redeemers[0]->bookingDetails[0]->pickupTime}} - {{
-                    @$product->redeemers[0]->bookingDetails[0]->pickupLocation }}</p>
-                @endif
-                <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
-                <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
-                <div class="border-line"></div>
-                <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
-                <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
-                <p class="customer-detail">{{ @$product->supplier->email }}</p>
-                <p class="customer-detail">{{ @$product->supplier->phone }}</p>
-                <div class="border-line"></div>
-                <p><span class="font-bold">important infoRmation</span></p>
-                @if(isset($product->redeemers[0]->bookingDetails[0]->levy))
-                <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
-                    x {{ count($product->redeemers) }}</p>
-                @endif
-                <p>{!! $product->instructions !!}</p>
-                <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
-                <div class="border-line"></div>
-                <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through
-                </p>
-                <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in
-                    full
-                    (excluding any potential levies mentioned in the important information above).
-                    If you require assistance in claming this voucher, please contact support@adventium.tech</p>
-            </div>
-            @endforeach
-            <div class="voucher-box voucher-in">
-                <a href="https://freelance-travel.com/booking-terms-and-conditions"><h3 class="term-condition">TERMS & CONDITIONS</h3></a>
-                <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
-                    strtotime(@$data->purchaseDate)) ); }})</p>
             </div>
         </div>
     </section>

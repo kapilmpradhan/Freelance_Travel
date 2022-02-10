@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'check.token.success'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
+    Route::post('share-booking', [BaseController::class, 'shareBooking']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {

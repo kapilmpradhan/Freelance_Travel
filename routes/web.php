@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group([ 'namespace' => 'App\Http\Controllers\Client', 'prefix' => "" ], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], function () {
     Route::get('payment-success/{slug}', [BookingController::class, 'paymentSuccess'])->name('payment.success');
     Route::get('payment-detail/{bookingReference}', [BookingController::class, 'paymentDetail'])->name('payment.detail');
     Route::get('/booking/{bookingReference}', [BookingController::class, 'bookingDetail'])->name('bookingDetail');
@@ -23,6 +23,10 @@ Route::group([ 'namespace' => 'App\Http\Controllers\Client', 'prefix' => "" ], f
 Route::get('/', function () {
     return redirect(env('APP_BASE_URL'));
 });
+
+Route::view("/agent-share", "email.agentShare");
+Route::view("/email-share", "email.emailShare");
+
 Route::get('{slug}', function () {
     return redirect(env('APP_BASE_URL'));
 });

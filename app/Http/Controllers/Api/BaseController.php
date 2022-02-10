@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\sendShareToAgent;
+use App\Mail\sendShareToEmail;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class BaseController extends Controller
 {
     public function connectPayment(Request $request, Order $order)
     {
         $create = $order->storeOrder($request);
-        if ( $create ) {
+        if ($create) {
             return response()->json([
-                'message'=>__('successfully'),
+                'message' => __('successfully'),
                 'data' => $create,
             ], 200);
         }
         return response()->json([
-            'message'=>__('fail'),
+            'message' => __('fail'),
             'data' => "",
         ], 400);
     }
@@ -45,6 +48,26 @@ class BaseController extends Controller
             'success' => true,
             'data' => $result,
             'message' => $message,
+            'code' => 200
+        ];
+
+        return response()->json($response, 200);
+    }
+
+    public function shareBooking(Request $request)
+    {
+
+        $emailShare = new sendShareToEmail($request->all());
+        Mail::to($request->email)->send($emailShare);
+
+        $agentEmail = @$request->agent->email ?? "james.nguyen@adamosoft.com";
+
+        $agentShare = new sendShareToAgent();
+        Mail::to($agentEmail)->send($agentShare);
+
+        $response = [
+            'success' => true,
+            'data' => $request->all(),
             'code' => 200
         ];
 
