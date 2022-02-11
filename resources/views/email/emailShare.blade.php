@@ -335,12 +335,14 @@
         }
 
         .col-lg-5 {
-            width: 42%;
+            width: 41%;
         }
 
         .col-lg-7 {
             width: 49%;
         }
+
+
     </style>
 </head>
 
