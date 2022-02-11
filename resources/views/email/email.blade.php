@@ -350,28 +350,53 @@
                     <h5>{{ $product->name }}</h5>
                     <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
                     <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
+                    <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
+                    <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
                 </div>
                 <p><span class="font-bold">Quantity of fare type:</span> {{ $product->qty }}</p>
                 <p class="customer-detail"><span class="font-bold">Operator Booking Reference:</span></p>
-                @foreach($product->redeemers as $redeemer )
-                <p class="customer-detail">{{ $redeemer->name }} -
-                    {{@$redeemer->bookingDetails[0]->eBookingReferenceId}}</p>
+                @foreach($product->redeemers as $redeemer)
+                @foreach($redeemer->bookingDetails as $bookingDetail)
+                <p class="customer-detail">{{ $redeemer->name }} - {{ @$bookingDetail->eBookingReferenceId }}</p>
                 @endforeach
+                <?php
+                $bookingCustomer = [];
+                foreach ($product->redeemers as $index => $redeemer) {
+                    if ($index === 0) {
+                        foreach ($redeemer->bookingDetails as $bookingDetail) {
+                            $bookingCustomer[] = [
+                                "eBookingReferenceId" => $bookingDetail->eBookingReferenceId,
+                                "customers" => $redeemer->name
+                            ];
+                        }
+                    } else {
+                        foreach ($redeemer->bookingDetails as $bookingDetail) {
+                            $key = array_search($bookingDetail->eBookingReferenceId, array_column($bookingCustomer, 'eBookingReferenceId'));
+                            $bookingCustomer[$key]['customers'] = $bookingCustomer[$key]['customers'] . ", " . $redeemer->name;
+                        }
+                    }
+                }
+                ?>
+                @endforeach
+                @foreach($product->redeemers[0]->bookingDetails as $index => $booking)
                 <div class="mt-4 border-line"></div>
-                <p><span class="font-bold">Booking date:</span> {{ date("d M Y",
-                    strtotime(@$product->redeemers[0]->bookingDetails[0]->travelDate) + 3600 * 10) }}</p>
-                @if(isset($product->redeemers[0]->bookingDetails[0]->commencementTime))
-                <p><span class="font-bold">Commencement Time:</span> {{
-                    @$product->redeemers[0]->bookingDetails[0]->commencementTime }}</p>
+                <p>
+                    <span class="font-bold">Customer:</span>
+                    {{ $bookingCustomer[$index]['customers'] }}
+                </p>
+                <p>
+                    <span class="font-bold">Booking date:</span>
+                    {{ date("d M Y", strtotime(@$booking->travelDate) + 3600 * 10) }}
+                </p>
+                @if(isset($booking->commencementTime))
+                <p><span class="font-bold">Commencement Time:</span> {{ @$booking->commencementTime }}</p>
                 @endif
 
-                @if(isset($product->redeemers[0]->bookingDetails[0]->pickupLocation))
+                @if(isset($booking->pickupLocation))
                 <p> <span class="font-bold">Pick up location:
-                    </span> {{@$product->redeemers[0]->bookingDetails[0]->pickupTime}} - {{
-                    @$product->redeemers[0]->bookingDetails[0]->pickupLocation }}</p>
+                    </span> {{@$booking->pickupTime}} - {{ $booking->pickupLocation }}</p>
                 @endif
-                <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
-                <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
+                @endforeach
                 <div class="border-line"></div>
                 <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
                 <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
@@ -395,7 +420,9 @@
             </div>
             @endforeach
             <div class="voucher-box voucher-in">
-                <a href="https://freelance-travel.com/booking-terms-and-conditions"><h3 class="term-condition">TERMS & CONDITIONS</h3></a>
+                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                    <h3 class="term-condition">TERMS & CONDITIONS</h3>
+                </a>
                 <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
                     strtotime(@$data->purchaseDate)) ); }})</p>
             </div>
