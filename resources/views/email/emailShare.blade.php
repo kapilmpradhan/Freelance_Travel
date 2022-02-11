@@ -341,7 +341,8 @@
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]->firstName }} {{ @$data->redeemers[0]->lastName }},</h3>
-                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent->name }} below.</p>
+                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent->firstName }} {{
+                        @$data->agent->lastName }} below.</p>
                     <p>To confirm your quote click ‘BOOK NOW’ to open a secure payment link. Please note that the secure
                         payment link is for one-time use only so please only click the link when you are ready to book.
                         When
@@ -349,7 +350,7 @@
                         emailed to you.</p>
                     <p>If you have any questions or require amendments to the quote, please contact your Freelance
                         Travel
-                        Agent {{ @$data->agent->name }} on {{ @$data->agent->email }} or call {{ @$data->agent->phone
+                        Agent {{ @$data->agent->firstName }} {{ @$data->agent->lastName }} on {{ @$data->agent->email
                         }}.</p>
                     @if(isset( $data->paymentLink ))
                     <a class="book-now" href="{{ $data->paymentLink }}">BOOK NOW</a>

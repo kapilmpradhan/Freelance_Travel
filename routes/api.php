@@ -20,12 +20,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'check.token.success'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
     Route::post('share-booking', [BaseController::class, 'shareBooking']);
-});
-
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('resend-voucher/{orderId}', [QuotetController::class, 'resendVoucher']);
     Route::post('save-account', [AccountController::class, 'saveAccount']);
     Route::get('detail-account/{email}', [AccountController::class, 'detailAccount']);
