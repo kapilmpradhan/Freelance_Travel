@@ -332,6 +332,11 @@
 
         .quote-item .item-content .content-date {
             color: #31B4B9;
+            font-size: 18px;
+        }
+
+        .content-date img {
+            margin-right: 5px
         }
 
         .col-lg-5 {
@@ -341,8 +346,6 @@
         .col-lg-7 {
             width: 49%;
         }
-
-
     </style>
 </head>
 
@@ -450,7 +453,7 @@
                                 </p>
                                 <p class="content-date">
                                     <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
-                                    {{ date("d M Y", strtotime('+1 year', strtotime(@$product['travelDate']))) }}
+                                    {{ @$product['date'] }}
                                 </p>
                                 <hr />
                                 <p class="content">total: {{ @$product['quantity'] }}</p>
