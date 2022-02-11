@@ -57,7 +57,10 @@ class BaseController extends Controller
     public function shareBooking(Request $request)
     {
 
-        $emailShare = new sendShareToEmail($request->all());
+        // return view("email.emailShare", ["data" => $request]);
+
+        $emailShare = new sendShareToEmail($request);
+
         Mail::to($request->email)->send($emailShare);
 
         $agentEmail = @$request->agent->email ?? "james.nguyen@adamosoft.com";

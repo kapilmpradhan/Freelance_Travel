@@ -312,6 +312,10 @@
             padding: 7.5px 0
         }
 
+        .quote-item .quote-image {
+            width: 33%;
+        }
+
         .quote-item .quote-image img {
             object-fit: cover;
             width: 160px;
@@ -329,6 +333,14 @@
         .quote-item .item-content .content-date {
             color: #31B4B9;
         }
+
+        .col-lg-5 {
+            width: 42%;
+        }
+
+        .col-lg-7 {
+            width: 49%;
+        }
     </style>
 </head>
 
@@ -340,9 +352,9 @@
                     <img src="{{ asset('images/Logo.png') }}" alt="" srcset="">
                 </div>
                 <div class="agent-box">
-                    <h3>Hello {{ @$data->redeemers[0]->firstName }} {{ @$data->redeemers[0]->lastName }},</h3>
-                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent->firstName }} {{
-                        @$data->agent->lastName }} below.</p>
+                    <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
+                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent['firstName'] }} {{
+                        @$data->agent['lastName'] }} below.</p>
                     <p>To confirm your quote click ‘BOOK NOW’ to open a secure payment link. Please note that the secure
                         payment link is for one-time use only so please only click the link when you are ready to book.
                         When
@@ -350,9 +362,10 @@
                         emailed to you.</p>
                     <p>If you have any questions or require amendments to the quote, please contact your Freelance
                         Travel
-                        Agent {{ @$data->agent->firstName }} {{ @$data->agent->lastName }} on {{ @$data->agent->email
+                        Agent {{ @$data->agent['firstName'] }} {{ @$data->agent['lastName'] }} on {{
+                        @$data->agent['emailAddress']
                         }}.</p>
-                    @if(isset( $data->paymentLink ))
+                    @if(isset($data->paymentLink))
                     <a class="book-now" href="{{ $data->paymentLink }}">BOOK NOW</a>
                     @endif
                 </div>
@@ -368,15 +381,15 @@
                 <div class="row ">
                     <div class="col-lg-6 col-12">
                         <div class="lead">
-                            <b>{{ @$data->redeemers[0]->firstName }} {{ @$data->redeemers[0]->lastName }}</b>
-                            <p>{{ @$data->redeemers[0]->email }}</p>
-                            <p>{{ @$data->redeemers[0]->phone }}</p>
+                            <b>{{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }}</b>
+                            <p>{{ @$data->redeemers[0]['email'] }}</p>
+                            <p>{{ @$data->redeemers[0]['phone'] }}</p>
                         </div>
                         <div class="addition">
                             @if (isset($data->redeemers))
                             @foreach ($data->redeemers as $index => $redeemer)
                             @if($index > 0)
-                            <p>{{ @$redeemer->firstName }} {{ @$redeemer->lastName }}</p>
+                            <p>{{ @$redeemer['firstName'] }} {{ @$redeemer['lastName'] }}</p>
                             @endif
                             @endforeach
                             @endif
@@ -386,28 +399,27 @@
                     <div class="col-lg-6 col-12">
                         <div class="lead ">
                             <div class="row">
-
-                                <div class="col-5">
+                                <div class="col-lg-5">
                                     <b class="name">Quote Reference:</b>
                                 </div>
-                                <div class="col-7">
+                                <div class="col-lg-7">
                                     <span>{{ @$data->bookingReference }}</span>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-5">
+                                <div class="col-lg-5">
                                     <p class="name">Number of Items:</p>
                                 </div>
-                                <div class="col-7">
-                                    <span>{{ @$data->quantity }}</span>
+                                <div class="col-lg-7">
+                                    <p>{{ @$data->quantity }} {{ @$data->quantity === 1 ? "item" : "items"}}</p>
                                 </div>
                             </div>
                             <div class="row">
 
-                                <div class="col-5">
+                                <div class="col-lg-5">
                                     <b class="name">Total Price:</b>
                                 </div>
-                                <div class="col-7">
+                                <div class="col-lg-7">
                                     <span>{{ @$data->totalCharged }}</span>
                                 </div>
                             </div>
@@ -428,18 +440,18 @@
                 @foreach($data->products as $product)
                 <div class="quote-item">
                     <div class="row">
-                        <div class="quote-image col-lg-3 col-12"> <img src="" alt=""></div>
-                        <div class="col-lg-6 col-12">
+                        <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}" alt=""></div>
+                        <div class="col-lg-6">
                             <div class="item-content">
                                 <p class="content">
-                                    {{ @$product->fareName }}
+                                    {{ @$product['fareName'] }}
                                 </p>
                                 <p class="content-date">
-                                    <img src="{{ asset('images/fi_calendar.png') }}" />
-                                    {{ date("d M Y", strtotime('+1 year', strtotime(@$product->travelDate))) }}
+                                    <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
+                                    {{ date("d M Y", strtotime('+1 year', strtotime(@$product['travelDate']))) }}
                                 </p>
                                 <hr />
-                                <p class="content">total: {{ @$product->quantity }}</p>
+                                <p class="content">total: {{ @$product['quantity'] }}</p>
                             </div>
                         </div>
                     </div>
