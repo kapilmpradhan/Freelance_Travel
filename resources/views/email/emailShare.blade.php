@@ -346,6 +346,32 @@
         .col-lg-7 {
             width: 49%;
         }
+
+        .square-iamge {
+            position: relative;
+            width: 33%;
+        }
+
+        .square-iamge:after {
+            content: "";
+            display: block;
+            padding-bottom: 100%;
+        }
+
+        .square-iamge .content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .square-iamge .content .image {
+            width: calc(100% - 24px);
+            height: calc(100% - 24px);
+            margin: 24px auto 0 auto;
+            max-height: 456px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
     </style>
 </head>
 
@@ -445,7 +471,11 @@
                 @foreach($data->products as $product)
                 <div class="quote-item">
                     <div class="row">
-                        <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}" alt=""></div>
+                        <div class="square-iamge">
+                            <div className="content">
+                                <img src="{{ @$product['tour']['productImagePath'] }}" alt="">
+                            </div>
+                        </div>
                         <div class="col-lg-6">
                             <div class="item-content">
                                 <p class="content">
@@ -453,10 +483,10 @@
                                 </p>
                                 <p class="content-date">
                                     <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
-                                    {{ @$product['date'] }}
+                                    {{ date("d M Y", strtotime(@$product['date']) + 3600 * 10) }}
                                 </p>
                                 <hr />
-                                <p class="content">total: {{ @$product['quantity'] }}</p>
+                                <p class="content">Total: {{ @$product['quantity'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -496,8 +526,6 @@
                                             src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
                                     <a href="https://www.instagram.com/_freelancetravel"><img
                                             src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
-                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}" alt=""
-                                            srcset=""></a>
                                     <a href="https://www.linkedin.com/company/freelancetravel"><img
                                             src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
                                             srcset=""></a>
