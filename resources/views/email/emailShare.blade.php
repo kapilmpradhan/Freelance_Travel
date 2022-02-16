@@ -471,11 +471,7 @@
                 @foreach($data->products as $product)
                 <div class="quote-item">
                     <div class="row">
-                        <div class="square-iamge">
-                            <div className="content">
-                                <img src="{{ @$product['tour']['productImagePath'] }}" alt="">
-                            </div>
-                        </div>
+                        <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}" alt=""></div>
                         <div class="col-lg-6">
                             <div class="item-content">
                                 <p class="content">
