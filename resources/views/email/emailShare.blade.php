@@ -492,7 +492,7 @@
                 </div>
                 @endforeach
                 @endif
-                <div class="quote-item">
+                {{-- <div class="quote-item">
                     <div class="row padding-30">
                         <div class="square-iamge">
                             <div class="content">
@@ -515,7 +515,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
     </section>
