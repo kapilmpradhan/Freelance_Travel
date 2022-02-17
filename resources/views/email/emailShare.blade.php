@@ -371,10 +371,6 @@
             max-height: 456px;
             object-fit: cover;
         }
-
-        .padding-30: {
-            padding: 0 30px;
-        }
     </style>
 </head>
 
