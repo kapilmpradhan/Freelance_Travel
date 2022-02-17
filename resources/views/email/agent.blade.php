@@ -279,7 +279,7 @@
                     <h3>Hi {{ @$data->agentUser->name }},</h3>
                     <p>Your customer {{ @$data->products[0]->redeemers[0]->name }} has now successfully paid for booking
                         {{ @$data->bookingReference }}.</p>
-                    <p> You should now fnd this booking in “My Bookings”.</p>
+                    <p> You should now find this booking in “My Bookings”.</p>
                     <p>We will shortly send your customer an email with their vouchers.</p>
                     <p>We recommend that you check in with your customer to make sure they received their vouchers and
                         all details on the booking are correct.

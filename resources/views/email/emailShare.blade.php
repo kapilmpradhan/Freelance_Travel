@@ -365,12 +365,15 @@
         }
 
         .square-iamge .content .image {
-            width: calc(100% - 24px);
-            height: calc(100% - 24px);
+            width: 100%;
+            height: 100%;
             margin: 24px auto 0 auto;
             max-height: 456px;
             object-fit: cover;
-            border-radius: 12px;
+        }
+
+        .padding-30: {
+            padding: 0 30px;
         }
     </style>
 </head>
@@ -489,6 +492,30 @@
                 </div>
                 @endforeach
                 @endif
+                <div class="quote-item">
+                    <div class="row padding-30">
+                        <div class="square-iamge">
+                            <div class="content">
+                                <img class="image"
+                                    src="https://cms.websitetravel.com/upload/lg/60ebb83968bfd_5844_dji0113-edit-2.jpg"
+                                    alt="">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="item-content">
+                                <p class="content">
+                                    { @$product['fareName'] }
+                                </p>
+                                <p class="content-date">
+                                    <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
+                                    { date("d M Y", strtotime(@$product['date']) + 3600 * 10) }
+                                </p>
+                                <hr />
+                                <p class="content">Total: { @$product['quantity'] }</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
