@@ -329,8 +329,8 @@
 
         .quote-item .quote-image img {
             object-fit: cover;
-            width: 135px;
-            height: 135px;
+            width: 120px;
+            height: 120px;
         }
 
         .quote-item .content {
