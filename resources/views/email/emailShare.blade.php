@@ -20,7 +20,7 @@
         }
 
         .container-custom {
-            max-width: 800px;
+            max-width: 400px;
             margin: auto;
         }
 
@@ -68,7 +68,7 @@
         .addition-box {
             margin-top: 30px;
             background: #fff;
-            padding: 30px 30px;
+            padding: 15px;
         }
 
         .agent-box {
@@ -131,7 +131,10 @@
             line-height: 30px;
             color: #333333;
             margin-bottom: 0;
+            margin-top: 0;
         }
+
+
 
         .addition p {
             font-style: normal;
@@ -156,6 +159,10 @@
             font-size: 14px;
             line-height: 21px;
             font-weight: bold;
+        }
+
+        .lead {
+            margin-bottom: 15px;
         }
 
         .voucher-box {
@@ -309,30 +316,36 @@
         }
 
         .quote-item {
-            padding: 7.5px 0
+            padding: 7.5px 0;
+        }
+
+        .quote-item hr {
+            margin-top: 0 !important;
         }
 
         .quote-item .quote-image {
-            width: 33%;
+            width: 40%;
         }
 
         .quote-item .quote-image img {
             object-fit: cover;
-            width: 160px;
-            height: 160px;
+            width: 135px;
+            height: 135px;
         }
 
-        .quote-item .item-content {
-            padding: 15px 0
-        }
-
-        .quote-item .item-content .content {
+        .quote-item .content {
             font-weight: bold;
+            margin-bottom: 15px !important;
         }
 
         .quote-item .item-content .content-date {
             color: #31B4B9;
             font-size: 18px;
+        }
+
+        .quote-item p {
+            margin-bottom: 0 !important;
+            margin-top: 0 !important;
         }
 
         .content-date img {
@@ -349,7 +362,7 @@
 
         .square-iamge {
             position: relative;
-            width: 33%;
+            width: 40%;
         }
 
         .square-iamge:after {
@@ -368,8 +381,11 @@
             width: 100%;
             height: 100%;
             margin: 24px auto 0 auto;
-            max-height: 456px;
             object-fit: cover;
+        }
+
+        p a {
+            font-size: 13px !important;
         }
     </style>
 </head>
@@ -408,111 +424,70 @@
                 <div class="box-title">
                     QUOTE DETAILS
                 </div>
-                <div class="row ">
-                    <div class="col-lg-6 col-12">
-                        <div class="lead">
-                            <b>{{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }}</b>
-                            <p>{{ @$data->redeemers[0]['email'] }}</p>
-                            <p>{{ @$data->redeemers[0]['phone'] }}</p>
-                        </div>
-                        <div class="addition">
-                            @if (isset($data->redeemers))
-                            @foreach ($data->redeemers as $index => $redeemer)
-                            @if($index > 0)
-                            <p>{{ @$redeemer['firstName'] }} {{ @$redeemer['lastName'] }}</p>
-                            @endif
-                            @endforeach
-                            @endif
-                        </div>
-                    </div>
+                <div class="lead">
+                    <b>{{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }}</b>
+                    <p>{{ @$data->redeemers[0]['email'] }}</p>
+                    <p>{{ @$data->redeemers[0]['phone'] }}</p>
+                </div>
+                <div class="addition">
+                    @if (isset($data->redeemers))
+                    @foreach ($data->redeemers as $index => $redeemer)
+                    @if($index > 0)
+                    <p>{{ @$redeemer['firstName'] }} {{ @$redeemer['lastName'] }}</p>
+                    @endif
+                    @endforeach
+                    @endif
+                </div>
 
-                    <div class="col-lg-6 col-12">
-                        <div class="lead ">
-                            <div class="row">
-                                <div class="col-lg-5">
-                                    <b class="name">Quote Reference:</b>
-                                </div>
-                                <div class="col-lg-7">
-                                    <span>{{ @$data->bookingReference }}</span>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-5">
-                                    <p class="name">Number of Items:</p>
-                                </div>
-                                <div class="col-lg-7">
-                                    <p>{{ @$data->quantity }} {{ @$data->quantity === 1 ? "item" : "items"}}</p>
-                                </div>
-                            </div>
-                            <div class="row">
-
-                                <div class="col-lg-5">
-                                    <b class="name">Total Price:</b>
-                                </div>
-                                <div class="col-lg-7">
-                                    <span>{{ @$data->totalCharged }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="lead ">
+                    <b class="name">Quote Reference:</b>
+                    <br />
+                    <span>{{ @$data->bookingReference }}</span>
 
                 </div>
+                <div class="lead ">
+                    <p class="name">Number of Items:</p>
+
+                    <p>{{ @$data->quantity }} {{ @$data->quantity === 1 ? "item" : "items"}}</p>
+
+                </div>
+                <div class="lead ">
+
+                    <b class="name">Total Price:</b>
+                    <br />
+                    <span>{{ @$data->totalCharged }}</span>
+
+                </div>
+
             </div>
         </div>
     </section>
     <section class="additional ">
         <div class="container-custom">
+            @if(isset($data->products))
+            @foreach($data->products as $product)
             <div class="addition-box ">
-                <div class="box-title">
-                    QUOTE INCLUSIONS
-                </div>
-                @if(isset($data->products))
-                @foreach($data->products as $product)
                 <div class="quote-item">
+                    <p class="content">
+                        {{ @$product['fareName'] }}
+                    </p>
                     <div class="row">
                         <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}" alt=""></div>
                         <div class="col-lg-6">
+                            <hr />
                             <div class="item-content">
-                                <p class="content">
-                                    {{ @$product['fareName'] }}
-                                </p>
                                 <p class="content-date">
                                     <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
                                     {{ date("d M Y", strtotime(@$product['date']) + 3600 * 10) }}
                                 </p>
-                                <hr />
                                 <p class="content">Total: {{ @$product['quantity'] }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                @endforeach
-                @endif
-                {{-- <div class="quote-item">
-                    <div class="row padding-30">
-                        <div class="square-iamge">
-                            <div class="content">
-                                <img class="image"
-                                    src="https://cms.websitetravel.com/upload/lg/60ebb83968bfd_5844_dji0113-edit-2.jpg"
-                                    alt="">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="item-content">
-                                <p class="content">
-                                    { @$product['fareName'] }
-                                </p>
-                                <p class="content-date">
-                                    <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
-                                    { date("d M Y", strtotime(@$product['date']) + 3600 * 10) }
-                                </p>
-                                <hr />
-                                <p class="content">Total: { @$product['quantity'] }</p>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
             </div>
+            @endforeach
+            @endif
         </div>
     </section>
     <section class="voucher">
