@@ -232,16 +232,20 @@
 
         .footer-top {
             background: #090A18;
-            height: 120px;
+            /* height: 120px; */
+            padding: 10px 0;
         }
 
         .footer-freelance {
             display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .footer-freelance .logo-bottom {
             display: flex;
             height: 60px;
+            justify-content: center;
         }
 
         .footer-right .v349_637 {
@@ -252,13 +256,11 @@
             width: 92%;
             color: #20DEE5;
             display: inline-block;
-            text-align: right;
+            text-align: center;
             margin-bottom: 10px;
         }
 
-        .footer-left,
         .footer-right {
-            width: 50%;
             margin-top: 30px;
         }
 
@@ -275,7 +277,7 @@
             height: 36px;
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
             line-height: 160%;
             color: #FFFFFF;
             margin: 0;
