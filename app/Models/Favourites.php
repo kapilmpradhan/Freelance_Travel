@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Favourites extends Model
 {
@@ -34,5 +35,13 @@ class Favourites extends Model
     {
         $favorite = $this->where('email', $email)->where('productId', $productId);
         $favorite->delete();
+    }
+
+    public function updateImage($productId, $token)
+    {
+        // WHAT: call get product detail api
+        $product = json_decode(getProductDetail($productId, $token));
+        $productImage = @$product->results[0]->productImagePath;
+        $this->where('productId', $productId)->update(['productImagePath' => $productImage]);
     }
 }

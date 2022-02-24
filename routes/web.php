@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Client\BookingController;
+use App\Jobs\UpdateFavoriteNightly;
+use App\Models\Favourites;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,8 +26,11 @@ Route::get('/', function () {
     return redirect(env('APP_BASE_URL'));
 });
 
-Route::view("/agent-share", "email.agentShare");
-Route::view("/email-share", "email.emailShare");
+Route::get('/test', function () {
+    dispatch(new UpdateFavoriteNightly());
+    dd(1);
+});
+
 
 Route::get('{slug}', function () {
     return redirect(env('APP_BASE_URL'));
