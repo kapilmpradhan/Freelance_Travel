@@ -41,14 +41,13 @@ class Favourites extends Model
     {
         // WHAT: call get product detail api
         $productDetail = getProductDetail($productId, $token);
-        dd($productDetail);
         Log::info("Product detail: {$productDetail}");
         $product = json_decode($productDetail);
         $productImage = @$product->results[0]->productImagePath;
         $productName = @$product->results[0]->name;
         $productLocation = @$product->results[0]->categories->startLocationName ?? @$product->results[0]->country;
         $productRRP = @$product->results[0]->rrp;
-
+        dump($product);
         $productDuration = "";
         $durationDay = intval(@$product->results[0]->durationDays);
         if ($durationDay > 0) {
@@ -82,6 +81,7 @@ class Favourites extends Model
         ];
         $updatedLog = json_encode($updated);
 
+        dd($updated);
         Log::info("Product Info: {$updatedLog}");
         $this->where('productId', $productId)->update($updated);
     }
