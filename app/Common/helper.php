@@ -36,7 +36,7 @@ if (!function_exists("getProductDetail")) {
 if (!function_exists("getToken")) {
     function getToken()
     {
-        $requestUrl = env('PRODUCTION_URL', 'https://appweb.websitetravel.com/apiv1');
+        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelance-travel.com/apiv1');
         $userName = env('PRODUCTION_USER_NAME', 'james.nguyen@adamodigital.com');
         $password = env('PRODUCTION_PASSWORD', 'PEqyHdMUMsvFQ7s');
         $body = [
