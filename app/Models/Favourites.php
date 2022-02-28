@@ -43,16 +43,43 @@ class Favourites extends Model
         $product = json_decode(getProductDetail($productId, $token));
         $productImage = @$product->results[0]->productImagePath;
         $productName = @$product->results[0]->name;
-        $productLocation = @$product->results[0]->location;
-        $productDuration = @$product->results[0]->duration;
+        $productLocation = @$product->results[0]->categories->startLocationName ?? @$product->results[0]->country;
         $productRRP = @$product->results[0]->rrp;
-        Log::info("Product Info: {$product->results[0]}");
-        $this->where('productId', $productId)->update([
+
+        $productDuration = "";
+        $durationDay = intval(@$product->results[0]->durationDays);
+        if ($durationDay > 0) {
+            $productDuration .= $durationDay;
+            if ($durationDay === 1) {
+                $productDuration .= " day";
+            } else {
+                $productDuration .= " days";
+            }
+        }
+
+        $durationNight = intval(@$product->results[0]->durationNight);
+        if ($durationDay > 0 && $durationNight > 0) {
+            $productDuration .= " - ";
+        }
+
+        if ($durationNight > 0) {
+            $productDuration .= $durationNight;
+            if ($durationNight === 1) {
+                $productDuration .= " night";
+            } else {
+                $productDuration .= " nights";
+            }
+        }
+        $updated = [
             'productImagePath' => $productImage,
             'name' => $productName,
             'location' => $productLocation,
             'duration' => $productDuration,
             'rrp' => $productRRP
-        ]);
+        ];
+        $updatedLog = json_encode($updated);
+
+        Log::info("Product Info: {$updatedLog}");
+        $this->where('productId', $productId)->update($updated);
     }
 }

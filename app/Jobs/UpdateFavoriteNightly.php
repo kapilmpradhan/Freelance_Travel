@@ -32,8 +32,9 @@ class UpdateFavoriteNightly implements ShouldQueue
     public function handle(Favourites $favourites)
     {
         Log::info("========== UPDATE NIGHTLY ============");
-        $accessToken = json_decode(getToken());
-        Log::info($accessToken);
+        $accessToken = getToken();
+        Log::info("Access token: $accessToken");
+        $accessToken = json_decode($accessToken);
         $token = @$accessToken->access_token;
         $listId = $favourites->get()->unique("productId")->pluck("productId");
         foreach ($listId as $id) {
