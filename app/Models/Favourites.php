@@ -46,6 +46,7 @@ class Favourites extends Model
         $productLocation = @$product->results[0]->location;
         $productDuration = @$product->results[0]->duration;
         $productRRP = @$product->results[0]->rrp;
+        Log::info("Product Info: {$product->results[0]}");
         $this->where('productId', $productId)->update([
             'productImagePath' => $productImage,
             'name' => $productName,
