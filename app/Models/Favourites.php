@@ -40,7 +40,9 @@ class Favourites extends Model
     public function updateProduct($productId, $token)
     {
         // WHAT: call get product detail api
-        $product = json_decode(getProductDetail($productId, $token));
+        $productDetail = getProductDetail($productId, $token);
+        Log::info("Product detail: {$productDetail}");
+        $product = json_decode($productDetail);
         $productImage = @$product->results[0]->productImagePath;
         $productName = @$product->results[0]->name;
         $productLocation = @$product->results[0]->categories->startLocationName ?? @$product->results[0]->country;
