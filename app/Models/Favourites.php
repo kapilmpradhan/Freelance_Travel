@@ -43,6 +43,15 @@ class Favourites extends Model
         $product = json_decode(getProductDetail($productId, $token));
         $productImage = @$product->results[0]->productImagePath;
         $productName = @$product->results[0]->name;
-        $this->where('productId', $productId)->update(['productImagePath' => $productImage, 'name' => $productName]);
+        $productLocation = @$product->results[0]->location;
+        $productDuration = @$product->results[0]->duration;
+        $productRRP = @$product->results[0]->rrp;
+        $this->where('productId', $productId)->update([
+            'productImagePath' => $productImage,
+            'name' => $productName,
+            'location' => $productLocation,
+            'duration' => $productDuration,
+            'rrp' => $productRRP
+        ]);
     }
 }
