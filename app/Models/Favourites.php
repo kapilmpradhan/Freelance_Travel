@@ -81,8 +81,9 @@ class Favourites extends Model
         ];
         $updatedLog = json_encode($updated);
 
-        dd($updated);
         Log::info("Product Info: {$updatedLog}");
+
+        dd($updated);
         $this->where('productId', $productId)->update($updated);
     }
 }
