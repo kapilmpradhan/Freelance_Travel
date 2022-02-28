@@ -47,7 +47,6 @@ class Favourites extends Model
         $productName = @$product->results[0]->name;
         $productLocation = @$product->results[0]->categories->startLocationName ?? @$product->results[0]->country;
         $productRRP = @$product->results[0]->rrp;
-        dump($product);
         $productDuration = "";
         $durationDay = intval(@$product->results[0]->durationDays);
         if ($durationDay > 0) {
@@ -83,7 +82,6 @@ class Favourites extends Model
 
         Log::info("Product Info: {$updatedLog}");
 
-        dd($updated);
         $this->where('productId', $productId)->update($updated);
     }
 }
