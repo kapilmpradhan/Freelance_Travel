@@ -26,8 +26,14 @@ Route::get('/', function () {
     return redirect(env('APP_BASE_URL'));
 });
 
-Route::get('/test', function () {
-    dispatch(new UpdateFavoriteNightly());
+Route::get('/test', function (Favourites $favourites) {
+    // dispatch(new UpdateFavoriteNightly());
+    $accessToken = getToken();
+    // Log::info("Access token: $accessToken");
+    $accessToken = json_decode($accessToken);
+    $token = @$accessToken->access_token;
+
+    $favourites->updateProduct("26401", $token);
     dd(1);
 });
 

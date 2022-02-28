@@ -41,6 +41,7 @@ class Favourites extends Model
     {
         // WHAT: call get product detail api
         $productDetail = getProductDetail($productId, $token);
+        dd($productDetail);
         Log::info("Product detail: {$productDetail}");
         $product = json_decode($productDetail);
         $productImage = @$product->results[0]->productImagePath;
