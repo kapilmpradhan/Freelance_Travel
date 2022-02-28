@@ -19,7 +19,7 @@ if (!function_exists("getBookingDetail")) {
 if (!function_exists("getProductDetail")) {
     function getProductDetail($productId, $token)
     {
-        $requestUrl = env('PRODUCTION_URL', 'https://appweb.websitetravel.com/apiv1');
+        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelance-travel.com/apiv1');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/{$productId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
