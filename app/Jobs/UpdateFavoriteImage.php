@@ -34,6 +34,6 @@ class UpdateFavoriteImage implements ShouldQueue
      */
     public function handle(Favourites $favourites)
     {
-        $favourites->updateImage($this->productId, $this->token);
+        $favourites->updateProduct($this->productId, $this->token);
     }
 }

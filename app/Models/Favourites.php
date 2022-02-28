@@ -37,11 +37,12 @@ class Favourites extends Model
         $favorite->delete();
     }
 
-    public function updateImage($productId, $token)
+    public function updateProduct($productId, $token)
     {
         // WHAT: call get product detail api
         $product = json_decode(getProductDetail($productId, $token));
         $productImage = @$product->results[0]->productImagePath;
-        $this->where('productId', $productId)->update(['productImagePath' => $productImage]);
+        $productName = @$product->results[0]->name;
+        $this->where('productId', $productId)->update(['productImagePath' => $productImage, 'name' => $productName]);
     }
 }
