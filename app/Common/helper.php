@@ -29,6 +29,10 @@ if (!function_exists("getProductDetail")) {
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         $result = curl_exec($curl);
+        if ($result === false) {
+
+            Log::Error(htmlspecialchars(curl_error($curl)));
+        }
         return $result;
     }
 }
