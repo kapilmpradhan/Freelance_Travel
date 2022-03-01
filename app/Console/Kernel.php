@@ -25,13 +25,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->job(new UpdateFavoriteNightly)->hourly();
+        $schedule->job(new UpdateFavoriteNightly)->twiceDaily();
     }
 
     /**
      * Register the commands for the application.
      *
-     * @return void
+     * @return voids
      */
     protected function commands()
     {

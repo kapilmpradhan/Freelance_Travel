@@ -42,7 +42,7 @@ class Favourites extends Model
         // WHAT: call get product detail api
         $productDetail = getProductDetail($productId, $token);
         $product = json_decode($productDetail);
-        $productImage = @$product->results[0]->productImagePath;
+        $productImage = @$product->results[0]->productLargeSizeImagePath;
         $productName = @$product->results[0]->name;
         $productLocation = @$product->results[0]->categories->startLocationName ?? @$product->results[0]->country;
         $productRRP = @$product->results[0]->rrp;
