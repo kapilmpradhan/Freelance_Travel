@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Client\BookingController;
-use App\Jobs\UpdateFavoriteNightly;
-use App\Models\Favourites;
+// use App\Jobs\UpdateFavoriteNightly;
+// use App\Models\Favourites;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,13 +16,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/', function () {
+    return redirect(env('APP_BASE_URL'));
+});
+
+
 Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], function () {
     Route::get('payment-success/{slug}', [BookingController::class, 'paymentSuccess'])->name('payment.success');
     Route::get('payment-detail/{bookingReference}', [BookingController::class, 'paymentDetail'])->name('payment.detail');
     Route::get('/booking/{bookingReference}', [BookingController::class, 'bookingDetail'])->name('bookingDetail');
 });
 
-Route::get('/', function () {
+
+Route::get('{slug}', function () {
     return redirect(env('APP_BASE_URL'));
 });
 
@@ -36,8 +42,3 @@ Route::get('/', function () {
 //     // $favourites->updateProduct("26401", $token);
 //     // dd(1);
 // });
-
-
-Route::get('{slug}', function () {
-    return redirect(env('APP_BASE_URL'));
-});
