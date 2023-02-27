@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return redirect(env('APP_BASE_URL'));
+    return redirect(config('constants.base_url'));
 });
 
 
@@ -29,7 +29,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], fun
 
 
 Route::get('{slug}', function () {
-    return redirect(env('APP_BASE_URL'));
+    return redirect(config('constants.base_url'));
 });
 
 // Route::get('/test', function (Favourites $favourites) {

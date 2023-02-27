@@ -76,4 +76,23 @@ class BaseController extends Controller
 
         return response()->json($response, 200);
     }
+
+    public function sendMail(Request $request)
+    {
+        $emailShare = new sendShareToEmail($request);
+
+        Mail::to($request->email)->send($emailShare);
+
+        $agentEmail = @$request->agent->email ?? "anh.tong@adamosoft.com";
+
+        $agentShare = new sendShareToAgent();
+        Mail::to($agentEmail)->send($agentShare);
+
+        $response = [
+            'success' => true,
+            'data' => $request->all(),
+            'code' => 200
+        ];
+        return response()->json($response, 200);
+    }
 }

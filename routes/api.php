@@ -43,3 +43,6 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middle
 });
 
 Route::post("email-log", [LogController::class, "log"]);
+
+Route::post('send-mail', [BaseController::class, 'sendMail']);
+
