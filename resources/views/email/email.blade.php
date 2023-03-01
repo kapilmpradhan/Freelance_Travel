@@ -10,6 +10,7 @@
         .body {
             background: #f2f2f2;
             padding-top: 1px;
+            font-family: sans-serif;
         }
 
         .header-box {
