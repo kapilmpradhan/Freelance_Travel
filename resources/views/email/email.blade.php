@@ -125,6 +125,10 @@
             margin-bottom: 45px
         }
 
+        .voucher-box .text-term {
+            text-transform: lowercase;
+        }
+
         .voucher-box h4 {
             font-weight: bold;
             font-size: 16px;
@@ -444,7 +448,7 @@
                 <a href="https://freelance-travel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
-                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                <a class="text-term" href="https://freelance-travel.com/booking-terms-and-conditions">
                     https://freelance-travel.com/booking-terms-and-conditions
                 </a>
                 <p class="term-text">These tickets expire on
