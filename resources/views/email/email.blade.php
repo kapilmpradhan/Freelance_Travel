@@ -233,6 +233,22 @@
             padding-top: 10px;
         }
 
+        .voucher-booking-button {
+            border: none;
+            display: block;
+            width: 21%;
+            background: rgb(49, 180, 185);
+            color: rgb(255, 255, 255) !important;
+            text-decoration: none;
+            text-align: center;
+            font-style: normal;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 20px;
+            border-radius: 0px;
+            margin: 0 auto;
+        }
+
         .text-center {
             text-align: center;
         }
@@ -277,7 +293,7 @@
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>
-                <h2 class="date_of_purchase">Date Of Purchase: {{ date("d M Y", strtotime(@$data->purchaseDate)) }}
+                <h2 class="date_of_purchase">Date Of Purchase: {{ date('d M Y', strtotime(@$data->purchaseDate)) }}
                 </h2>
             </div>
         </div>
@@ -309,8 +325,7 @@
         <div class="container-custom">
             <div class="addition-box voucher-in">
                 <div class="row ">
-                    <div @if(isset($data->products[0]->redeemers[1])) class="col-lg-6 col-12" @else class="col-lg-12"
-                        @endif>
+                    <div @if (isset($data->products[0]->redeemers[1])) class="col-lg-6 col-12" @else class="col-lg-12" @endif>
                         <div class="lead">
                             <h4 class="name">Lead customer</h4>
                             <p>{{ @$data->products[0]->redeemers[0]->name }}</p>
@@ -318,15 +333,15 @@
                             <p>{{ @$data->products[0]->redeemers[0]->phone }}</p>
                         </div>
                     </div>
-                    @if(isset($data->products[0]->redeemers[1]))
-                    <div class="col-lg-6  col-12">
-                        <div class="lead">
-                            <h4 class="name">Additional customers</h4>
-                            @foreach($data->products[0]->redeemers as $redeemer)
-                            <p>{{ $redeemer->name }}</p>
-                            @endforeach
+                    @if (isset($data->products[0]->redeemers[1]))
+                        <div class="col-lg-6  col-12">
+                            <div class="lead">
+                                <h4 class="name">Additional customers</h4>
+                                @foreach ($data->products[0]->redeemers as $redeemer)
+                                    <p>{{ $redeemer->name }}</p>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
                     @endif
                 </div>
             </div>
@@ -342,88 +357,100 @@
     </section>
     <section class="voucher">
         <div class="container-custom">
-            @foreach($data->products as $product)
-            <div class="voucher-box voucher-in">
-                <div class="voucher-head">
-                    <h4>Voucher number: {{ $product->voucherNumber }}</h4>
-                    <h5>{{ $product->name }}</h5>
-                    <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
-                    <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
-                    <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
-                    <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
-                </div>
-                <p><span class="font-bold">Quantity of fare type:</span> {{ $product->qty }}</p>
-                <p class="customer-detail"><span class="font-bold">Operator Booking Reference:</span></p>
-                @foreach($product->redeemers as $redeemer)
-                @foreach($redeemer->bookingDetails as $bookingDetail)
-                <p class="customer-detail">{{ $redeemer->name }} - {{ @$bookingDetail->eBookingReferenceId }}</p>
-                @endforeach
-                <?php
-                $bookingCustomer = [];
-                foreach ($product->redeemers as $index => $redeemer) {
-                    if ($index === 0) {
-                        foreach ($redeemer->bookingDetails as $bookingDetail) {
-                            $bookingCustomer[] = [
-                                "eBookingReferenceId" => $bookingDetail->eBookingReferenceId,
-                                "customers" => $redeemer->name
-                            ];
+            @foreach ($data->products as $product)
+                <div class="voucher-box voucher-in">
+                    <div class="voucher-head">
+                        <h4>Voucher number: {{ $product->voucherNumber }}</h4>
+                        <h5>{{ $product->name }}</h5>
+                        <p><span class="font-bold">Fare Type:</span> {{ $product->fareName }}</p>
+                        <p><span class="font-bold">TourCode:</span>{{ $product->tourCode }}</p>
+                        <p><span class="font-bold">start location:</span> {{ $product->startLocation }}</p>
+                        <p><span class="font-bold">End location:</span> {{ $product->endLocation }}</p>
+                    </div>
+                    <p><span class="font-bold">Quantity of fare type:</span> {{ $product->qty }}</p>
+                    <p class="customer-detail"><span class="font-bold">Operator Booking Reference:</span></p>
+                    @foreach ($product->redeemers as $redeemer)
+                        @foreach ($redeemer->bookingDetails as $bookingDetail)
+                            <p class="customer-detail">{{ $redeemer->name }} -
+                                {{ @$bookingDetail->eBookingReferenceId }}</p>
+                        @endforeach
+                        <?php
+                        $bookingCustomer = [];
+                        foreach ($product->redeemers as $index => $redeemer) {
+                            if ($index === 0) {
+                                foreach ($redeemer->bookingDetails as $bookingDetail) {
+                                    $bookingCustomer[] = [
+                                        'eBookingReferenceId' => $bookingDetail->eBookingReferenceId,
+                                        'customers' => $redeemer->name,
+                                    ];
+                                }
+                            } else {
+                                foreach ($redeemer->bookingDetails as $bookingDetail) {
+                                    $key = array_search($bookingDetail->eBookingReferenceId, array_column($bookingCustomer, 'eBookingReferenceId'));
+                                    $bookingCustomer[$key]['customers'] = $bookingCustomer[$key]['customers'] . ', ' . $redeemer->name;
+                                }
+                            }
                         }
-                    } else {
-                        foreach ($redeemer->bookingDetails as $bookingDetail) {
-                            $key = array_search($bookingDetail->eBookingReferenceId, array_column($bookingCustomer, 'eBookingReferenceId'));
-                            $bookingCustomer[$key]['customers'] = $bookingCustomer[$key]['customers'] . ", " . $redeemer->name;
-                        }
-                    }
-                }
-                ?>
-                @endforeach
-                @foreach($product->redeemers[0]->bookingDetails as $index => $booking)
-                <div class="mt-4 border-line"></div>
-                <p>
-                    <span class="font-bold">Customer:</span>
-                    {{ $bookingCustomer[$index]['customers'] }}
-                </p>
-                <p>
-                    <span class="font-bold">Booking date:</span>
-                    {{ date("d M Y", strtotime(@$booking->travelDate) + 3600 * 10) }}
-                </p>
-                @if(isset($booking->commencementTime))
-                <p><span class="font-bold">Commencement Time:</span> {{ @$booking->commencementTime }}</p>
-                @endif
+                        ?>
+                    @endforeach
+                    @foreach ($product->redeemers[0]->bookingDetails as $index => $booking)
+                        <div class="mt-4 border-line"></div>
+                        <p>
+                            <span class="font-bold">Customer:</span>
+                            {{ $bookingCustomer[$index]['customers'] }}
+                        </p>
+                        <p>
+                            <span class="font-bold">Booking date:</span>
+                            {{ date('d M Y', strtotime(@$booking->travelDate) + 3600 * 10) }}
+                        </p>
+                        @if (isset($booking->commencementTime))
+                            <p><span class="font-bold">Commencement Time:</span> {{ @$booking->commencementTime }}</p>
+                        @endif
 
-                @if(isset($booking->pickupLocation))
-                <p> <span class="font-bold">Pick up location:
-                    </span> {{@$booking->pickupTime}} - {{ $booking->pickupLocation }}</p>
-                @endif
-                @endforeach
-                <div class="border-line"></div>
-                <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
-                <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
-                <p class="customer-detail">{{ @$product->supplier->email }}</p>
-                <p class="customer-detail">{{ @$product->supplier->phone }}</p>
-                <div class="border-line"></div>
-                <p><span class="font-bold">important infoRmation</span></p>
-                @if(isset($product->redeemers[0]->bookingDetails[0]->levy))
-                <p><span class="font-bold">Pay on Arrival:</span> {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
-                    x {{ count($product->redeemers) }}</p>
-                @endif
-                <p>{!! $product->instructions !!}</p>
-                <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
-                <div class="border-line"></div>
-                <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made through
-                </p>
-                <p class="text-lower"><span class="font-bold">Website travel / Adventium Tech</span> has been paid in
-                    full
-                    (excluding any potential levies mentioned in the important information above).
-                    If you require assistance in claming this voucher, please contact support@adventium.tech</p>
-            </div>
+                        @if (isset($booking->pickupLocation))
+                            <p> <span class="font-bold">Pick up location:
+                                </span> {{ @$booking->pickupTime }} - {{ $booking->pickupLocation }}</p>
+                        @endif
+                    @endforeach
+                    <div class="border-line"></div>
+                    <p><span class="font-bold">Operator Name:</span> {{ @$product->supplier->name }}</p>
+                    <p class="customer-detail"><span class="font-bold">Operator Phone:</span></p>
+                    <p class="customer-detail">{{ @$product->supplier->email }}</p>
+                    <p class="customer-detail">{{ @$product->supplier->phone }}</p>
+                    <div class="border-line"></div>
+                    <p><span class="font-bold">important infoRmation</span></p>
+                    @if (isset($product->redeemers[0]->bookingDetails[0]->levy))
+                        <p><span class="font-bold">Pay on Arrival:</span>
+                            {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
+                            x {{ count($product->redeemers) }}</p>
+                    @endif
+                    <p>{!! $product->instructions !!}</p>
+                    <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
+                    <div class="border-line"></div>
+                    <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made
+                        through
+                    </p>
+                    <p class="text-lower"><span class="font-bold">WebsiteTravel / Australian Adventure Tour
+                            Technology</span> has been paid in full (excluding any potential levies mentioned in the
+                        important information above). If you require assistance in claiming this voucher, please contact
+                        support@aagtech.io</p>
+                </div>
             @endforeach
+
+            <div class="voucher-button">
+                <a href="{{ $data->customerOrderPageUrl }}" class="voucher-booking-button">More Booking Detail</a>
+            </div>
+
             <div class="voucher-box voucher-in">
                 <a href="https://freelance-travel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
-                <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
-                    strtotime(@$data->purchaseDate)) ); }})</p>
+                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                    https://freelance-travel.com/booking-terms-and-conditions
+                </a>
+                <p class="term-text">These tickets expire on
+                    ({{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }})
+                </p>
             </div>
         </div>
     </section>
@@ -444,9 +471,10 @@
                                     <a href="https://www.facebook.com/freelancetravelinstantbookingsystem"><img
                                             src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
                                     <a href="https://www.instagram.com/_freelancetravel"><img
-                                            src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
-                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}" alt=""
+                                            src="{{ asset('images/Group 292.png') }}" alt=""
                                             srcset=""></a>
+                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}"
+                                            alt="" srcset=""></a>
                                     <a href="https://www.linkedin.com/company/freelancetravel"><img
                                             src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
                                             srcset=""></a>
