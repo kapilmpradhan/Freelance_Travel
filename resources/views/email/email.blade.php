@@ -437,12 +437,15 @@
             @endforeach
 
             <div class="voucher-button">
-                <a href="#" class="voucher-booking-button">More Booking Detail</a>
+                <a href="{{ $data->customerOrderPageUrl }}" class="voucher-booking-button">More Booking Detail</a>
             </div>
 
             <div class="voucher-box voucher-in">
                 <a href="https://freelance-travel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
+                </a>
+                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                    https://freelance-travel.com/booking-terms-and-conditions
                 </a>
                 <p class="term-text">These tickets expire on
                     ({{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }})
