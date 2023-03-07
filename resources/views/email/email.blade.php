@@ -292,7 +292,7 @@
         <div class="container-custom">
             <div class="header-box voucher-in">
                 <div class="logo text-center mb-4">
-                    <img src="{{ asset('images/Logo.png') }}" alt="" srcset="">
+                    <img src="{{ asset('images/new-logo.png') }}" alt="" srcset="">
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>
@@ -463,7 +463,7 @@
                 <div class="footer-freelance">
                     <div class="footer-left">
                         <div class="logo-bottom">
-                            <img src="{{ asset('images/Logo_white.png') }}" alt="" srcset="">
+                            <img src="{{ asset('images/new-logo-white.png') }}" alt="" srcset="">
                         </div>
                     </div>
                     <div class="footer-right">
