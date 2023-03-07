@@ -45,6 +45,8 @@ switch ($order['slug']) {
         //redirect other view
         if (isset($orderDetail->bookingReference)) {
             $rs_url = route('bookingDetail', $order['bookingReference']); // thay reference id
+        } elseif (isset($order['message'])) {
+            $rs_url .= "&message=" . $order['message'];
         }
         header("Location:" . $rs_url);
         exit();
