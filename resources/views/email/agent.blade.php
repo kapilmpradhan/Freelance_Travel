@@ -270,7 +270,7 @@
         <div class="container-custom">
             <div class="header-box">
                 <div class="logo text-center mb-4">
-                    <img src="{{ asset('images/new-logo.png') }}" alt="" srcset="">
+                    <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <div class="agent-box">
                     <h3>Hi {{ @$data->agentUser->name }},</h3>
@@ -289,8 +289,9 @@
         <div class="container-custom">
             <div class="voucher-box">
                 <h3 class="term-condition">TERMS & CONDITIONS</h3>
-                <p class="term-text">These tickets expire on ({{ date("d M Y", strtotime('+1 year',
-                    strtotime(@$data->purchaseDate)) ); }})</p>
+                <p class="term-text">These tickets expire on
+                    ({{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }})
+                </p>
             </div>
         </div>
     </section>
@@ -312,8 +313,8 @@
                                             src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
                                     <a href="https://www.instagram.com/_freelancetravel"><img
                                             src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
-                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}" alt=""
-                                            srcset=""></a>
+                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}"
+                                            alt="" srcset=""></a>
                                     <a href="https://www.linkedin.com/company/freelancetravel"><img
                                             src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
                                             srcset=""></a>

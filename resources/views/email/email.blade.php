@@ -293,7 +293,7 @@
         <div class="container-custom">
             <div class="header-box voucher-in">
                 <div class="logo text-center mb-4">
-                    <img src="{{ asset('images/new-logo.png') }}" alt="" srcset="">
+                    <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>

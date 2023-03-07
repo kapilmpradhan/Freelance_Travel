@@ -394,7 +394,7 @@
         <div class="container-custom">
             <div class="header-box ">
                 <div class="logo text-center">
-                    <img src="{{ asset('images/new-logo.png') }}" alt="" srcset="">
+                    <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
