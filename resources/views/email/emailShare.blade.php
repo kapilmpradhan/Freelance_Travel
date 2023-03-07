@@ -394,6 +394,7 @@
         <div class="container-custom">
             <div class="header-box ">
                 <div class="logo text-center">
+                    
                     <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <div class="agent-box">
