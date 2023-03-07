@@ -394,7 +394,7 @@
         <div class="container-custom">
             <div class="header-box ">
                 <div class="logo text-center">
-                    <img src="{{ asset('images/Logo.png') }}" alt="" srcset="">
+                    <img src="{{ asset('images/new-logo.png') }}" alt="" srcset="">
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
@@ -507,7 +507,7 @@
                 <div class="footer-freelance">
                     <div class="footer-left">
                         <div class="logo-bottom">
-                            <img src="{{ asset('images/Logo_white.png') }}" alt="" srcset="">
+                            <img src="{{ asset('images/new-logo-white.png') }}" alt="" srcset="">
                         </div>
                     </div>
                     <div class="footer-right">
