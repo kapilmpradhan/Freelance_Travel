@@ -396,24 +396,17 @@
                 <div class="logo text-center">
                     <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
-                Hello [Customername],
-
-                Please find the details of your FreelanceTravel quote from [AgentName] below.
-
-                To confirm your quote click ‘BOOK NOW’ to open a secure quotes page including your payment link.When you
-                have completed payment your booking will be automatically confirmed and your tickets will be emailed to
-                you.
-
-                If you have any questions or require amendments to the quote, please contact your FreelanceTravel Agent
-                [agentname] on [agentemail] or call [agentphone].
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
                     <p>Please find the details of your FreelanceTravel quote from {{ @$data->agent['firstName'] }}
                         {{ @$data->agent['lastName'] }} below.</p>
-                    <p>To confirm your quote click ‘BOOK NOW’ to open a secure quotes page including your payment link.When you
-                        have completed payment your booking will be automatically confirmed and your tickets will be emailed to
+                    <p>To confirm your quote click ‘BOOK NOW’ to open a secure quotes page including your payment
+                        link.When you
+                        have completed payment your booking will be automatically confirmed and your tickets will be
+                        emailed to
                         you.</p>
-                    <p>If you have any questions or require amendments to the quote, please contact your FreelanceTravel Travel Agent {{ @$data->agent['firstName'] }} {{ @$data->agent['lastName'] }} on
+                    <p>If you have any questions or require amendments to the quote, please contact your FreelanceTravel
+                        Travel Agent {{ @$data->agent['firstName'] }} {{ @$data->agent['lastName'] }} on
                         {{ @$data->agent['emailAddress'] }}.</p>
                     @if (isset($data->paymentLink))
                         <a class="book-now" href="{{ $data->paymentLink }}">BOOK NOW</a>
