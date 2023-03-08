@@ -278,22 +278,19 @@
                 </div>
                 <div class="agent-box">
                     <h3>Payment Link Emailed Successfully</h3>
-                    <br/>
+                    <br />
                     <p>
-                        A secure payment link has been successfully emailed to the lead customer
+                        A link to the quote including secure payment link has been successfully emailed to the lead
+                        customer
                         on the booking.
-                        <b>Please note all payment links are for one-time use only.</b> If you
-                        have received a copy of the email we sent the customer,
-                        <b>please do not click the link.</b>
                     </p>
                     <p>
-                        If you need to resend a new link or make any changes before payment, the
-                        order can be located in your ‘Quotes’ tab.
+                        If you need to resend a new link or make any changes before payment, the order can be located in
+                        your ‘Quotes’ tab.
                     </p>
                     <p>
-                        When your customer pays via the below link, the order will move to your
-                        ‘Bookings’ tab and the confirmation and digital travel vouchers will be
-                        automatically emailed to your customer.
+                        When your customer pays via the link, the order will move to your ‘Bookings’ tab and the
+                        confirmation and digital travel vouchers will be automatically emailed to your customer.
                     </p>
                 </div>
             </div>
@@ -317,8 +314,8 @@
                                             src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
                                     <a href="https://www.instagram.com/_freelancetravel"><img
                                             src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
-                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}" alt=""
-                                            srcset=""></a>
+                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}"
+                                            alt="" srcset=""></a>
                                     <a href="https://www.linkedin.com/company/freelancetravel"><img
                                             src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
                                             srcset=""></a>
