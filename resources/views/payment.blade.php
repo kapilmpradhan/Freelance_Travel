@@ -36,7 +36,7 @@ if (isset($orderDetail->bookingReference)) {
     $agentEmail = @$orderDetail->agentUser->email ?: "james.nguyen@adamosoft.com";
     // $agentEmail = "james.nguyen@adamosoft.com";
     dispatch(new sendMail( $email, $orderDetail ));
-    dispatch(new sendAgent, $orderDetail ));
+    dispatch(new sendAgent( $agentEmail, $orderDetail ));
 }
 
 switch ($order['slug']) {
