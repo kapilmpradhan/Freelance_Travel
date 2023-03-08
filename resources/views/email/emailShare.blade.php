@@ -233,16 +233,16 @@
             padding: 10px 0;
         }
 
-        .footer-freelance {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .footer-freelance {}
 
         .footer-freelance .logo-bottom {
             display: flex;
-            height: 60px;
-            justify-content: center;
+            height: 48px;
+            justify-content: center !important;
+        }
+
+        .logo img {
+            max-width: 380px;
         }
 
         .footer-right .v349_637 {
@@ -394,13 +394,12 @@
         <div class="container-custom">
             <div class="header-box ">
                 <div class="logo text-center">
-                    
                     <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
-                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent['firstName'] }} {{
-                        @$data->agent['lastName'] }} below.</p>
+                    <p>Please find the details of your Freelance Travel quote from {{ @$data->agent['firstName'] }}
+                        {{ @$data->agent['lastName'] }} below.</p>
                     <p>To confirm your quote click ‘BOOK NOW’ to open a secure payment link. Please note that the secure
                         payment link is for one-time use only so please only click the link when you are ready to book.
                         When
@@ -408,11 +407,10 @@
                         emailed to you.</p>
                     <p>If you have any questions or require amendments to the quote, please contact your Freelance
                         Travel
-                        Agent {{ @$data->agent['firstName'] }} {{ @$data->agent['lastName'] }} on {{
-                        @$data->agent['emailAddress']
-                        }}.</p>
-                    @if(isset($data->paymentLink))
-                    <a class="book-now" href="{{ $data->paymentLink }}">BOOK NOW</a>
+                        Agent {{ @$data->agent['firstName'] }} {{ @$data->agent['lastName'] }} on
+                        {{ @$data->agent['emailAddress'] }}.</p>
+                    @if (isset($data->paymentLink))
+                        <a class="book-now" href="{{ $data->paymentLink }}">BOOK NOW</a>
                     @endif
                 </div>
             </div>
@@ -431,11 +429,11 @@
                 </div>
                 <div class="addition">
                     @if (isset($data->redeemers))
-                    @foreach ($data->redeemers as $index => $redeemer)
-                    @if($index > 0)
-                    <p>{{ @$redeemer['firstName'] }} {{ @$redeemer['lastName'] }}</p>
-                    @endif
-                    @endforeach
+                        @foreach ($data->redeemers as $index => $redeemer)
+                            @if ($index > 0)
+                                <p>{{ @$redeemer['firstName'] }} {{ @$redeemer['lastName'] }}</p>
+                            @endif
+                        @endforeach
                     @endif
                 </div>
 
@@ -448,7 +446,7 @@
                 <div class="lead ">
                     <p class="name">Number of Items:</p>
 
-                    <p>{{ @$data->quantity }} {{ @$data->quantity === 1 ? "item" : "items"}}</p>
+                    <p>{{ @$data->quantity }} {{ @$data->quantity === 1 ? 'item' : 'items' }}</p>
 
                 </div>
                 <div class="lead ">
@@ -464,29 +462,30 @@
     </section>
     <section class="additional ">
         <div class="container-custom">
-            @if(isset($data->products))
-            @foreach($data->products as $product)
-            <div class="addition-box ">
-                <div class="quote-item">
-                    <p class="content">
-                        {{ @$product['fareName'] }}
-                    </p>
-                    <div class="row">
-                        <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}" alt=""></div>
-                        <div class="col-lg-6">
-                            <hr />
-                            <div class="item-content">
-                                <p class="content-date">
-                                    <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
-                                    {{ date("d M Y", strtotime(@$product['date']) + 3600 * 10) }}
-                                </p>
-                                <p class="content">Total: {{ @$product['quantity'] }}</p>
+            @if (isset($data->products))
+                @foreach ($data->products as $product)
+                    <div class="addition-box ">
+                        <div class="quote-item">
+                            <p class="content">
+                                {{ @$product['fareName'] }}
+                            </p>
+                            <div class="row">
+                                <div class="quote-image"> <img src="{{ @$product['tour']['productImagePath'] }}"
+                                        alt=""></div>
+                                <div class="col-lg-6">
+                                    <hr />
+                                    <div class="item-content">
+                                        <p class="content-date">
+                                            <img src="{{ asset('images/fi_calendar.png') }}" alt="" />
+                                            {{ date('d M Y', strtotime(@$product['date']) + 3600 * 10) }}
+                                        </p>
+                                        <p class="content">Total: {{ @$product['quantity'] }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            @endforeach
+                @endforeach
             @endif
         </div>
     </section>
@@ -497,7 +496,7 @@
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
                 <p class="term-text">These tickets expire on (
-                    {{ date("d M Y", strtotime('+1 year', strtotime(@$data->purchaseDate))) }}
+                    {{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }}
                     )</p>
             </div>
         </div>
@@ -508,7 +507,8 @@
                 <div class="footer-freelance">
                     <div class="footer-left">
                         <div class="logo-bottom">
-                            <img src="{{ asset('images/new-logo-white.png') }}" alt="" srcset="">
+                            <img src="https://confirmation.freelance-travel.com/images/new-logo-white.png"
+                                alt="" srcset="">
                         </div>
                     </div>
                     <div class="footer-right">
@@ -519,7 +519,8 @@
                                     <a href="https://www.facebook.com/freelancetravelinstantbookingsystem"><img
                                             src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
                                     <a href="https://www.instagram.com/_freelancetravel"><img
-                                            src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
+                                            src="{{ asset('images/Group 292.png') }}" alt=""
+                                            srcset=""></a>
                                     <a href="https://www.linkedin.com/company/freelancetravel"><img
                                             src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
                                             srcset=""></a>

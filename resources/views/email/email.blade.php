@@ -195,7 +195,10 @@
 
         .footer-freelance .logo-bottom {
             display: flex;
-            height: 60px;
+            height: 50px;
+        }
+        .logo img {
+            max-width: 400px;
         }
 
         .footer-right .v349_637 {
@@ -441,7 +444,7 @@
             @endforeach
 
             <div class="voucher-button">
-                <a href="{{ $data->customerOrderPageUrl }}" class="voucher-booking-button">More Booking Detail</a>
+                <a href="{{ $data->customerOrderPageUrl }}" class="voucher-booking-button">More Booking Details</a>
             </div>
 
             <div class="voucher-box voucher-in">
@@ -463,7 +466,7 @@
                 <div class="footer-freelance">
                     <div class="footer-left">
                         <div class="logo-bottom">
-                            <img src="{{ asset('images/new-logo-white.png') }}" alt="" srcset="">
+                            <img src="https://confirmation.freelance-travel.com/images/new-logo-white.png" alt="" srcset="">
                         </div>
                     </div>
                     <div class="footer-right">
