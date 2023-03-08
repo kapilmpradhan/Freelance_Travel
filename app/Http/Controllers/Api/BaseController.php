@@ -100,14 +100,13 @@ class BaseController extends Controller
             // $agentEmail = "james.nguyen@adamosoft.com";
             dispatch(new sendMail($email, $orderDetail));
         }
+        $emailShare = new sendShareToEmail($request);
 
-        // $emailShare = new sendShareToEmail($request);
-
-        // Mail::to($request->email)->send($emailShare);
+        Mail::to($request->email)->send($emailShare);
 
 
-        // $agentShare = new sendShareToAgent();
-        // Mail::to($agentEmail)->send($agentShare);
+        $agentShare = new sendShareToAgent();
+        Mail::to($agentEmail)->send($agentShare);
 
         $response = [
             'success' => true,

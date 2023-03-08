@@ -189,7 +189,11 @@
 
         .footer-freelance .logo-bottom {
             display: flex;
-            height: 60px;
+            height: 50px;
+        }
+
+        .logo img {
+            max-width: 400px;
         }
 
         .footer-right .v349_637 {
