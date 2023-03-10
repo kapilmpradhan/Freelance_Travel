@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\sendAgent;
 use App\Jobs\sendMail;
 use App\Mail\sendShareToAgent;
 use App\Mail\sendShareToEmail;
@@ -99,14 +100,13 @@ class BaseController extends Controller
             $email = $request->email;
             // $agentEmail = "james.nguyen@adamosoft.com";
             dispatch(new sendMail($email, $orderDetail));
+            dispatch(new sendAgent($email, $orderDetail));
         }
         $emailShare = new sendShareToEmail($request);
-
         Mail::to($request->email)->send($emailShare);
 
-
         $agentShare = new sendShareToAgent();
-        Mail::to($agentEmail)->send($agentShare);
+        Mail::to($request->email)->send($agentShare);
 
         $response = [
             'success' => true,

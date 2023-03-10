@@ -191,13 +191,15 @@
         }
 
         .footer-freelance {
-            display: flex;
+            width: 50%;
+            margin: 0 auto;
         }
 
         .footer-freelance .logo-bottom {
             display: flex;
             height: 50px;
         }
+
         .logo img {
             max-width: 400px;
         }
@@ -216,8 +218,8 @@
 
         .footer-left,
         .footer-right {
-            width: 50%;
-            margin-top: 30px;
+            width: 65%;
+            margin-top: 20px;
         }
 
         .icon-item {
@@ -467,7 +469,8 @@
                 <div class="footer-freelance">
                     <div class="footer-left">
                         <div class="logo-bottom">
-                            <img src="https://confirmation.freelance-travel.com/images/new-logo-white.png" alt="" srcset="">
+                            <img src="https://confirmation.freelance-travel.com/images/new-logo-white.png"
+                                alt="" srcset="">
                         </div>
                     </div>
                     <div class="footer-right">
