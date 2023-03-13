@@ -186,20 +186,24 @@
 
         .footer-top {
             background: #090A18;
-            height: 120px;
+            height: 140px;
         }
 
         .footer-freelance {
-            width: 50%;
+            /* width: 50%; */
+            text-align: center;
             margin: 0 auto;
         }
 
-        .footer-freelance .logo-bottom {
-            display: flex;
-            height: 50px;
+        .footer-freelance .logo-bottom {}
+
+        .footer-freelance .logo-bottom img {
+            width: 100%;
+            max-width: 300px;
         }
 
         .logo img {
+            width: 100%;
             max-width: 400px;
         }
 
@@ -211,18 +215,19 @@
             width: 92%;
             color: #20DEE5;
             display: inline-block;
-            text-align: right;
+            text-align: center;
             margin-bottom: 10px;
         }
 
         .footer-left,
         .footer-right {
-            width: 65%;
-            margin-top: 20px;
+            /* width: 65%;
+            margin-top: 20px; */
+            text-align: center
         }
 
         .icon-item {
-            text-align: right;
+            text-align: center;
         }
 
         .icon-item a {
