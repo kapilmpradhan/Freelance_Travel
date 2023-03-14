@@ -187,7 +187,8 @@
 
         .footer-top {
             background: #090A18;
-            height: 140px;
+            padding: 20px;
+            /* height: 140px; */
         }
 
         .footer-freelance {
@@ -205,7 +206,7 @@
 
         .logo img {
             width: 100%;
-            max-width: 400px;
+            max-width: 300px;
         }
 
         .footer-right .v349_637 {
