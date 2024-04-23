@@ -65,7 +65,7 @@ class BaseController extends Controller
 
         Mail::to($request->email)->send($emailShare);
 
-        $agentEmail = @$request->agent->email ?? "james.nguyen@adamosoft.com";
+        $agentEmail = @$request->agent->email ?? "support@freelance-travel.com";
 
         $agentShare = new sendShareToAgent();
         Mail::to($agentEmail)->send($agentShare);
@@ -82,11 +82,11 @@ class BaseController extends Controller
     public function sendMail(Request $request)
     {
 
-        $agentEmail = @$request->agent->email ?? "anh.tong@adamosoft.com";
+        $agentEmail = @$request->agent->email ?? "support@freelance-travel.com";
 
         //  dispatch(new sendMail( $agentEmail, $orderDetail ));
 
-        $url = 'https://freelancetest02.websitetravel.com/apiv1';
+        $url = env('PRODUCTION_URL');
         $accessToken = getToken();
         $accessToken = json_decode($accessToken);
         $token = @$accessToken->access_token;
@@ -96,9 +96,9 @@ class BaseController extends Controller
         // dd($orderDetail, $token);
 
         if (isset($orderDetail->bookingReference)) {
-            // $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
+            // $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelance-travel.com";
             $email = $request->email;
-            // $agentEmail = "james.nguyen@adamosoft.com";
+            // $agentEmail = "support@freelance-travel.com";
             dispatch(new sendMail($email, $orderDetail));
             dispatch(new sendAgent($email, $orderDetail));
         }

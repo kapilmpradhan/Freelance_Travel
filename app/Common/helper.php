@@ -41,7 +41,7 @@ if (!function_exists("getToken")) {
     function getToken()
     {
         $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelance-travel.com/apiv1');
-        $userName = env('PRODUCTION_USER_NAME', 'james.nguyen@adamodigital.com');
+        $userName = env('PRODUCTION_USER_NAME', 'support@freelance-travel.com');
         $password = env('PRODUCTION_PASSWORD', 'PEqyHdMUMsvFQ7s');
         $body = [
             'username' => $userName,

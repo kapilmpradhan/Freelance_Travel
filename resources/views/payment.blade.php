@@ -32,9 +32,9 @@ $header_data = curl_getinfo($curl);
 $orderDetail = json_decode(getBookingDetail($bookingOrder->request_url, $bookingOrder->order_id, $bookingOrder->accessToken));
 
 if (isset($orderDetail->bookingReference)) {
-    $email = @$orderDetail->products[0]->redeemers[0]->email ?: "james.nguyen@adamosoft.com";
-    $agentEmail = @$orderDetail->agentUser->email ?: "james.nguyen@adamosoft.com";
-    // $agentEmail = "james.nguyen@adamosoft.com";
+    $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelance-travel.com";
+    $agentEmail = @$orderDetail->agentUser->email ?: "support@freelance-travel.com";
+    // $agentEmail = "support@freelance-travel.com";
     dispatch(new sendMail( $email, $orderDetail ));
     dispatch(new sendAgent( $agentEmail, $orderDetail ));
 }
