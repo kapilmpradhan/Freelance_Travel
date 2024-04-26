@@ -299,40 +299,7 @@
             </div>
         </div>
     </section>
-    <section class="footer mt-5">
-        <div class="footer-top">
-            <div class="container-custom">
-                <div class="footer-freelance">
-                    <div class="footer-left">
-                        <div class="logo-bottom">
-                            <img src="{{ asset('images/new-logo-white.png') }}" alt="" srcset="">
-                        </div>
-                    </div>
-                    <div class="footer-right">
-                        <div class="v349_636">
-                            <span class="v349_637">Follow us on</span>
-                            <div class="footer-icons">
-                                <div class="icon-item">
-                                    <a href="https://www.facebook.com/freelancetravelinstantbookingsystem"><img
-                                            src="{{ asset('images/facebook.png') }}" alt="" srcset=""></a>
-                                    <a href="https://www.instagram.com/_freelancetravel"><img
-                                            src="{{ asset('images/Group 292.png') }}" alt="" srcset=""></a>
-                                    <a href=""><img src="{{ asset('images/brandico_twitter-bird.png') }}"
-                                            alt="" srcset=""></a>
-                                    <a href="https://www.linkedin.com/company/freelancetravel"><img
-                                            src="{{ asset('images/akar-icons_linkedin-fill.png') }}" alt=""
-                                            srcset=""></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <p class="footer-bottom">
-            Copyright © Freelance Travel. All rights reserved
-        </p>
-    </section>
+    @include('email.footer')
 </body>
 
 </html>
