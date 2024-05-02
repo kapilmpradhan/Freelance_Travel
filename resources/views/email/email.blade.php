@@ -130,6 +130,10 @@
             text-transform: lowercase;
         }
 
+        .voucher-box .text-term_hyperlink {
+            color: #4990ef;
+        }
+
         .voucher-box h4 {
             font-weight: bold;
             font-size: 16px;
@@ -434,19 +438,19 @@
                     <p class="customer-detail">{{ @$product->supplier->phone }}</p>
                     <div class="border-line"></div>
                     <p><span class="font-bold">important infoRmation</span></p>
+                    <p>{!! $product->instructions !!}</p>
                     @if (isset($product->redeemers[0]->bookingDetails[0]->levy))
                         <p><span class="font-bold">Pay on Arrival:</span>
                             {{ @$product->redeemers[0]->bookingDetails[0]->levy }}
                             x {{ count($product->redeemers) }}</p>
                     @endif
-                    <p>{!! $product->instructions !!}</p>
+                    <!-- change here important info -->
                     <p>{{ @$product->redeemers[0]->bookingDetails[0]->comments }}</p>
                     <div class="border-line"></div>
                     <p class="text-lower"><span class="font-bold">Note for Operator:</span> This booking was made
                         through
                     </p>
-                    <p class="text-lower"><span class="font-bold">WebsiteTravel / Australian Adventure Tour
-                            Technology</span> has been paid in full (excluding any potential levies mentioned in the
+                    <p class="text-lower"><span class="font-bold">WebsiteTravel / Global Travel Marketplace</span> has been paid in full (excluding any potential levies mentioned in the
                         important information above). If you require assistance in claiming this voucher, please contact
                         support@aagtech.io</p>
                 </div>
@@ -460,9 +464,7 @@
                 <a href="https://freelance-travel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
-                <a class="text-term" href="https://freelance-travel.com/booking-terms-and-conditions">
-                    https://freelance-travel.com/booking-terms-and-conditions
-                </a>
+                <p class="text-term">”Please<a class="text-term_hyperlink" href="https://freelance-travel.com/booking-terms-and-conditions"> click here </a>full terms and conditions”</p>
                 <p class="term-text">These tickets expire on
                     ({{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }})
                 </p>
