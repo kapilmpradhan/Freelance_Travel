@@ -65,7 +65,7 @@ class BaseController extends Controller
 
         Mail::to($request->email)->send($emailShare);
 
-        $agentEmail = @$request->agent->email ?? "support@freelance-travel.com";
+        $agentEmail = @$request->agent->email ?? "support@freelancetravel.com";
 
         $agentShare = new sendShareToAgent();
         Mail::to($agentEmail)->send($agentShare);
@@ -82,7 +82,7 @@ class BaseController extends Controller
     public function sendMail(Request $request)
     {
 
-        $agentEmail = @$request->agent->email ?? "support@freelance-travel.com";
+        $agentEmail = @$request->agent->email ?? "support@freelancetravel.com";
 
         //  dispatch(new sendMail( $agentEmail, $orderDetail ));
 
@@ -96,9 +96,9 @@ class BaseController extends Controller
         // dd($orderDetail, $token);
 
         if (isset($orderDetail->bookingReference)) {
-            // $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelance-travel.com";
+            // $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelancetravel.com";
             $email = $request->email;
-            // $agentEmail = "support@freelance-travel.com";
+            // $agentEmail = "support@freelancetravel.com";
             dispatch(new sendMail($email, $orderDetail));
             dispatch(new sendAgent($email, $orderDetail));
         }

@@ -44,8 +44,8 @@ class QuotetController extends BaseController
         }
         $orderDetail = json_decode(getBookingDetail($url, $orderId, $token));
         if (isset($orderDetail->bookingReference)) {
-            $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelance-travel.com";
-            // $agentEmail = "support@freelance-travel.com";
+            $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelancetravel.com";
+            // $agentEmail = "support@freelancetravel.com";
             dispatch(new sendMail($email, $orderDetail));
         }
     }

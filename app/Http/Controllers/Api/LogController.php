@@ -12,7 +12,7 @@ class LogController extends Controller
     {
         $title = $request->title ?? "Send log";
         $mail = $request->mail ?? "Hello World";
-        $email = $request->email ?? "support@freelance-travel.com";
+        $email = $request->email ?? "support@freelancetravel.com";
 
         dispatch(new sendLogMail($email, $mail, $title));
         return "ok";
