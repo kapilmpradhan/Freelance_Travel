@@ -308,7 +308,7 @@
         <div class="container-custom">
             <div class="header-box voucher-in">
                 <div class="logo text-center mb-4">
-                    <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
+                    <img src="https://confirmation.freelancetravel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <p class="title-voucher ">Booking Reference</p>
                 <h1>{{ $data->bookingReference }}</h1>
@@ -461,10 +461,10 @@
             </div>
 
             <div class="voucher-box voucher-in">
-                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                <a href="https://freelancetravel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
-                <p class="text-term">”Please<a class="text-term_hyperlink" href="https://freelance-travel.com/booking-terms-and-conditions"> click here </a>full terms and conditions”</p>
+                <p class="text-term">”Please<a class="text-term_hyperlink" href="https://freelancetravel.com/booking-terms-and-conditions"> click here </a>full terms and conditions”</p>
                 <p class="term-text">These tickets expire on
                     ({{ date('d M Y', strtotime('+1 year', strtotime(@$data->purchaseDate))) }})
                 </p>

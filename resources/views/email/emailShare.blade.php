@@ -394,7 +394,7 @@
         <div class="container-custom">
             <div class="header-box ">
                 <div class="logo text-center">
-                    <img src="https://confirmation.freelance-travel.com/images/logo-2.png" alt="" srcset="">
+                    <img src="https://confirmation.freelancetravel.com/images/logo-2.png" alt="" srcset="">
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
@@ -488,7 +488,7 @@
     <section class="voucher">
         <div class="container-custom">
             <div class="voucher-box ">
-                <a href="https://freelance-travel.com/booking-terms-and-conditions">
+                <a href="https://freelancetravel.com/booking-terms-and-conditions">
                     <h3 class="term-condition">TERMS & CONDITIONS</h3>
                 </a>
                 <p class="term-text">These tickets expire on (

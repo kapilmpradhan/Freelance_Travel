@@ -19,7 +19,7 @@ if (!function_exists("getBookingDetail")) {
 if (!function_exists("getProductDetail")) {
     function getProductDetail($productId, $token)
     {
-        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelance-travel.com/apiv1');
+        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelancetravel.com/apiv1');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/{$productId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
@@ -40,7 +40,7 @@ if (!function_exists("getProductDetail")) {
 if (!function_exists("getToken")) {
     function getToken()
     {
-        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelance-travel.com/apiv1');
+        $requestUrl = env('PRODUCTION_URL', 'https://appweb.freelancetravel.com/apiv1');
         $userName = env('PRODUCTION_USER_NAME', 'support@freelance-travel.com');
         $password = env('PRODUCTION_PASSWORD', 'PEqyHdMUMsvFQ7s');
         $body = [
