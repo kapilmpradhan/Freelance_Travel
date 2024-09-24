@@ -21,7 +21,7 @@ class CreateUpdatedUserTable extends Migration
             $table->string('email', 100)->unique();
             $table->string('password');
             $table->boolean('is_email_verified')->default(false); // Set default to false
-            $table->enum('sso_type', ['email', 'google', 'apple']); // Not nullable now
+            $table->enum('sso_type', ['email', 'google', 'apple']);
             $table->timestamps(); // Default created_at and updated_at fields
         });
     }
@@ -33,6 +33,6 @@ class CreateUpdatedUserTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('accounts'); // Drop accounts table when rolling back
+        Schema::dropIfExists('users'); // Drop accounts table when rolling back
     }
 }

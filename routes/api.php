@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\FavouritesController;
 use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
+    Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
+});
+
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);

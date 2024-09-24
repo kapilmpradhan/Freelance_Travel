@@ -12,7 +12,7 @@ class User extends Model
     use HasFactory;
     use HasUuids;
 
-    protected $table = 'accounts';
+    protected $table = 'users';
     protected $primaryKey = 'uuid';
     protected $keyType = 'string';
     protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type'];
@@ -22,13 +22,13 @@ class User extends Model
         return [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:accounts,email|max:100',
+            'email' => 'required|email|unique:users,email|max:100',
             'password' => 'required|string|min:8',
             'is_email_verfied' => 'boolean',
             'sso_type'  => 'in:' . implode(',', [
-                self::env('SSO_TYPE_EMAIl'),
-                self::env('SSO_TYPE_GOOGLE'),
-                self::env('SSO_TYPE_APPLE'),
+                env('SSO_TYPE_EMAIl', 'email'),
+                env('SSO_TYPE_GOOGLE', 'google'),
+                env('SSO_TYPE_APPLE', 'apple'),
             ]),
         ];
     }
@@ -41,16 +41,8 @@ class User extends Model
         ];
     }
 
-    public function storeAccount($request)
+    public function storeUser($data)
     {
-        $params = [
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'is_email_verified' => false,
-            'sso_type' => $request->sso_type
-        ];
-        return $this->create($params);
+        return $this->create($data);
     }
 }
