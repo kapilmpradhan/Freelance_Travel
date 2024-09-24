@@ -2,44 +2,55 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Model
 {
-    use HasApiTokens;
     use HasFactory;
-    use Notifiable;
+    use HasUuids;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var string[]
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $table = 'accounts';
+    protected $primaryKey = 'uuid';
+    protected $keyType = 'string';
+    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type'];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    public function signupRule()
+    {
+        return [
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => 'required|email|unique:accounts,email|max:100',
+            'password' => 'required|string|min:8',
+            'is_email_verfied' => 'boolean',
+            'sso_type'  => 'in:' . implode(',', [
+                self::env('SSO_TYPE_EMAIl'),
+                self::env('SSO_TYPE_GOOGLE'),
+                self::env('SSO_TYPE_APPLE'),
+            ]),
+        ];
+    }
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    public function loginRule()
+    {
+        return [
+            'email' => 'required|email|max:100',
+            'password' => 'required|string|min:8'
+        ];
+    }
+
+    public function storeAccount($request)
+    {
+        $params = [
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'is_email_verified' => false,
+            'sso_type' => $request->sso_type
+        ];
+        return $this->create($params);
+    }
 }
