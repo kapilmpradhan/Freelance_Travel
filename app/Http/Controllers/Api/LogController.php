@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\sendLogMail;
+use App\Jobs\SendLogMail;
 use Illuminate\Http\Request;
 
 class LogController extends Controller
@@ -14,7 +14,7 @@ class LogController extends Controller
         $mail = $request->mail ?? "Hello World";
         $email = $request->email ?? "support@freelancetravel.com";
 
-        dispatch(new sendLogMail($email, $mail, $title));
+        dispatch(new SendLogMail($email, $mail, $title));
         return "ok";
     }
 }

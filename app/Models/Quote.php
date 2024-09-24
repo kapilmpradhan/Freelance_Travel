@@ -13,7 +13,7 @@ class Quote extends Model
     protected $fillable = ['email', 'json'];
 
 
-    public function CallApi($url, $token)
+    public function callApi($url, $token)
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$url}/bookingreference");

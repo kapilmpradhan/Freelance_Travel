@@ -26,7 +26,7 @@ class Account extends Model
             'json' => json_encode($request->json)
         ];
         $account = $this->where('email', $request->email)->first();
-        if ( $account ) {
+        if ($account) {
             $account->update($params);
             return $this->where('email', $request->email)->first();
         }
