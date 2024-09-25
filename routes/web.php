@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Client\BookingController;
+use App\Http\Controllers\Api\GoogleLoginController;
 // use App\Jobs\UpdateFavoriteNightly;
 // use App\Models\Favourites;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,12 @@ Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], fun
 
 Route::get('{slug}', function () {
     return redirect(config('constants.base_url'));
+});
+
+
+Route::group(['middleware' => ['web']], function () {
+    Route::get('auth/google/redirect/', [GoogleLoginController::class, 'redirectToGoogle']);
+    Route::get('auth/google/callback/', [GoogleLoginController::class, 'handleGoogleCallback']);
 });
 
 // Route::get('/test', function (Favourites $favourites) {
