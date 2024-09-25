@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'check.token.success' => \App\Http\Middleware\CheckTokenSuccess::class,
         'cors' => \App\Http\Middleware\Cors::class,
         'checkToken' => \App\Http\Middleware\CheckToken::class,
+        'auth.jwt' => \App\Http\Middleware\JwtAuthenticate::class,
     ];
 }

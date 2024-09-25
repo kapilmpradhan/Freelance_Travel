@@ -51,3 +51,6 @@ Route::post("email-log", [LogController::class, "log"]);
 
 Route::post('send-mail', [BaseController::class, 'sendMail']);
 
+Route::middleware('auth.jwt')->get('/test', function () {
+    return response()->json(['message' => 'Hello']);
+});
