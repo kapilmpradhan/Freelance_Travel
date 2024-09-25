@@ -19,7 +19,7 @@ class CreateUpdatedUserTable extends Migration
             $table->string('first_name', 100);
             $table->string('last_name', 100);
             $table->string('email', 100)->unique();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->boolean('is_email_verified')->default(false); // Set default to false
             $table->enum('sso_type', ['email', 'google', 'apple']);
             $table->timestamps(); // Default created_at and updated_at fields

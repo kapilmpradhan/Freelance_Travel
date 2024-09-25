@@ -17,23 +17,18 @@ class User extends Model
     protected $keyType = 'string';
     protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type'];
 
-    public function signupRule()
+    public function emailSignupRule()
     {
         return [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email|max:100',
             'password' => 'required|string|min:8',
-            'is_email_verfied' => 'boolean',
-            'sso_type'  => 'in:' . implode(',', [
-                env('SSO_TYPE_EMAIl', 'email'),
-                env('SSO_TYPE_GOOGLE', 'google'),
-                env('SSO_TYPE_APPLE', 'apple'),
-            ]),
+            'is_email_verfied' => 'boolean'
         ];
     }
 
-    public function loginRule()
+    public function emailLoginRule()
     {
         return [
             'email' => 'required|email|max:100',

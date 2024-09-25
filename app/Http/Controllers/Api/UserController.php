@@ -12,15 +12,14 @@ class UserController extends BaseController
     public function userSignupEmail(Request $request, User $user, UserResource $userResource)
     {
         $data = $request->all(); // Retrive request data
-        $data['sso_type'] = 'email'; // Add email sso to the array
-
-        $validate = Validator::make($data, $user->signupRule());
+        
+        $validate = Validator::make($data, $user->emailSignupRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
         }
 
+        $data['sso_type'] = 'email'; // Add email sso to the array
         $new_user = $user->storeUser($data);
-
         $return_data = $userResource->userDetail($new_user);
 
         return $this->sendResponse($return_data, 'successfully');
