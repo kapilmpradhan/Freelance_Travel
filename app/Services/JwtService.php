@@ -2,54 +2,49 @@
 
 namespace App\Services;
 
+use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Illuminate\Support\Facades\Config;
+use App\Models\User;
+use Firebase\JWT\ExpiredException;
 
 class JwtService
 {
     protected $secretKey;
-    protected $algo;
-    protected $tokenValidityInMinutes;
 
     public function __construct()
     {
-        $this->secretKey = Config::get('jwt.secret');
-        $this->algo = 'HS256';  // Set the algorithm
-        $this->tokenValidityInMinutes = Config::get('jwt.token_validity');  // Get from config
+        $this->secretKey = env(ENV_KEY_APP_KEY);
     }
 
-    /**
-     * Generate JWT Token
-     */
-    public function generateToken($payload)
+    // Generate JWT token
+    public function generateToken(User $user, $tokenType)
     {
-        $payload['exp'] = time() + ($this->tokenValidityInMinutes * 60); // Expiry in minutes
-        return JWT::encode($payload, $this->secretKey, $this->algo);
-    }
-
-    /**
-     * Decode JWT Token
-     */
-    public function decodeToken($token)
-    {
-        try {
-            return JWT::decode($token, new Key($this->secretKey, $this->algo));
-        } catch (\Exception $e) {
-            throw new \Exception('Token is invalid or expired');
+        if ($tokenType = 'access') {
+            $exp = env(ENV_KEY_ACCESS_TOKEN_VALIDITY_PERIOD_IN_MINUTES, 10);
+        } elseif ($tokenType = 'refresh') {
+            $exp = env(ENV_KEY_REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES, 1000);
         }
+        $payload = [
+            'iss' => env(ENV_KEY_APP_NAME),
+            'sub' => $user->uuid,
+            'iat' => time(),
+            'exp' => time() + 60 * $exp
+        ];
+
+        return JWT::encode($payload, $this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM));
     }
 
-    /**
-     * Validate Token
-     */
+    // Validate and decode JWT token
     public function validateToken($token)
     {
         try {
-            $decoded = $this->decodeToken($token);
-            return (array)$decoded;
-        } catch (\Exception $e) {
-            return false;
+            $payload = JWT::decode($token, new Key($this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM)));
+            return User::find($payload->sub);
+        } catch (ExpiredException $e) {
+            throw new Exception('Token has expired.');
+        } catch (Exception $e) {
+            throw new Exception('Token is invalid.');
         }
     }
 }
