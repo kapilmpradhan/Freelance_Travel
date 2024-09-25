@@ -4,16 +4,19 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Services\JwtService;
+use App\Services\ResponseService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class JwtAuthenticate
 {
     protected $jwtService;
+    protected $responseService;
 
-    public function __construct(JwtService $jwtService)
+    public function __construct(JwtService $jwtService, ResponseService $responseService)
     {
         $this->jwtService = $jwtService;
+        $this->responseService = $responseService;
     }
 
     /**
@@ -24,17 +27,16 @@ class JwtAuthenticate
         $token = $this->getTokenFromRequest($request);
 
         if (!$token) {
-            return response()->json(['error' => 'Token not provided'], Response::HTTP_UNAUTHORIZED);
+            return $this->responseService->sendError('Token not provided');
         }
 
-        $isValid = $this->jwtService->validateToken($token);
+        $validated_data = $this->jwtService->validateToken($token);
 
-        if (!$isValid) {
-            return response()->json(['error' => 'Invalid or expired token'], Response::HTTP_UNAUTHORIZED);
+        if ($validated_data['error']) {
+            return $this->responseService->sendError($validated_data['error']);
         }
 
-        // Optionally, set user context (e.g., $request->user = $isValid)
-        $request->user = $isValid; 
+        $request->merge(['user' => $validated_data['user']]);
 
         return $next($request);
     }

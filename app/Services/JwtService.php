@@ -7,6 +7,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\User;
 use Firebase\JWT\ExpiredException;
+use PhpOption\None;
 
 class JwtService
 {
@@ -40,11 +41,20 @@ class JwtService
     {
         try {
             $payload = JWT::decode($token, new Key($this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM)));
-            return User::find($payload->sub);
+            return [
+                'user' => User::find($payload->sub),
+                'error' => null
+            ];
         } catch (ExpiredException $e) {
-            throw new Exception('Token has expired.');
+            return [
+                'user' => null,
+                'error' => 'Token has expired.'
+            ];
         } catch (Exception $e) {
-            throw new Exception('Token is invalid.');
+            return [
+                'user' => null,
+                'error' => 'Token is invalid.'
+            ];
         }
     }
 }

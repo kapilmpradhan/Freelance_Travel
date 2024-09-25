@@ -7,6 +7,7 @@ use App\Services\JwtService;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends BaseController
@@ -33,13 +34,13 @@ class UserController extends BaseController
             return $this->sendError('Validation Error.', $validate->errors());
         }
 
-        // Retrieve the account by email
-        $account = User::where('email', $request->email)->first();
+        // Retrieve the user by email
+        $user = User::where('email', $request->email)->first();
 
-        // Check if the account exists and the password is correct
-        if ($account && Hash::check($request->password, $account->password)) {
-            $accessToken = $jwtService->generateToken($account, 'access');
-            $refreshToken = $jwtService->generateToken($account, 'refresh');
+        // Check if the user exists and the password is correct
+        if ($user && Hash::check($request->password, $user->password)) {
+            $accessToken = $jwtService->generateToken($user, 'access');
+            $refreshToken = $jwtService->generateToken($user, 'refresh');
 
             $data = [
                 'accessToken' => $accessToken,
@@ -49,5 +50,18 @@ class UserController extends BaseController
         } else {
             return $this->sendError('Invalid Credentials');
         }
+    }
+
+    public function userDetail(Request $request, UserResource $userResource)
+    {
+        $user = $request->get('user');
+
+        if (!($user)) {
+            return $this->sendError('Account unauthenticated');
+        }
+
+
+        $account_data = $userResource->userDetail($user);
+        return $this->sendResponse($account_data, 'successfully');
     }
 }
