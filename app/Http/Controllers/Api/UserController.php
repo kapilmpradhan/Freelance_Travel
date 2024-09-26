@@ -12,7 +12,7 @@ class UserController extends BaseController
     public function userSignupEmail(Request $request, User $user, UserResource $userResource)
     {
         $data = $request->all(); // Retrive request data
-        
+
         $validate = Validator::make($data, $user->emailSignupRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
