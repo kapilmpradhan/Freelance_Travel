@@ -22,11 +22,15 @@ class GoogleLoginController extends BaseController
 
         if (!$existing_user) {
             $name = $googleUser->name;
-            // Find the position of the first space to separate first and last name from full name
-            $spacePosition = strpos($name, ' ');
+            // Handle if name from google doesnot not contain first/last name
+            if ($name) {
+                $exploded_name = explode(' ', $name);
+                $first_name = $exploded_name[0];
+                $last_name = implode('', array_slice($exploded_name, 1));
+            }
             $data = [
-                'first_name' => substr($googleUser->name, 0, $spacePosition),
-                'last_name' => substr($googleUser->name, $spacePosition + 1),
+                'first_name' => ($name) ? $first_name : null,
+                'last_name' => ($name) ? $last_name : null,
                 'email' => $googleUser->email,
                 'is_email_verified' => true,
                 'sso_type' => env('SSO_TYPE_GOOGLE', 'google')
