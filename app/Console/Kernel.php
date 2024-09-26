@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->job(new UpdateFavoriteNightly)->twiceDaily();
+        $schedule->job(new UpdateFavoriteNightly())->twiceDaily();
     }
 
     /**

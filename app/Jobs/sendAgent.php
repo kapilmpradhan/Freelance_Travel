@@ -2,18 +2,20 @@
 
 namespace App\Jobs;
 
-use App\Mail\sendAgentMail;
+use App\Mail\SendAgentMail;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class sendAgent implements ShouldQueue
+class SendAgent implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $email;
     protected $data;
@@ -35,7 +37,7 @@ class sendAgent implements ShouldQueue
      */
     public function handle()
     {
-        $email = new sendAgentMail($this->data);
+        $email = new SendAgentMail($this->data);
         Mail::to($this->email)->send($email);
     }
 }

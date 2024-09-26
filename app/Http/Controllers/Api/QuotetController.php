@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Resources\BaseResource;
-use App\Jobs\sendMail;
-use App\Models\Order;
+use App\Jobs\SendMail;
 use App\Models\Quote;
 use Illuminate\Http\Request;
 use Validator;
@@ -46,7 +44,7 @@ class QuotetController extends BaseController
         if (isset($orderDetail->bookingReference)) {
             $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelancetravel.com";
             // $agentEmail = "support@freelancetravel.com";
-            dispatch(new sendMail($email, $orderDetail));
+            dispatch(new SendMail($email, $orderDetail));
         }
     }
 }

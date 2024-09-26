@@ -1,0 +1,37 @@
+name: PHP Lint and Format
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint_and_format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Print PHP version
+        run: php -v
+
+      - name: Print Composer Dependencies
+        run: composer show --installed
+
+      - name: Run PHP CodeSniffer (Lint)
+        run: ./vendor/bin/phpcs --standard=PSR12 app/
+
+      - name: Run PHP-CS-Fixer (Format)
+        run: ./vendor/bin/php-cs-fixer fix --rules=@PSR12 app/ --verbose
+        

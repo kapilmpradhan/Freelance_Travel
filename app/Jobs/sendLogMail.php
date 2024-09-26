@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Mail\logMail;
+use App\Mail\LogMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,9 +11,13 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class sendLogMail implements ShouldQueue
+class SendLogMail implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+
     protected $email;
     protected $mail;
     protected $title;
@@ -36,7 +40,7 @@ class sendLogMail implements ShouldQueue
      */
     public function handle()
     {
-        $email = new logMail($this->mail, $this->title);
+        $email = new LogMail($this->mail, $this->title);
         Mail::to($this->email)->send($email);
     }
 }

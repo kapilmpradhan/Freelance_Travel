@@ -23,7 +23,7 @@ class BCRController extends Controller
         return $bookingCancelRequest->getAllByBookingReference($bookingReference);
     }
 
-    public function CancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
+    public function cancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
     {
         $data = [
             "email" => $request->email,
@@ -36,7 +36,7 @@ class BCRController extends Controller
         return $bookingCancelRequest->createCancelRequest($data);
     }
 
-    public function MakeCancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
+    public function makeCancelRequest(Request $request, BookingCancelRequest $bookingCancelRequest)
     {
         $data = [
             "bookingReference" => $request->bookingReference,

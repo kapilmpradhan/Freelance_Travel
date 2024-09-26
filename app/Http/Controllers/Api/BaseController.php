@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\sendAgent;
-use App\Jobs\sendMail;
-use App\Mail\sendShareToAgent;
-use App\Mail\sendShareToEmail;
+use App\Jobs\SendAgent;
+use App\Jobs\SendMail;
+use App\Mail\SendShareToAgent;
+use App\Mail\SendShareToEmail;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -61,13 +61,13 @@ class BaseController extends Controller
 
         // return view("email.emailShare", ["data" => $request]);
 
-        $emailShare = new sendShareToEmail($request);
+        $emailShare = new SendShareToEmail($request);
 
         Mail::to($request->email)->send($emailShare);
 
         $agentEmail = @$request->agent->email ?? "support@freelancetravel.com";
 
-        $agentShare = new sendShareToAgent();
+        $agentShare = new SendShareToAgent();
         Mail::to($agentEmail)->send($agentShare);
 
         $response = [
@@ -84,7 +84,7 @@ class BaseController extends Controller
 
         $agentEmail = @$request->agent->email ?? "support@freelancetravel.com";
 
-        //  dispatch(new sendMail( $agentEmail, $orderDetail ));
+        //  dispatch(new SendMail( $agentEmail, $orderDetail ));
 
         $url = env('PRODUCTION_URL');
         $accessToken = getToken();
@@ -99,13 +99,13 @@ class BaseController extends Controller
             // $email = @$orderDetail->products[0]->redeemers[0]->email ?: "support@freelancetravel.com";
             $email = $request->email;
             // $agentEmail = "support@freelancetravel.com";
-            dispatch(new sendMail($email, $orderDetail));
-            dispatch(new sendAgent($email, $orderDetail));
+            dispatch(new SendMail($email, $orderDetail));
+            dispatch(new SendAgent($email, $orderDetail));
         }
-        $emailShare = new sendShareToEmail($request);
+        $emailShare = new SendShareToEmail($request);
         Mail::to($request->email)->send($emailShare);
 
-        $agentShare = new sendShareToAgent();
+        $agentShare = new SendShareToAgent();
         Mail::to($request->email)->send($agentShare);
 
         $response = [

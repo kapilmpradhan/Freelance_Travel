@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
+
     protected $table = 'orders';
     protected $fillable = ['booking_id', 'bookingReference', 'accessToken', 'order_id', "request_url", "return_url"];
 
@@ -29,7 +30,7 @@ class Order extends Model
         return $this->where('bookingReference', $bookingReference)->first();
     }
 
-    public function CallApiDetailBooking($booking)
+    public function callApiDetailBooking($booking)
     {
         return getBookingDetail($booking->request_url, $booking->order_id, $booking->accessToken);
     }
