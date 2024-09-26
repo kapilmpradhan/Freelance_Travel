@@ -35,6 +35,9 @@ class JwtAuthenticate
         if ($validated_data['error']) {
             return $this->responseService->sendError($validated_data['error']);
         }
+        elseif ($validated_data['tokenType'] != 'access') {
+            return $this->responseService->sendError('Token is invalid');
+        }
 
         $request->merge(['user' => $validated_data['user']]);
 

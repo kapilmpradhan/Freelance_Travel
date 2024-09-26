@@ -64,4 +64,26 @@ class UserController extends BaseController
         $account_data = $userResource->userDetail($user);
         return $this->sendResponse($account_data, 'successfully');
     }
+
+    public function accessTokenRegenerate(Request $request, JwtService $jwtService)
+    {
+        $data = $request->all();
+        $refresh_token = $data['refresh_token'];
+
+        $validated_data = $jwtService->validateToken($refresh_token);
+
+        if ($validated_data['error']) {
+            return $this->sendError($validated_data['error']);
+        } elseif ($validated_data['tokenType'] != 'refresh'){
+            return $this->sendError('Invalid token.');
+        }
+
+        $new_access_token = $jwtService->generateToken($validated_data['user'], 'access');
+
+        $data = [
+            'accessToken' => $new_access_token
+        ];
+
+        return $this->sendResponse($data, 'successfully');
+    }
 }
