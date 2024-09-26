@@ -38,7 +38,7 @@ class User extends Model
 
     public function storeUser($data)
     {
-        if ($data['password']) {
+        if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
         return $this->create($data);
