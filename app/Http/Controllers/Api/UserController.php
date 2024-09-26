@@ -74,7 +74,7 @@ class UserController extends BaseController
 
         if ($validated_data['error']) {
             return $this->sendError($validated_data['error']);
-        } elseif ($validated_data['tokenType'] != 'refresh'){
+        } elseif ($validated_data['tokenType'] != 'refresh') {
             return $this->sendError('Invalid token.');
         }
 
