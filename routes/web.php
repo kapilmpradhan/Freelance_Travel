@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return redirect(config('constants.base_url'));
-});
+// Route::get('/', function () {
+//     return redirect(config('constants.base_url'));
+// });
 
 
 Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], function () {
