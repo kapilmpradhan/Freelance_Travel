@@ -16,8 +16,8 @@ class CreateUpdatedUserTable extends Migration
         Schema::dropIfExists('users'); // Drop accounts table if exists for fresh start
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('uuid')->primary(); // Use UUID as the primary key
-            $table->string('first_name', 100);
-            $table->string('last_name', 100);
+            $table->string('first_name', 100)->nullable();
+            $table->string('last_name', 100)->nullable();
             $table->string('email', 100)->unique();
             $table->string('password')->nullable();
             $table->boolean('is_email_verified')->default(false); // Set default to false
