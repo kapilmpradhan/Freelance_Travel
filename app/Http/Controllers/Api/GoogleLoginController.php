@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
-use App\Http\Controllers\Api\BaseController;
+use App\Services\JwtService;
 use App\Http\Resources\UserResource;
 use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\Api\BaseController;
 
 class GoogleLoginController extends BaseController
 {
@@ -15,7 +16,7 @@ class GoogleLoginController extends BaseController
     }
 
 
-    public function handleGoogleCallback(User $user, UserResource $userResource)
+    public function handleGoogleCallback(User $user, UserResource $userResource, JwtService $jwtService)
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
         $existing_user = User::where('email', $googleUser->email)->first();
@@ -38,7 +39,13 @@ class GoogleLoginController extends BaseController
             ];
             $new_user = $user->storeUser($data);
         }
-        $data = $userResource->userDetail(($existing_user) ? $existing_user : $new_user);
+
+        $user = ($existing_user) ? $existing_user : $new_user;
+
+        $data = [
+            "accessToken" => $jwtService->generateToken($user, 'access'),
+            "refreshToken" => $jwtService->generateToken($user, 'refresh')
+        ];
 
         return $this->sendResponse($data, 'successfully');
     }

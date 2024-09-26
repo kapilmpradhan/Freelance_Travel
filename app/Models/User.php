@@ -25,7 +25,6 @@ class User extends Model
             'email' => 'required|email|unique:users,email|max:100',
             'password' => 'required|string|min:8',
             'is_email_verfied' => 'boolean',
-            'sso_type'  => env('SSO_TYPE_EMAIl', 'email')
         ];
     }
 
@@ -39,6 +38,9 @@ class User extends Model
 
     public function storeUser($data)
     {
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
         return $this->create($data);
     }
 }

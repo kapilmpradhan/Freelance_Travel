@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
+    Route::post('login/email/', [UserController::class, 'userLoginEmail']);
+    Route::post('token/access/', [UserController::class, 'accessTokenRegenerate']);
 });
 
 
@@ -51,3 +53,6 @@ Route::post("email-log", [LogController::class, "log"]);
 
 Route::post('send-mail', [BaseController::class, 'sendMail']);
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
+    Route::get('detail', [UserController::class, 'userDetail']);
+});
