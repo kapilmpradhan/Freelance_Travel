@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\GoogleLoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
     Route::post('token/access/', [UserController::class, 'accessTokenRegenerate']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'web'], function () {
+    Route::get('login/google/', [GoogleLoginController::class, 'redirectToGoogle']);
+});
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
