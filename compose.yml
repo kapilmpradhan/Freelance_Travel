@@ -2,10 +2,8 @@ version: '3.8'
 
 services:
   app:
-    image: travel:latest
+    image: asheshbh11/freelance-travel:7.0
     container_name: freelance-travel-app
-    volumes:
-      - .:/var/www/html
     ports:
       - "8000:8000"
     networks:
