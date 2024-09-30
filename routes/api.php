@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\FavouritesController;
 use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\QuotetController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\GoogleLoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
+    Route::post('login/google/', [GoogleLoginController::class, 'userLoginGoogle']);
     Route::post('token/access/', [UserController::class, 'accessTokenRegenerate']);
 });
 
