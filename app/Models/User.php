@@ -20,8 +20,8 @@ class User extends Model
     public function emailSignupRule()
     {
         return [
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
+            'first_name' => 'string|max:100',
+            'last_name' => 'string|max:100',
             'email' => 'required|email|unique:users,email|max:100',
             'password' => 'required|string|min:8',
             'is_email_verfied' => 'boolean',
