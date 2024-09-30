@@ -1,4 +1,4 @@
-name: PHP Lint and Format
+name: PHP Lint, Format, and Test
 
 on:
   pull_request:
@@ -18,7 +18,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring
+          extensions: mbstring, xdebug
+          ini-values: |
+            memory_limit=-1
+          coverage: xdebug
 
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
@@ -34,4 +37,9 @@ jobs:
 
       - name: Run PHP-CS-Fixer (Format)
         run: ./vendor/bin/php-cs-fixer fix --rules=@PSR12 app/ --verbose
-        
+
+      - name: Display Code Coverage
+        run: |
+          ./vendor/bin/phpunit --coverage-text | tee coverage.txt
+          echo "Code Coverage Report:"
+          cat coverage.txt
