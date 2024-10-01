@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\GoogleLoginController;
 
 /*
 |--------------------------------------------------------------------------
