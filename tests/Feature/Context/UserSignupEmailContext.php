@@ -60,8 +60,8 @@ class UserSignupEmailContext implements Context
     public function iShouldGetErrorMessage($errorMessage)
     {
         // Check error message
-        if ($this->response['message'] !== $errorMessage) {
-            throw new \Exception('Expected error message \'' . $errorMessage . '\' but got \''. $this->response['message'] . '\'');
+        if ($this->response['data']['email'][0] !== $errorMessage) {
+            throw new \Exception('Expected error message \'' . $errorMessage . '\' but got \''. $this->response['data']['email'][0] . '\'');
     }
     }
 

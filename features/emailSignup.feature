@@ -10,5 +10,5 @@ Feature: User Signup Email
     Given I provide email "test" and password "password@123"
     When I submit the signup form
     Then I should get response status 400
-    Then I should get error message 'Validation Error.'
+    Then I should get error message 'The email must be a valid email address.'
     And the email "test" will not be available in the database
