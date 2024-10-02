@@ -1,0 +1,6 @@
+default:
+    suites:
+        default:
+            contexts:
+                - Tests\Feature\Context\BehatHooks
+                - Tests\Feature\Context\UserSignupEmailContext
