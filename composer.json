@@ -56,7 +56,10 @@
         "test-bdd": [
             "touch database/database.testing.sqlite",
             "php artisan migrate --env=testing",
-            "APP_ENV=testing vendor/bin/behat && rm database/database.testing.sqlite"
+            "php artisan serve --port=8000 --env=testing > /dev/null 2>&1 & disown &",
+            "sleep 5",
+            "APP_ENV=testing vendor/bin/behat",
+            "kill $(lsof -t -i:8000) && rm database/database.testing.sqlite"
         ]
     },
     "extra": {

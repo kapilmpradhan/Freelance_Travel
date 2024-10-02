@@ -3,24 +3,13 @@
 namespace Tests\Feature\Context;
 
 use Behat\Behat\Context\Context;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Http;
 
 class UserSignupEmailContext implements Context
 {
-    use RefreshDatabase;
-
     private $data;
     private $response;
-
-    public function __construct()
-    {
-        // Bootstrap the Laravel application
-        $app = require __DIR__ . '/../../../bootstrap/app.php';
-        $app->make(Kernel::class)->bootstrap();
-    }
 
     /**
      * @Given I provide email :email and password :password
