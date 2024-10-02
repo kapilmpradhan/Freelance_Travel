@@ -9,5 +9,5 @@ Feature: User Signup Email
   Scenario: Signup with invalid email
     Given I provide email "test" and password "password@123"
     When I submit the signup form
-    Then I should get response status 404
+    Then I should get response status 400
     And the email "test" will not be available in the database
