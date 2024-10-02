@@ -37,7 +37,7 @@ class UserSignupEmailContext implements Context
      */
     public function iShouldGetResponseStatus($responseStatus)
     {
-        // Check that the response has a validation error
+        // Check the response status
         if ($this->response->status() !== (int)$responseStatus) {
             throw new \Exception('Expected status ' . $responseStatus . ' but got ' . $this->response->status());
         }
@@ -52,6 +52,17 @@ class UserSignupEmailContext implements Context
         if (!DB::table('users')->where('email', $email)->exists()) {
             throw new \Exception('User with email ' . $email . 'does not exists in the database.');
         }
+    }
+
+    /**
+     * @Then I should get error message ':errorMessage'
+     */
+    public function iShouldGetErrorMessage($errorMessage)
+    {
+        // Check error message
+        if ($this->response['message'] !== $errorMessage) {
+            throw new \Exception('Expected error message \'' . $errorMessage . '\' but got \''. $this->response['message'] . '\'');
+    }
     }
 
     /**
