@@ -5,3 +5,4 @@ default:
                 - Tests\Feature\Context\BehatHooks
                 - Tests\Feature\Context\UserLoginEmailContext
                 - Tests\Feature\Context\UserSignupEmailContext
+                - Tests\Feature\Context\UserLoginGoogleContext
