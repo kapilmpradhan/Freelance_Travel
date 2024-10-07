@@ -3,4 +3,5 @@ default:
         default:
             contexts:
                 - Tests\Feature\Context\BehatHooks
+                - Tests\Feature\Context\UserLoginEmailContext
                 - Tests\Feature\Context\UserSignupEmailContext

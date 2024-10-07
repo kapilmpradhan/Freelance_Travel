@@ -12,9 +12,9 @@ class UserSignupEmailContext implements Context
     private $response;
 
     /**
-     * @Given I provide email :email and password :password
+     * @Given I provide email :email and password :password for signup
      */
-    public function iProvideEmailAndPassword($email, $password)
+    public function iProvideEmailAndPasswordForSignup($email, $password)
     {
         // Store the user data for later use
         $this->data = [
@@ -33,9 +33,9 @@ class UserSignupEmailContext implements Context
     }
 
     /**
-     * @Then I should get response status :responseStatus
+     * @Then I should get signup response status :responseStatus
      */
-    public function iShouldGetResponseStatus($responseStatus)
+    public function iShouldGetSignupResponseStatus($responseStatus)
     {
         // Check the response status
         if ($this->response->status() !== (int)$responseStatus) {
