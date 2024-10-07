@@ -4,16 +4,16 @@ namespace App\Services;
 
 class ResponseService
 {
-    public function sendError($error, $errorMessages = [], $code = 404)
+    public function sendError($error, $errorMessage = '', $code = 404)
     {
         $response = [
             'success' => false,
-            'message' => $error,
+            'title' => $error,
             'code' => $code
         ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+        if (!$errorMessage) {
+            $response['message'] = $errorMessage;
         }
 
         return response()->json($response, $code);

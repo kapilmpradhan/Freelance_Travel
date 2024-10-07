@@ -54,6 +54,7 @@
             "@php artisan key:generate --ansi"
         ],
         "test-bdd": [
+            "rm database/database.testing.sqlite && kill $(lsof -t -i:8000) &",
             "touch database/database.testing.sqlite",
             "php artisan migrate --env=testing",
             "php artisan serve --port=8000 --env=testing > /dev/null 2>&1 & disown &",
