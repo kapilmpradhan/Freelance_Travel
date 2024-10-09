@@ -7,27 +7,29 @@ RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
-    git
+    git \
+    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite
+RUN docker-php-ext-install pdo_mysql
 
 # Set working directory
 WORKDIR /ft
 
-# Copy all files into the container
-COPY . /ft
+# Copy composer.lock and composer.json first to leverage Docker cache
+COPY composer.json composer.lock /ft/
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Laravel dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Install Laravel dependencies (temporarily)
+RUN composer install --no-scripts --no-autoloader
 
-# Ensure the SQLite file exists and set permissions
-RUN rm database/database.sqlite && \
-    touch database/database.sqlite && \
-    chmod 777 database/database.sqlite
+# Copy the rest of the application files
+COPY . /ft
+
+# Run composer install with autoloading after copying files
+RUN composer install --optimize-autoloader --no-dev
 
 # Set file permissions
 RUN chown -R www-data:www-data /ft/storage /ft/bootstrap/cache
