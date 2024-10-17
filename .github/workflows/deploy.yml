@@ -1,7 +1,6 @@
 name: Freelance travel deployment
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       image_tag:
