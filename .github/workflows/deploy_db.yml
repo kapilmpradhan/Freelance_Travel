@@ -1,0 +1,54 @@
+name: Freelance travel db deployment
+
+on:
+  workflow_dispatch:
+
+env:
+  DB_HOST: ${{ vars.DB_HOST }}
+  DB_PORT: ${{ vars.DB_PORT }}
+  DB_DATABASE: ${{ vars.DB_DATABASE }}
+  DB_USERNAME: ${{ vars.DB_USERNAME }}
+  DB_PASSWORD: ${{ vars.DB_PASSWORD }}
+  DB_PASSWORD_ROOT: ${{ vars.DB_PASSWORD_ROOT }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USER: ${{ secrets.EC2_USER }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      
+    - name: Deploy db to EC2 instance
+      run: |
+        # Write the RSA private key to a temporary file
+        echo "$SSH_PRIVATE_KEY" > ec2_key.pem
+        # Set the appropriate permissions for the private key
+        chmod 400 ec2_key.pem
+
+        # Create the .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
+
+        # Add EC2's IP address to known hosts to avoid host key verification issues
+        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+        # Create and Copy docker compose file to EC2 instance
+        envsubst < deployment/db-compose.template.txt > db-compose.yml
+        scp -i ec2_key.pem db-compose.yml $EC2_USER@$EC2_HOST:~
+
+        # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
+        echo 'Getting into EC2 server'
+        ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          # Create a Docker network if it doesn't exist
+          docker network inspect ft-network >/dev/null 2>&1 || docker network create ft-network
+          
+          docker-compose -f db-compose.yml down
+          docker-compose -f db-compose.yml up -d
+
+          echo "Reloading Nginx"
+          sudo systemctl reload nginx
+        EOF
