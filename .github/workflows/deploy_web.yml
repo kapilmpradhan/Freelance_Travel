@@ -1,0 +1,54 @@
+name: Freelance travel web deployment
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  S3_BUCKET_NAME: apptest-freelance-travel-com
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          repository: websitetravel/freelance-website
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ft-frontend
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.9.0'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./ft-frontend
+
+      - name: Build Frontend
+        run: npm run build
+        working-directory: ./ft-frontend
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Remove all files from S3
+        run: |
+          # Define the directory you want to keep
+          KEEP_DIR="old/"
+        
+          # List all objects in the S3 bucket, filter out the KEEP_DIR, and delete the rest
+          aws s3 ls s3://$S3_BUCKET_NAME --recursive | awk '{print $4}' | grep -v "^$KEEP_DIR" | while read -r file; do
+            aws s3 rm "s3://$S3_BUCKET_NAME/$file" --region $AWS_REGION
+          done
+
+      - name: Deploy Frontend to S3
+        run: |
+          aws s3 sync ./ft-frontend/build s3://$S3_BUCKET_NAME --delete --region $AWS_REGION
