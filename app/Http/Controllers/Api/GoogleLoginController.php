@@ -59,8 +59,14 @@ class GoogleLoginController extends BaseController
             return $this->sendError('Authentication error', null, 401);
         }
 
-        $userInfo = $googleService->googleUserDetail($data['google_access_token']);
+        // Verify the token's client ID to ensure it's from your app
+        $googleClientIds = explode(',', env('GOOGLE_CLIENT_IDS'));
+        $tokenInfo = $googleService->googleTokenDetail(($data['google_access_token']));
+        if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $googleClientIds)) {
+            return $this->sendError('Authentication error: Unauthorized client', null, 401);
+        }
 
+        $userInfo = $googleService->googleUserDetail($data['google_access_token']);
         if (!$userInfo) {
             return $this->sendError('Authentication error', null, 401);
         }
