@@ -7,7 +7,7 @@ services:
       - "$APP_PORT:8000"
     networks:
       ft-network:
-        ipv4_address: 172.18.0.20 
+        ipv4_address: $API_IP_ADDRESS
 
 networks:
   ft-network:

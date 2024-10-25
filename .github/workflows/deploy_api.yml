@@ -24,17 +24,15 @@ env:
       APP_DEBUG: ${{ vars.APP_DEBUG }}
       APP_URL: ${{ vars.APP_URL }}
       APP_PORT: ${{ vars.APP_PORT }}
+      API_IP_ADDRESS: ${{ vars.API_IP_ADDRESS }}
       DB_CONNECTION: ${{ vars.DB_CONNECTION }}
-      DB_HOST: 172.18.0.10
+      DB_HOST: ${{ vars.DB_IP_ADDRESS }}
       DB_PORT: ${{ vars.DB_PORT }}
       DB_DATABASE: ${{ vars.DB_DATABASE }}
       DB_USERNAME: ${{ vars.DB_USERNAME }}
       DB_PASSWORD: ${{ vars.DB_PASSWORD }}
       DB_PASSWORD_ROOT: ${{ vars.DB_PASSWORD_ROOT }}
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ vars.GOOGLE_CLIENT_SECRET }}
-      GOOGLE_REDIRECT_URL: ${{ vars.GOOGLE_REDIRECT_URL }}
-      SSO_TYPE_EMAIL: ${{ vars.SSO_TYPE_EMAIL }}
       SSO_TYPE_GOOGLE: ${{ vars.SSO_TYPE_GOOGLE }}
       SSO_TYPE_APPLE: ${{ vars.SSO_TYPE_APPLE }}
       JWT_TOKEN_ENCRYPT_ALGORITHM: ${{ vars.JWT_TOKEN_ENCRYPT_ALGORITHM }}
@@ -45,6 +43,8 @@ env:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
+      APPLE_CLIENT_IDS: ${{ APPLE_CLIENT_IDS }}
+      GOOGLE_CLIENT_IDS: ${{ GOOGLE_CLIENT_IDS }}
 
 jobs:
   build:
@@ -64,7 +64,6 @@ jobs:
         
         # Create .env file from the template
         envsubst < deployment/env.template.txt > .env
-        cat .env
 
     # - name: Configure AWS Credentials
     #   uses: aws-actions/configure-aws-credentials@v2
