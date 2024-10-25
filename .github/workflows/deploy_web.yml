@@ -25,7 +25,6 @@ jobs:
         run: |
           mkdir ~/.ssh
           echo "${{ secrets.WEB_REPO_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-          cat ~/.ssh/id_rsa
           chmod 700 ~/.ssh/id_rsa
 
       - name: Checkout Code
