@@ -43,8 +43,8 @@ env:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
-      APPLE_CLIENT_IDS: ${{ APPLE_CLIENT_IDS }}
-      GOOGLE_CLIENT_IDS: ${{ GOOGLE_CLIENT_IDS }}
+      APPLE_CLIENT_IDS: ${{ vars.APPLE_CLIENT_IDS }}
+      GOOGLE_CLIENT_IDS: ${{ vars.GOOGLE_CLIENT_IDS }}
 
 jobs:
   build:
