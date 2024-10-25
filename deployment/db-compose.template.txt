@@ -1,20 +1,6 @@
-version: '3.8'
-
 services:
-  app:
-    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
-    container_name: freelance-travel-app
-    platform: linux/amd64
-    ports:
-      - "$APP_PORT:8000"
-    networks:
-      - laravel
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
-    image: $DB_IMAGE:$DB_VERSION
+    image: mysql:9.0
     container_name: freelance-travel-db
     platform: linux/amd64
     environment:
@@ -25,9 +11,10 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     networks:
-      - laravel
-    ports:
-      - "$DB_PORT:3306"
+      ft-network:
+        ipv4_address: 172.18.0.10
+    expose:
+      - "$DB_PORT"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
@@ -35,8 +22,8 @@ services:
       retries: 5
 
 networks:
-  laravel:
-    driver: bridge
+  ft-network:
+    external: true
 
 volumes:
   db_data:

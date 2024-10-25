@@ -25,7 +25,7 @@ env:
       APP_URL: ${{ vars.APP_URL }}
       APP_PORT: ${{ vars.APP_PORT }}
       DB_CONNECTION: ${{ vars.DB_CONNECTION }}
-      DB_HOST: ${{ vars.DB_HOST }}
+      DB_HOST: 172.18.0.10
       DB_PORT: ${{ vars.DB_PORT }}
       DB_DATABASE: ${{ vars.DB_DATABASE }}
       DB_USERNAME: ${{ vars.DB_USERNAME }}
@@ -64,6 +64,7 @@ jobs:
         
         # Create .env file from the template
         envsubst < deployment/env.template.txt > .env
+        cat .env
 
     # - name: Configure AWS Credentials
     #   uses: aws-actions/configure-aws-credentials@v2
@@ -109,14 +110,12 @@ jobs:
 
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/api-compose.template.txt > api-compose.yml
-        scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~
+        scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~/deploy/api/api-compose.yml
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
-          # Create a Docker network if it doesn't exist
-          docker network inspect ft-network >/dev/null 2>&1 || docker network create ft-network
-
+          cd ~/deploy/api
           docker-compose -f api-compose.yml down
           docker-compose -f api-compose.yml up -d
 

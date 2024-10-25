@@ -1,0 +1,14 @@
+services:
+  api:
+    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    container_name: freelance-travel-api
+    platform: linux/amd64
+    ports:
+      - "$APP_PORT:8000"
+    networks:
+      ft-network:
+        ipv4_address: 172.18.0.20 
+
+networks:
+  ft-network:
+    external: true

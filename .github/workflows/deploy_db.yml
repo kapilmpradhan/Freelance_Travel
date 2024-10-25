@@ -38,17 +38,13 @@ jobs:
 
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/db-compose.template.txt > db-compose.yml
-        scp -i ec2_key.pem db-compose.yml $EC2_USER@$EC2_HOST:~
+        cat db-compose.yml
+        scp -i ec2_key.pem db-compose.yml $EC2_USER@$EC2_HOST:~/deploy/db/db-compose.yml
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
-          # Create a Docker network if it doesn't exist
-          docker network inspect ft-network >/dev/null 2>&1 || docker network create ft-network
-          
+          cd ~/deploy/db
           docker-compose -f db-compose.yml down
           docker-compose -f db-compose.yml up -d
-
-          echo "Reloading Nginx"
-          sudo systemctl reload nginx
         EOF
