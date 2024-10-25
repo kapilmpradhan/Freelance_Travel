@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Services\JwtService;
 use Illuminate\Http\Request;
-use App\Services\AppleService; // You'll need to create this service for Apple-specific token verification
-use Laravel\Socialite\Facades\Socialite;
+use App\Services\AppleService;
 use App\Http\Controllers\Api\BaseController;
 
 class AppleLoginController extends BaseController
@@ -19,20 +18,15 @@ class AppleLoginController extends BaseController
         }
 
         // Verify Apple's identity token
-        $googleClientIds = explode(',', env('APPLE_CLIENT_IDS'));
-        $tokenInfo = $appleService->verifyIdentityToken($data['apple_identity_token']);
-        if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $googleClientIds)) {
+        $appleClientIds = explode(',', env('APPLE_CLIENT_IDS'));
+        $tokenInfo = $appleService->getTokenInfo($data['apple_identity_token']);
+        if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $appleClientIds)) {
             return $this->sendError('Authentication error: Unauthorized client', null, 401);
         }
 
-        $userInfo = $appleService->getUserInfo($data['apple_identity_token']);
-        if (!$userInfo) {
-            return $this->sendError('Authentication error', null, 401);
-        }
-
-        $first_name = $userInfo['first_name'] ?? null;
-        $last_name = $userInfo['last_name'] ?? null;
-        $email = $userInfo['email'];
+        $first_name = $tokenInfo['name']['first_name'] ?? null;
+        $last_name = $tokenInfo['name']['last_name'] ?? null;
+        $email = $tokenInfo['email'];
 
         // Get existing user by email
         $existing_user = User::where('email', $email)->first();

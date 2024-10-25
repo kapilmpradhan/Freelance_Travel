@@ -2,55 +2,26 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
+use Exception;
+use Illuminate\Support\Facades\Http;
 
 class AppleService
 {
-    protected $applePublicKeyUrl = 'https://appleid.apple.com/auth/keys';
+    protected $appleKeyUrl = 'https://appleid.apple.com/auth/keys';
 
-    /**
-     * Verifies the Apple identity token (JWT) using Apple's public keys
-     */
-    public function verifyIdentityToken($identityToken)
+    public function getTokenInfo($identityToken)
     {
-        // Fetch Apple's public keys
-        $response = Http::get($this->applePublicKeyUrl);
-        if (!$response->successful()) {
+        $parts = explode('.', $identityToken);
+
+        if (count($parts) !== 3) {
             return false;
         }
 
-        $publicKeys = $response->json();
-        
-        try {
-            // Decode the identity token using Apple's JWK keys
-            $decoded = JWT::decode($identityToken, JWK::parseKeySet($publicKeys), ['RS256']);
+        // Decode the  payload
+        $payload = json_decode(base64_decode($parts[1]), true);
 
-            return (array) $decoded; // Return the decoded token details
-        } catch (\Exception $e) {
-            // Handle token verification errors (invalid token, etc.)
-            return false;
-        }
-    }
-
-    /**
-     * Extracts user information from the identity token
-     */
-    public function getUserInfo($identityToken)
-    {
-        // Apple's identity token is a JWT and contains user info like email and name
-        $decodedToken = $this->verifyIdentityToken($identityToken);
-        if (!$decodedToken) {
-            return false;
-        }
-
-        $userInfo = [
-            'email' => $decodedToken['email'] ?? null,
-            'first_name' => $decodedToken['name']['first_name'] ?? null,
-            'last_name' => $decodedToken['name']['last_name'] ?? null
-        ];
-
-        return $userInfo;
+        return $payload;
     }
 }
