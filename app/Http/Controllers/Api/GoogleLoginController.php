@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Services\JwtService;
 use Illuminate\Http\Request;
 use App\Services\GoogleService;
-use App\Http\Resources\UserResource;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Api\BaseController;
 
