@@ -15,7 +15,9 @@ class AppleLoginController extends BaseController
     public function appleAuthCallback(Request $request)
     {
         $body = http_build_query($request->all());
-        $redirectUrl = "intent://callback?{$body}#Intent;package=" . Config::get('services.apple.client_id') . ";scheme=signinwithapple;end";
+        $redirectUrl = "intent://callback?{$body}#Intent;" .
+               "package=" . Config::get('services.apple.client_id') . ";" .
+               "scheme=signinwithapple;end";
         return redirect()->away($redirectUrl);
     }
 
@@ -47,7 +49,7 @@ class AppleLoginController extends BaseController
                 'sso_type' => 'apple',
                 'is_email_verfied' => true
             ]
-            );
+        );
 
         $data = [
             "accessToken" => $jwtService->generateToken($user, 'access'),
