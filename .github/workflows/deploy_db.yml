@@ -38,7 +38,6 @@ jobs:
 
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/db-compose.template.txt > db-compose.yml
-        cat db-compose.yml
         scp -i ec2_key.pem db-compose.yml $EC2_USER@$EC2_HOST:~/deploy/db/db-compose.yml
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
