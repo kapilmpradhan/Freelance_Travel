@@ -3,46 +3,51 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
-use App\Services\JwtService;
-use Illuminate\Http\Request;
 use App\Services\AppleService;
+use App\Services\JWTService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use App\Http\Controllers\Api\BaseController;
+use Illuminate\Support\Facades\Validator;
 
 class AppleLoginController extends BaseController
 {
-    public function userLoginApple(Request $request, User $user, JwtService $jwtService, AppleService $appleService)
+    public function appleAuthCallback(Request $request)
+    {
+        $body = http_build_query($request->all());
+        $redirectUrl = "intent://callback?{$body}#Intent;package=" . Config::get('services.apple.client_id') . ";scheme=signinwithapple;end";
+        return redirect()->away($redirectUrl);
+    }
+
+    public function userLoginApple(Request $request, JWTService $jwtService)
     {
         $data = $request->all();
-        if (!isset($data['apple_identity_token'])) {
-            return $this->sendError('Authentication error', null, 401);
+        $validator = Validator::make($data, [
+            'access_token' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Invalid Input', $validator->errors());
         }
 
-        // Verify Apple's identity token
-        $appleClientIds = explode(',', env('APPLE_CLIENT_IDS'));
-        $tokenInfo = $appleService->getTokenInfo($data['apple_identity_token']);
-        if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $appleClientIds)) {
-            return $this->sendError('Authentication error: Unauthorized client', null, 401);
+        $appleUser = AppleService::getUserInfo($data);
+        if (!$appleUser['success']) {
+            return response()->json(['error' => $appleUser['errors']], 400);
         }
 
-        $first_name = $tokenInfo['name']['first_name'] ?? null;
-        $last_name = $tokenInfo['name']['last_name'] ?? null;
-        $email = $tokenInfo['email'];
+        $email = $appleUser['data']['email'];
+        $first_name = $appleUser['data']['first_name'];
+        $last_name = $appleUser['data']['last_name'];
 
-        // Get existing user by email
-        $existing_user = User::where('email', $email)->first();
-
-        if (!$existing_user) {
-            $data = [
-                'first_name' =>  $first_name,
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            [
+                'first_name' => $first_name,
                 'last_name' => $last_name,
-                'email' => $email,
-                'is_email_verified' => true,
-                'sso_type' => env('SSO_TYPE_APPLE', 'apple')
-            ];
-            $new_user = $user->storeUser($data);
-        }
-
-        $user = ($existing_user) ? $existing_user : $new_user;
+                'sso_type' => 'apple',
+                'is_email_verfied' => true
+            ]
+            );
 
         $data = [
             "accessToken" => $jwtService->generateToken($user, 'access'),
