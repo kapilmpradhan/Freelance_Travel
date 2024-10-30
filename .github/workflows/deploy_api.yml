@@ -45,7 +45,7 @@ env:
       EC2_USER: ${{ secrets.EC2_USER }}
       APPLE_CLIENT_IDS: ${{ vars.APPLE_CLIENT_IDS }}
       GOOGLE_CLIENT_IDS: ${{ vars.GOOGLE_CLIENT_IDS }}
-      APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_IDS }}
+      APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
 
 jobs:
   build:
