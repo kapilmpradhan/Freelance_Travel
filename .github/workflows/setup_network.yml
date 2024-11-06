@@ -1,0 +1,47 @@
+name: Freelance travel network setup
+
+on:
+  workflow_dispatch:
+    inputs:
+        network_subnet:
+            description: 'Docker network subnet'
+            required: true
+        api_ip_address:
+            description: 'IP address for api'
+            required: true
+        db_ip_address:
+            description: 'IP address for db'
+            required: true
+
+env:
+    SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    EC2_HOST: ${{ secrets.EC2_HOST }}
+    EC2_USER: ${{ secrets.EC2_USER }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      
+    - name: Deploy db to EC2 instance
+      run: |
+        # Write the RSA private key to a temporary file
+        echo "$SSH_PRIVATE_KEY" > ec2_key.pem
+        # Set the appropriate permissions for the private key
+        chmod 400 ec2_key.pem
+
+        # Create the .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
+
+        # Add EC2's IP address to known hosts to avoid host key verification issues
+        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+        # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
+        echo 'Getting into EC2 server'
+        ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+            # Create a Docker network if it doesn't exist
+            docker network create --driver=bridge --subnet=${{ github.action.inputs.network_subnet }}/16 ft-network
+
+        EOF

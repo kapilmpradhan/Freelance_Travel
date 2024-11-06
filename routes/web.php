@@ -35,7 +35,6 @@ Route::get('{slug}', function () {
 
 
 Route::group(['middleware' => ['web']], function () {
-    Route::get('auth/google/redirect/', [GoogleLoginController::class, 'redirectToGoogle']);
     Route::get('auth/google/callback/', [GoogleLoginController::class, 'handleGoogleCallback']);
 });
 

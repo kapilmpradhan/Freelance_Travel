@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    image: test:latest
+    container_name: freelance-travel-app
+    platform: linux/amd64
+    ports:
+      - "8000:8000"
+    networks:
+      - laravel
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:9.0
+    container_name: freelance-travel-db
+    platform: linux/amd64
+    environment:
+      MYSQL_DATABASE: travel_db
+      MYSQL_USER: freelance_travel
+      MYSQL_PASSWORD: freelance_travel
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - laravel
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  db_data:

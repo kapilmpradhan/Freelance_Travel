@@ -24,17 +24,15 @@ env:
       APP_DEBUG: ${{ vars.APP_DEBUG }}
       APP_URL: ${{ vars.APP_URL }}
       APP_PORT: ${{ vars.APP_PORT }}
+      API_IP_ADDRESS: ${{ vars.API_IP_ADDRESS }}
       DB_CONNECTION: ${{ vars.DB_CONNECTION }}
-      DB_HOST: ${{ vars.DB_HOST }}
+      DB_HOST: ${{ vars.DB_IP_ADDRESS }}
       DB_PORT: ${{ vars.DB_PORT }}
       DB_DATABASE: ${{ vars.DB_DATABASE }}
       DB_USERNAME: ${{ vars.DB_USERNAME }}
       DB_PASSWORD: ${{ vars.DB_PASSWORD }}
       DB_PASSWORD_ROOT: ${{ vars.DB_PASSWORD_ROOT }}
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ vars.GOOGLE_CLIENT_SECRET }}
-      GOOGLE_REDIRECT_URL: ${{ vars.GOOGLE_REDIRECT_URL }}
-      SSO_TYPE_EMAIL: ${{ vars.SSO_TYPE_EMAIL }}
       SSO_TYPE_GOOGLE: ${{ vars.SSO_TYPE_GOOGLE }}
       SSO_TYPE_APPLE: ${{ vars.SSO_TYPE_APPLE }}
       JWT_TOKEN_ENCRYPT_ALGORITHM: ${{ vars.JWT_TOKEN_ENCRYPT_ALGORITHM }}
@@ -45,6 +43,9 @@ env:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
+      APPLE_CLIENT_IDS: ${{ vars.APPLE_CLIENT_IDS }}
+      GOOGLE_CLIENT_IDS: ${{ vars.GOOGLE_CLIENT_IDS }}
+      APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
 
 jobs:
   build:
@@ -109,14 +110,12 @@ jobs:
 
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/api-compose.template.txt > api-compose.yml
-        scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~
+        scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~/deploy/api/api-compose.yml
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
-          # Create a Docker network if it doesn't exist
-          docker network inspect ft-network >/dev/null 2>&1 || docker network create ft-network
-
+          cd ~/deploy/api
           docker-compose -f api-compose.yml down
           docker-compose -f api-compose.yml up -d
 
