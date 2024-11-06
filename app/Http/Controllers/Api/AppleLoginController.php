@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Services\AppleService;
-use App\Services\JWTService;
+use App\Services\JwtService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use App\Http\Controllers\Api\BaseController;
@@ -21,7 +21,7 @@ class AppleLoginController extends BaseController
         return redirect()->away($redirectUrl);
     }
 
-    public function userLoginApple(Request $request, JWTService $jwtService)
+    public function userLoginApple(Request $request, JwtService $jwtService)
     {
         $data = $request->all();
         $validator = Validator::make($data, [
