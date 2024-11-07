@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Jobs\SendForgotPasswordOtp;
 
 class UserController extends BaseController
 {
@@ -49,6 +50,32 @@ class UserController extends BaseController
         } else {
             return $this->sendError('Invalid Credentials');
         }
+    }
+
+    public function forgotPasswordSendOtp(Request $request, User $user)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, $user->forgotPasswordRule());
+        if ($validate->fails()) {
+            return $this->sendError('Validation Error.', $validate->errors());
+        }
+
+        // Retrieve the user by email
+        $user = User::where('email', $data['email'])
+                    ->where('sso_type', 'email')
+                    ->first();
+
+        if (!$user) {
+            return $this->sendError('Invalid email');
+        }
+
+        // Generate OTP
+        $otp = rand(10000, 99999);
+
+        // Dispatch the job to send the email
+        SendForgotPasswordOtp::dispatch($user->email, $otp);
+
+        return response()->json(['message' => 'OTP sent to your email!'], 200);
     }
 
     public function userDetail(Request $request, UserResource $userResource)

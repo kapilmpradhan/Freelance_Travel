@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
+    Route::post('login/email/forgot-password/', [UserController::class, 'forgotPasswordSendOtp']);
     Route::post('login/apple/', [AppleLoginController::class, 'userLoginApple']);
     Route::post('callback/apple/', [AppleLoginController::class, 'appleAuthCallback']);
     Route::post('login/google/', [GoogleLoginController::class, 'userLoginGoogle']);

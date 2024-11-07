@@ -36,6 +36,13 @@ class User extends Model
         ];
     }
 
+    public function forgotPasswordRule()
+    {
+        return [
+            'email' => 'required|email'
+        ];
+    }
+
     public function storeUser($data)
     {
         if (isset($data['password'])) {
