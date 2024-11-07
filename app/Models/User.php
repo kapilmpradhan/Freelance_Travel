@@ -50,4 +50,11 @@ class User extends Model
         }
         return $this->create($data);
     }
+
+    public function getSsoEmailUser($email)
+    {
+        return $this->where('email', $email)
+                    ->where('sso_type', 'email')
+                    ->first();
+    }
 }

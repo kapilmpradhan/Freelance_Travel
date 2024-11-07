@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\SendForgotPasswordOtp;
+use App\Services\OtpService;
 
 class UserController extends BaseController
 {
@@ -61,19 +62,23 @@ class UserController extends BaseController
         }
 
         // Retrieve the user by email
-        $user = User::where('email', $data['email'])
-                    ->where('sso_type', 'email')
-                    ->first();
+        $user = $user->getSsoEmailUser($data['email']);
 
         if (!$user) {
             return $this->sendError('Invalid email');
         }
 
         // Generate OTP
-        $otp = rand(10000, 99999);
+        $generatedOtp = OtpService::generateOtp($user);
+        if ($generatedOtp['success'] == false)
+        {
+            return $this->sendError($generatedOtp['error']);
+        }
+
+        $otpDetails = $generatedOtp['otpDetails'];
 
         // Dispatch the job to send the email
-        SendForgotPasswordOtp::dispatch($user->email, $otp);
+        SendForgotPasswordOtp::dispatch($user->email, $otpDetails->otp);
 
         return response()->json(['message' => 'OTP sent to your email!'], 200);
     }
