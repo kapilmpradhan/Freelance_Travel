@@ -15,7 +15,7 @@ class CreateOtpsTable extends Migration
             $table->string('otp');
             $table->timestamp('created_timestamp');
             $table->timestamp('expire_timestamp');
-            $table->boolean('is_used')->default(false);
+            $table->boolean('is_verified')->default(false);
             $table->timestamps();
 
             $table->unique('user_id');

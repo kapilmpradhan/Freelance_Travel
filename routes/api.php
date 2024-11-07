@@ -27,6 +27,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
     Route::post('login/email/forgot-password/', [UserController::class, 'forgotPasswordSendOtp']);
+    Route::post('email/otp/verify/', [UserController::class, 'verifyOtp']);
+    Route::post('email/reset-password/', [UserController::class, 'updatePassword']);
     Route::post('login/apple/', [AppleLoginController::class, 'userLoginApple']);
     Route::post('callback/apple/', [AppleLoginController::class, 'appleAuthCallback']);
     Route::post('login/google/', [GoogleLoginController::class, 'userLoginGoogle']);

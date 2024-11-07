@@ -83,6 +83,62 @@ class UserController extends BaseController
         return response()->json(['message' => 'OTP sent to your email!'], 200);
     }
 
+    public function verifyOtp(Request $request, User $user)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, $user->verifyOtpRule());
+        if ($validate->fails()) {
+            return $this->sendError('Validation Error.', $validate->errors());
+        }
+
+        $user = $user->getSsoEmailUser($data['email']);
+
+        if (!$user)
+        {
+            return $this->sendError('Invalid OTP/email');
+        }
+        
+        $is_otp_verfied = OtpService::verifyOtp($user, $data['otp']);
+
+        if ($is_otp_verfied['success'] == false)
+        {
+            return $this->sendError($is_otp_verfied['error']);
+        }
+
+        return $this->sendResponse([], 'Otp Verfied');
+    }
+
+    public function updatePassword(Request $request, User $user)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, $user->updatePasswordRule());
+        if ($validate->fails()) {
+            return $this->sendError('Validation Error.', $validate->errors());
+        }
+
+        $user = $user->getSsoEmailUser($data['email']);
+
+        if (!$user)
+        {
+            return $this->sendError('Invalid OTP/email');
+        }
+
+        $is_otp_valid = OtpService::checkOtpForPasswordUpdate($user, $data['otp']);
+
+        if ($is_otp_valid['success'] == false)
+        {
+            return $this->sendError($is_otp_valid['error']);
+        }
+
+        try {
+            $user->updatePassword($data['new_password']);
+            return $this->sendResponse([], 'Password changed successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Password reset failed');
+        }
+
+    }
+
     public function userDetail(Request $request, UserResource $userResource)
     {
         $user = $request->get('user');

@@ -11,7 +11,7 @@ class Otp extends Model
     use HasFactory;
 
     protected $table = 'otps';
-    protected $fillable = ['user_id', 'otp', 'created_timestamp', 'expire_timstamp', 'is_used'];
+    protected $fillable = ['user_id', 'otp', 'created_timestamp', 'expire_timstamp', 'is_verified'];
 
     protected static function boot()
     {
@@ -21,13 +21,6 @@ class Otp extends Model
         static::creating(function ($otp) {
             $otp->created_timestamp = Carbon::now();
             $otp->expire_timestamp = Carbon::now()->addMinutes(5);
-        });
-
-        // Automatically update timestamps on update
-        static::updating(function ($otp) {
-            $otp->created_timestamp = Carbon::now();
-            $otp->expire_timestamp = Carbon::now()->addMinutes(5);
-            $otp->is_used = false;
         });
     }
 
@@ -39,5 +32,11 @@ class Otp extends Model
     public function storeOtp($data)
     {
         return $this->create($data);
+    }
+
+    public function getOtp($user, $otp)
+    {
+        return $this->where('user_id', $user->uuid)
+                    ->where('otp', $otp);
     }
 }
