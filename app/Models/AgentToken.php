@@ -2,31 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AgentToken extends Model
 {
     use HasFactory;
 
     protected $table = 'agent_tokens';
-    protected $fillable = ['agent_name', 'agent_id', 'email_address', 'status', 'linked_on', 'agent_token'];
+    protected $fillable = ['user_id', 'username', 'access_token', 'expires_in', 'token_type', 'scope', 'bank_bsb', 'bank_account', 'bank_country_short_code', 'business_number', 'trading_name'];
 
-    public function rule()
+    public function addAgentTokenRule()
     {
         return [
-            'agent_name' => 'required',
-            'agent_id' => 'required',
-            'email_address' => 'required',
-            'status' => 'required',
-            'linked_on' => 'required',
-            'agent_token' => 'required'
+            'user_id' => 'required|string',
+            'username' => 'required|email|unique:agent_tokens,username',
+            'access_token' => 'required|string',
+            'expires_in' => 'required|integer',
+            'token_type' => 'required|string',
+            'scope' => 'required|string',
+            'bank_bsb' => 'nullable|string',
+            'bank_account' => 'nullable|string',
+            'bank_country_short_code' => 'nullable|string',
+            'business_number' => 'nullable|string',
+            'trading_name' => 'nullable|string'
         ];
     }
 
-    public function storeAgentToken($request)
+    public function user()
     {
-        $data = $request->all();
-        return $this->create($data);
+        return $this->belongsTo(User::class);
     }
 }
