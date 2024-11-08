@@ -36,11 +36,50 @@ class User extends Model
         ];
     }
 
+    public function forgotPasswordRule()
+    {
+        return [
+            'email' => 'required|email'
+        ];
+    }
+
+    public function verifyOtpRule()
+    {
+        return [
+            'email' => 'required|email',
+            'otp' => 'required'
+        ];
+    }
+
+    public function resetPasswordRule()
+    {
+        return [
+            'email' => 'required|email',
+            'otp' => 'required',
+            'new_password' => 'required|string|min:8'
+        ];
+    }
+
+
     public function storeUser($data)
     {
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
         return $this->create($data);
+    }
+
+    public function updatePassword($new_password)
+    {
+        if ($new_password) {
+            $this->update(['password' => Hash::make($new_password)]);
+        }
+    }
+
+    public function getSsoEmailUser($email)
+    {
+        return $this->where('email', $email)
+                    ->where('sso_type', 'email')
+                    ->first();
     }
 }
