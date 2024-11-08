@@ -31,13 +31,12 @@ jobs:
 
       - name: Print Composer Dependencies
         run: composer show --installed
-        
-      - name: Run PHP-CS-Fixer (Format)
-        run: ./vendor/bin/php-cs-fixer fix --rules=@PSR12 app/ --verbose
-        
+
       - name: Run PHP CodeSniffer (Lint)
         run: ./vendor/bin/phpcs --standard=PSR12 app/
 
+      - name: Run PHP-CS-Fixer (Format)
+        run: ./vendor/bin/php-cs-fixer fix --rules=@PSR12 app/ --verbose
 
       - name: Display Code Coverage
         run: |
