@@ -10,7 +10,19 @@ class AgentToken extends Model
     use HasFactory;
 
     protected $table = 'agent_tokens';
-    protected $fillable = ['user_id', 'username', 'access_token', 'expires_in', 'token_type', 'scope', 'bank_bsb', 'bank_account', 'bank_country_short_code', 'business_number', 'trading_name'];
+    protected $fillable = [
+        'user_id',
+        'username',
+        'access_token',
+        'expires_in',
+        'token_type',
+        'scope',
+        'bank_bsb',
+        'bank_account',
+        'bank_country_short_code',
+        'business_number',
+        'trading_name'
+    ];
 
     public function addAgentTokenRule()
     {
