@@ -7,7 +7,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-
 class AgentTokenController extends BaseController
 {
     public function addAgentToken(Request $request, AgentToken $agentToken)
