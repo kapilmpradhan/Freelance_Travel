@@ -8,7 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use App\Services\BrevoEmailService;
+use App\Services\IEmailService;
 
 class SendForgotPasswordOtp implements ShouldQueue
 {
@@ -29,7 +29,7 @@ class SendForgotPasswordOtp implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(BrevoEmailService $brevoEmailService)
+    public function handle(IEmailService $emailService)
     {
         try {
             // Prepare the data for sending via the Brevo API
@@ -46,7 +46,7 @@ class SendForgotPasswordOtp implements ShouldQueue
                 'htmlContent' => view('email.forgotPasswordOTP', ['otp' => $this->otp])->render(),
             ];
 
-            $brevoEmailService->sendMail($data);
+            $emailService->sendMail($data);
         } catch (\Exception $e) {
             Log::error('Failed to send email. Error: ' . $e->getMessage());
         }

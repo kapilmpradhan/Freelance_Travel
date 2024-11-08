@@ -5,9 +5,9 @@ namespace App\Services;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
-class BrevoEmailService
+class BrevoEmailService implements IEmailService
 {
-    public function sendMail($data)
+    public function sendMail(array $data): void
     {
         try {
             $client = new Client();

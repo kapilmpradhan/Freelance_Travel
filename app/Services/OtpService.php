@@ -4,10 +4,11 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\Otp;
+use App\Models\User;
 
 class OtpService
 {
-    public static function checkOtpForPasswordUpdate($user, $otp)
+    public static function checkOtpForPasswordUpdate(User $user, string $otp)
     {
         $availableOtp = Otp::where('user_id', $user->uuid)
                             ->first();
@@ -25,7 +26,7 @@ class OtpService
         return ['success' => false, 'error' => 'Unable to update password'];
     }
 
-    public static function generateOtp($user)
+    public static function generateOtp(User $user)
     {
         // Generate OTP
         $otpValue = rand(10000, 99999);
@@ -59,16 +60,17 @@ class OtpService
         }
     }
 
-    public static function verifyOtp($user, $otp)
+    public static function verifyOtp(User $user, string $otp)
     {
         $otp = Otp::where('user_id', $user->uuid)
                             ->where('otp', $otp)
                             ->first();
-        if (!$otp) {
+        if (!$otp or $otp->is_verified) {
             return ['success' => false, 'error' => 'Invalid OTP'];
-        } elseif ($otp && Carbon::now()->diffInSeconds($otp->expire_timestamp) < 0 && $otp->is_verified == true) {
+        } elseif (Carbon::now()->diffInSeconds($otp->expire_timestamp) < 0) {
             return ['success' => false, 'error' => 'Expired OTP'];
-        } else {
+        }
+         else {
             $otp->is_verified = true;
             $otp->save();
 

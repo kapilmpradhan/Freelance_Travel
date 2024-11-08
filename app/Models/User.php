@@ -51,7 +51,7 @@ class User extends Model
         ];
     }
 
-    public function updatePasswordRule()
+    public function resetPasswordRule()
     {
         return [
             'email' => 'required|email',

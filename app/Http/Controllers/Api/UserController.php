@@ -108,7 +108,7 @@ class UserController extends BaseController
     public function updatePassword(Request $request, User $user)
     {
         $data = $request->all();
-        $validate = Validator::make($data, $user->updatePasswordRule());
+        $validate = Validator::make($data, $user->resetPasswordRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
         }
