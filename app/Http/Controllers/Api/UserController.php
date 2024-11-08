@@ -70,8 +70,7 @@ class UserController extends BaseController
 
         // Generate OTP
         $generatedOtp = OtpService::generateOtp($user);
-        if ($generatedOtp['success'] == false)
-        {
+        if ($generatedOtp['success'] == false) {
             return $this->sendError($generatedOtp['error']);
         }
 
@@ -93,15 +92,13 @@ class UserController extends BaseController
 
         $user = $user->getSsoEmailUser($data['email']);
 
-        if (!$user)
-        {
+        if (!$user) {
             return $this->sendError('Invalid OTP/email');
         }
-        
+
         $is_otp_verfied = OtpService::verifyOtp($user, $data['otp']);
 
-        if ($is_otp_verfied['success'] == false)
-        {
+        if ($is_otp_verfied['success'] == false) {
             return $this->sendError($is_otp_verfied['error']);
         }
 
@@ -118,15 +115,13 @@ class UserController extends BaseController
 
         $user = $user->getSsoEmailUser($data['email']);
 
-        if (!$user)
-        {
+        if (!$user) {
             return $this->sendError('Invalid OTP/email');
         }
 
         $is_otp_valid = OtpService::checkOtpForPasswordUpdate($user, $data['otp']);
 
-        if ($is_otp_valid['success'] == false)
-        {
+        if ($is_otp_valid['success'] == false) {
             return $this->sendError($is_otp_valid['error']);
         }
 
@@ -136,7 +131,6 @@ class UserController extends BaseController
         } catch (\Exception $e) {
             return $this->sendError('Password reset failed');
         }
-
     }
 
     public function userDetail(Request $request, UserResource $userResource)

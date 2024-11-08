@@ -12,7 +12,10 @@ use App\Services\BrevoEmailService;
 
 class SendForgotPasswordOtp implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $email;
     protected $otp;

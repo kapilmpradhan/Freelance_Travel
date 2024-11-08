@@ -72,7 +72,7 @@ class User extends Model
     public function updatePassword($new_password)
     {
         if ($new_password) {
-            $this->update(['password'=> Hash::make($new_password)]);
+            $this->update(['password' => Hash::make($new_password)]);
         }
     }
 
