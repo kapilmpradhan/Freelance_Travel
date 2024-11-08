@@ -46,6 +46,13 @@ env:
       APPLE_CLIENT_IDS: ${{ vars.APPLE_CLIENT_IDS }}
       GOOGLE_CLIENT_IDS: ${{ vars.GOOGLE_CLIENT_IDS }}
       APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
+      MAIL_MAILER: ${{ vars.MAIL_MAILER }}
+      MAIL_HOST: ${{ vars.MAIL_HOST }}
+      MAIL_PORT: ${{ vars.MAIL_PORT }}
+      BREVO_MAIL_API_KEY: ${{ vars.BREVO_MAIL_API_KEY }}
+      MAIL_ENCRYPTION: ${{ vars.MAIL_ENCRYPTION }}
+      MAIL_FROM_ADDRESS: ${{ vars.MAIL_FROM_ADDRESS }}
+      MAIL_FROM_NAME: ${{ vars.APP_NAME }}
 
 jobs:
   build:
