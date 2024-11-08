@@ -69,8 +69,7 @@ class OtpService
             return ['success' => false, 'error' => 'Invalid OTP'];
         } elseif (Carbon::now()->diffInSeconds($otp->expire_timestamp) < 0) {
             return ['success' => false, 'error' => 'Expired OTP'];
-        }
-         else {
+        } else {
             $otp->is_verified = true;
             $otp->save();
 
