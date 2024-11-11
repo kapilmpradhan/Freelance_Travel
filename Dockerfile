@@ -35,4 +35,4 @@ COPY .env /ft/.env
 RUN composer install --optimize-autoloader --no-dev --no-cache
 
 # Run migrations and then serve Laravel application
-CMD php artisan migrate && php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan migrate && php artisan queue:work && php artisan serve --host=0.0.0.0 --port=8000
