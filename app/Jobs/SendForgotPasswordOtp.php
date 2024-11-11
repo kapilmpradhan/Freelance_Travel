@@ -46,9 +46,11 @@ class SendForgotPasswordOtp implements ShouldQueue
                 'htmlContent' => view('email.forgotPasswordOTP', ['otp' => $this->otp])->render(),
             ];
 
-            $emailService->sendMail($data);
+            $response = $emailService->sendMail($data);
+
+            echo $response;
         } catch (\Exception $e) {
-            Log::error('Failed to send email. Error: ' . $e->getMessage());
+            echo 'Failed to send email. Error: ' . $e->getMessage();
         }
     }
 }

@@ -4,5 +4,5 @@ namespace App\Services;
 
 interface IEmailService
 {
-    public function sendMail(array $data): void;
+    public function sendMail(array $data): string;
 }
