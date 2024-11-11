@@ -2,21 +2,14 @@
 FROM --platform=linux/amd64 php:8.2-cli
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libsqlite3-dev \
-    curl \
-    zip \
-    unzip \
-    git \
-    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql
+RUN apt-get update && \
+    apt-get install -y libsqlite3-dev curl zip unzip git && \
+    docker-php-ext-install pdo_mysql && \
+    rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
 # Set working directory
 WORKDIR /ft
 
-# Copy composer.lock and composer.json first to leverage Docker cache
 COPY composer.json /ft/
 
 # Install Composer
@@ -34,5 +27,7 @@ COPY .env /ft/.env
 # Run composer install with autoloading after copying files
 RUN composer install --optimize-autoloader --no-dev --no-cache
 
-# Run migrations and then serve Laravel application
-CMD php artisan migrate && php artisan queue:work && php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan migrate && \
+    nohup php artisan serve --host=0.0.0.0 --port=8000 & \
+    php artisan queue:work
+
