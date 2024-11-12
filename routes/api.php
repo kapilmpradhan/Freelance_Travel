@@ -64,6 +64,7 @@ Route::post('send-mail', [BaseController::class, 'sendMail']);
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
     Route::get('detail', [UserController::class, 'userDetail']);
+    Route::post('detail/change-password', [UserController::class, 'changePassword']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {

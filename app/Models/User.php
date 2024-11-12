@@ -36,6 +36,14 @@ class User extends Model
         ];
     }
 
+    public function changePasswordRule()
+    {
+        return [
+            'current_password' => 'required|string|min:8',
+            'new_password' => 'required|string|min:8'
+        ];
+    }
+
     public function forgotPasswordRule()
     {
         return [

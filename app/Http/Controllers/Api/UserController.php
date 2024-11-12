@@ -53,6 +53,28 @@ class UserController extends BaseController
         }
     }
 
+    public function changePassword(Request $request, User $user)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, $user->changePasswordRule());
+        if ($validate->fails()) {
+            return $this->sendError('Validation Error.', $validate->errors());
+        }
+
+        // Retrieve the user by email
+        $user = User::where('email', $request->user->email)->first();
+
+        if (!$user) {
+            return $this->sendError('User not found');
+        } elseif (!Hash::check($data['current_password'], $user->password)) {
+            return $this->sendError('Incorrect current password');
+        } else {
+            $user->password = Hash::make($data['new_password']);
+            $user->save();
+            return $this->sendResponse([], 'Password changed');
+        }
+    }
+
     public function forgotPasswordSendOtp(Request $request, User $user)
     {
         $data = $request->all();
