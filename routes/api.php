@@ -67,5 +67,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
+    Route::get('token', [AgentTokenController::class, 'getAgentToken']);
     Route::post('token/add/', [AgentTokenController::class, 'addAgentToken']);
+    Route::delete('token/remove/', [AgentTokenController::class, 'removeAgentToken']);
 });
