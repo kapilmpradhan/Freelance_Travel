@@ -27,7 +27,7 @@ class JwtService
             $exp = env(ENV_KEY_REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES, 1000);
         }
         $payload = [
-            'iss' => env(ENV_KEY_APP_NAME) . '-' . $tokenType,
+            'iss' => $tokenType,
             'sub' => $user->uuid,
             'iat' => time(),
             'exp' => time() + 60 * $exp
@@ -48,7 +48,7 @@ class JwtService
         try {
             $payload = JWT::decode($token, new Key($this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM)));
             return [
-                'tokenType' => explode('-', $payload->iss)[1],
+                'tokenType' => $payload->iss,
                 'user' => User::find($payload->sub),
                 'error' => null
             ];

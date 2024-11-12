@@ -25,4 +25,35 @@ class AgentTokenController extends BaseController
             return $this->sendError('Error occured');
         }
     }
+
+    public function getAgentToken(Request $request)
+    {
+        $user_id = $request->user->uuid;
+
+        try {
+            $agentToken = AgentToken::where('user_id', $user_id)->first();
+            if (!$agentToken) {
+                return $this->sendError('Agent token not added');
+            }
+            return $this->sendResponse($agentToken->toArray(), 'successfully', 200);
+        } catch (Exception $e) {
+            return $this->sendError('Error occured');
+        }
+    }
+
+    public function removeAgentToken(Request $request)
+    {
+        $user_id = $request->user->uuid;
+
+        try {
+            $agentToken = AgentToken::where('user_id', $user_id)->first();
+            if (!$agentToken) {
+                return $this->sendError('Agent token not added');
+            }
+            $agentToken->delete();
+            return $this->sendResponse([], 'successfully', 200);
+        } catch (Exception $e) {
+            return $this->sendError('Error occured');
+        }
+    }
 }
