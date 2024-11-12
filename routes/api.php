@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Api\BCRController;
@@ -10,7 +11,7 @@ use App\Http\Controllers\Api\QuotetController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AgentTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,4 +64,8 @@ Route::post('send-mail', [BaseController::class, 'sendMail']);
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
     Route::get('detail', [UserController::class, 'userDetail']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
+    Route::post('token/add/', [AgentTokenController::class, 'addAgentToken']);
 });
