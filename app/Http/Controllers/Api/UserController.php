@@ -66,6 +66,8 @@ class UserController extends BaseController
 
         if (!$user) {
             return $this->sendError('User not found');
+        } elseif ($user->sso_type != 'email') {
+            return $this->sendError('Email signed up user can only change password.');
         } elseif (!Hash::check($data['current_password'], $user->password)) {
             return $this->sendError('Incorrect current password');
         } else {
