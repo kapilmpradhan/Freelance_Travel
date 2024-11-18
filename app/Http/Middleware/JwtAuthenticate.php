@@ -27,15 +27,15 @@ class JwtAuthenticate
         $token = $this->getTokenFromRequest($request);
 
         if (!$token) {
-            return $this->responseService->sendError('Token not provided', null, 401);
+            return $this->responseService->sendError('Token not provided', [], 401);
         }
 
         $validated_data = $this->jwtService->validateToken($token);
 
         if ($validated_data['error']) {
-            return $this->responseService->sendError($validated_data['error'], null, 401);
+            return $this->responseService->sendError($validated_data['error'], [], 401);
         } elseif ($validated_data['tokenType'] != 'access') {
-            return $this->responseService->sendError('Token is invalid', null, 401);
+            return $this->responseService->sendError('Token is invalid', [], 401);
         }
 
         $request->merge(['user' => $validated_data['user']]);

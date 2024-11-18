@@ -25,7 +25,7 @@ class UserController extends BaseController
         $new_user = $user->storeUser($data);
         $return_data = $userResource->userDetail($new_user);
 
-        return $this->sendResponse($return_data, 'successfully');
+        return $this->sendResponse('successfully', $return_data);
     }
 
     public function userLoginEmail(Request $request, User $user, JwtService $jwtService)
@@ -47,7 +47,7 @@ class UserController extends BaseController
                 'accessToken' => $accessToken,
                 'refreshToken' => $refreshToken
             ];
-            return $this->sendResponse($data, 'successfully');
+            return $this->sendResponse('JWT tokens', $data);
         } else {
             return $this->sendError('Invalid Credentials');
         }
@@ -73,7 +73,7 @@ class UserController extends BaseController
         } else {
             $user->password = Hash::make($data['new_password']);
             $user->save();
-            return $this->sendResponse([], 'Password changed');
+            return $this->sendResponse( 'Password changed');
         }
     }
 
@@ -103,7 +103,7 @@ class UserController extends BaseController
         // Dispatch the job to send the email
         SendForgotPasswordOtp::dispatch($user->email, $otpDetails->otp);
 
-        return response()->json(['message' => 'OTP sent to your email!'], 200);
+        return $this->sendResponse('OTP sent to your email');
     }
 
     public function verifyOtp(Request $request, User $user)
@@ -126,7 +126,7 @@ class UserController extends BaseController
             return $this->sendError($is_otp_verfied['error']);
         }
 
-        return $this->sendResponse([], 'Otp Verfied');
+        return $this->sendResponse( 'Otp Verfied');
     }
 
     public function updatePassword(Request $request, User $user)
@@ -151,7 +151,7 @@ class UserController extends BaseController
 
         try {
             $user->updatePassword($data['new_password']);
-            return $this->sendResponse([], 'Password changed successfully');
+            return $this->sendResponse( 'Password changed successfully');
         } catch (\Exception $e) {
             return $this->sendError('Password reset failed');
         }
@@ -167,7 +167,7 @@ class UserController extends BaseController
 
 
         $account_data = $userResource->userDetail($user);
-        return $this->sendResponse($account_data, 'successfully');
+        return $this->sendResponse( 'Account details', $account_data);
     }
 
     public function accessTokenRegenerate(Request $request, JwtService $jwtService)
@@ -189,6 +189,6 @@ class UserController extends BaseController
             'accessToken' => $new_access_token
         ];
 
-        return $this->sendResponse($data, 'successfully');
+        return $this->sendResponse( 'successfully', $data);
     }
 }

@@ -48,7 +48,7 @@ class GoogleLoginController extends BaseController
             "refreshToken" => $jwtService->generateToken($user, 'refresh')
         ];
 
-        return $this->sendResponse($data, 'successfully');
+        return $this->sendResponse( 'successfully', $data);
     }
 
     public function userLoginGoogle(Request $request, User $user, JwtService $jwtService, GoogleService $googleService)
@@ -67,7 +67,7 @@ class GoogleLoginController extends BaseController
 
         $userInfo = $googleService->googleUserDetail($data['google_access_token']);
         if (!$userInfo) {
-            return $this->sendError('Authentication error', null, 401);
+            return $this->sendError('Authentication error', [], 401);
         }
 
         $name = $userInfo['name'];
@@ -99,6 +99,6 @@ class GoogleLoginController extends BaseController
             "refreshToken" => $jwtService->generateToken($user, 'refresh')
         ];
 
-        return $this->sendResponse($data, 'successfully');
+        return $this->sendResponse( 'JWT tokens', $data);
     }
 }
