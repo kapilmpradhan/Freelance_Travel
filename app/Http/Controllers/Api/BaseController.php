@@ -28,29 +28,26 @@ class BaseController extends Controller
         ], 400);
     }
 
-    public function sendError($error, $errorMessages = [], $code = 400)
+    public function sendError($title, $data = [], $code = 400)
     {
         $response = [
             'success' => false,
-            'message' => $error,
-            'code' => $code
+            'title' => $title,
+            'code' => $code,
+            'data' => $data
         ];
-
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
-        }
 
         return response()->json($response, $code);
     }
 
 
-    public function sendResponse($result, $message)
+    public function sendResponse($title, $data = [], $code = 200)
     {
         $response = [
             'success' => true,
-            'data' => $result,
-            'message' => $message,
-            'code' => 200
+            'title' => $title,
+            'code' => $code,
+            'data' => $data
         ];
 
         return response()->json($response, 200);

@@ -20,7 +20,7 @@ class AgentTokenController extends BaseController
 
         try {
             $agentToken = $agentToken->create($data);
-            return $this->sendResponse($agentToken->toArray(), 'successfully', 200);
+            return $this->sendResponse('Agent token added', $agentToken->toArray());
         } catch (Exception $e) {
             return $this->sendError('Error occured');
         }
@@ -35,7 +35,7 @@ class AgentTokenController extends BaseController
             if (!$agentToken) {
                 return $this->sendError('Agent token not added');
             }
-            return $this->sendResponse($agentToken->toArray(), 'successfully', 200);
+            return $this->sendResponse('Agent token info', $agentToken->toArray());
         } catch (Exception $e) {
             return $this->sendError('Error occured');
         }
@@ -51,7 +51,7 @@ class AgentTokenController extends BaseController
                 return $this->sendError('Agent token not added');
             }
             $agentToken->delete();
-            return $this->sendResponse([], 'successfully', 200);
+            return $this->sendResponse('Agent token removed');
         } catch (Exception $e) {
             return $this->sendError('Error occured');
         }
