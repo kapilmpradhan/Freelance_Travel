@@ -73,7 +73,7 @@ class UserController extends BaseController
         } else {
             $user->password = Hash::make($data['new_password']);
             $user->save();
-            return $this->sendResponse( 'Password changed');
+            return $this->sendResponse('Password changed');
         }
     }
 
@@ -126,7 +126,7 @@ class UserController extends BaseController
             return $this->sendError($is_otp_verfied['error']);
         }
 
-        return $this->sendResponse( 'Otp Verfied');
+        return $this->sendResponse('Otp Verfied');
     }
 
     public function updatePassword(Request $request, User $user)
@@ -151,7 +151,7 @@ class UserController extends BaseController
 
         try {
             $user->updatePassword($data['new_password']);
-            return $this->sendResponse( 'Password changed successfully');
+            return $this->sendResponse('Password changed successfully');
         } catch (\Exception $e) {
             return $this->sendError('Password reset failed');
         }
@@ -167,7 +167,7 @@ class UserController extends BaseController
 
 
         $account_data = $userResource->userDetail($user);
-        return $this->sendResponse( 'Account details', $account_data);
+        return $this->sendResponse('Account details', $account_data);
     }
 
     public function accessTokenRegenerate(Request $request, JwtService $jwtService)
@@ -189,6 +189,6 @@ class UserController extends BaseController
             'accessToken' => $new_access_token
         ];
 
-        return $this->sendResponse( 'successfully', $data);
+        return $this->sendResponse('New access token', $data);
     }
 }
