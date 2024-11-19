@@ -12,7 +12,9 @@ class AgentToken extends Model
     protected $table = 'agent_tokens';
     protected $fillable = [
         'user_id',
+        'type',
         'username',
+        'password',
         'access_token',
         'expires_in',
         'token_type',
@@ -27,17 +29,10 @@ class AgentToken extends Model
     public function addAgentTokenRule()
     {
         return [
-            'user_id' => 'required|string',
+            'user_id' => 'required|uuid',
+            'type' => 'required|string|in:shared,user',
             'username' => 'required|email|unique:agent_tokens,username',
-            'access_token' => 'required|string',
-            'expires_in' => 'required|integer',
-            'token_type' => 'required|string',
-            'scope' => 'required|string',
-            'bank_bsb' => 'nullable|string',
-            'bank_account' => 'nullable|string',
-            'bank_country_short_code' => 'nullable|string',
-            'business_number' => 'nullable|string',
-            'trading_name' => 'nullable|string'
+            'password' => 'required|string'
         ];
     }
 

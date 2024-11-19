@@ -50,6 +50,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
     Route::get('token', [AgentTokenController::class, 'getAgentToken']);
+    Route::get('token/shared', [AgentTokenController::class, 'getSharedToken']);
     Route::post('token/add/', [AgentTokenController::class, 'addAgentToken']);
     Route::delete('token/remove/', [AgentTokenController::class, 'removeAgentToken']);
 });

@@ -17,6 +17,14 @@ class User extends Model
     protected $keyType = 'string';
     protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type'];
 
+    /**
+     * Define a one-to-one relationship with Agent Token.
+     */
+    public function agentToken()
+    {
+        return $this->hasOne(AgentToken::class, 'user_id', 'uuid');
+    }
+
     public function emailSignupRule()
     {
         return [

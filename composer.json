@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "doctrine/dbal": "^3.9",
         "firebase/php-jwt": "^6.10",
         "fruitcake/laravel-cors": "dev-develop",
         "guzzlehttp/guzzle": "^7.7",
