@@ -32,6 +32,10 @@ class JwtAuthenticate
 
         $validated_data = $this->jwtService->validateToken($token);
 
+        if (!$validated_data['user']) {
+            return $this->responseService->sendError('User not found', [], 401);
+        }
+
         if ($validated_data['error']) {
             return $this->responseService->sendError($validated_data['error'], [], 401);
         } elseif ($validated_data['tokenType'] != 'access') {

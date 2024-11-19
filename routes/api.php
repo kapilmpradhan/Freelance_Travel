@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\AgentTokenController;
+use App\Http\Controllers\Api\CartItemController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,22 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
     Route::post('token/access/', [UserController::class, 'accessTokenRegenerate']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
+    Route::get('detail', [UserController::class, 'userDetail']);
+    Route::post('detail/change-password', [UserController::class, 'changePassword']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
+    Route::post('add', [CartItemController::class, 'addItemToCart']);
+    Route::get('list', [CartItemController::class, 'getCartItems']);
+    Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
+    Route::get('token', [AgentTokenController::class, 'getAgentToken']);
+    Route::post('token/add/', [AgentTokenController::class, 'addAgentToken']);
+    Route::delete('token/remove/', [AgentTokenController::class, 'removeAgentToken']);
+});
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
     Route::post('connect-payment', [BaseController::class, 'connectPayment']);
@@ -61,14 +78,3 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middle
 Route::post("email-log", [LogController::class, "log"]);
 
 Route::post('send-mail', [BaseController::class, 'sendMail']);
-
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
-    Route::get('detail', [UserController::class, 'userDetail']);
-    Route::post('detail/change-password', [UserController::class, 'changePassword']);
-});
-
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
-    Route::get('token', [AgentTokenController::class, 'getAgentToken']);
-    Route::post('token/add/', [AgentTokenController::class, 'addAgentToken']);
-    Route::delete('token/remove/', [AgentTokenController::class, 'removeAgentToken']);
-});
