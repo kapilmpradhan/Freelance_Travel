@@ -55,6 +55,7 @@ env:
       MAIL_FROM_NAME: ${{ vars.APP_NAME }}
       SHARED_TOKEN_AGENT_USERNAME: ${{secrets.SHARED_TOKEN_AGENT_USERNAME}}
       SHARED_TOKEN_AGENT_PASSWORD: ${{secrets.SHARED_TOKEN_AGENT_PASSWORD}}
+      TDMS_API_URL: ${{vars.TDMS_API_URL}}
 
 jobs:
   build:

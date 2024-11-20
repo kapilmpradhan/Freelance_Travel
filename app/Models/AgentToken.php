@@ -26,12 +26,21 @@ class AgentToken extends Model
         'trading_name'
     ];
 
+    protected $hidden = ['password'];
+
     public function addAgentTokenRule()
     {
         return [
             'user_id' => 'required|uuid',
-            'type' => 'required|string|in:shared,user',
-            'username' => 'required|email|unique:agent_tokens,username',
+            'username' => 'required|email',
+            'password' => 'required|string'
+        ];
+    }
+
+    public function updateAgentTokenRule()
+    {
+        return [
+            'username' => 'required|email',
             'password' => 'required|string'
         ];
     }
