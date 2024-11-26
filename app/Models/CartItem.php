@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Product;
+use App\Jobs\CacheProductJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -28,5 +30,11 @@ class CartItem extends Model
             'product_price_id' => 'required|int',
             'booking_datetime' => 'required|date_format:Y-m-d H:i:s'
         ];
+    }
+
+    public function storeCartItem($data)
+    {
+        CacheProductJob::dispatch($data['product_id']);
+        return $this->create($data);
     }
 }

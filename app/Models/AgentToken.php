@@ -32,7 +32,7 @@ class AgentToken extends Model
     {
         return [
             'user_id' => 'required|uuid',
-            'username' => 'required|email',
+            'username' => 'required|email|unique:agent_tokens,username',
             'password' => 'required|string'
         ];
     }
