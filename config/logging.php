@@ -1,6 +1,7 @@
 <?php
 
 use Monolog\Handler\NullHandler;
+use App\Logging\RetackHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 
@@ -48,6 +49,21 @@ return [
     */
 
     'channels' => [
+        'console' => [
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
+            'with' => [
+                'stream' => 'php://stdout',
+            ],
+            'level' => 'debug',
+        ],
+
+        'retack' => [
+            'driver' => 'monolog',
+            'handler' => RetackHandler::class,
+            'level' => 'error'
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['single'],

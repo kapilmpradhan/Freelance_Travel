@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use App\Logging\Logger;
 
 class Handler extends ExceptionHandler
 {
@@ -37,5 +38,12 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function report(Throwable $exception)
+    {
+        Logger::error("Exception occured", $exception);
+
+        parent::report($exception);
     }
 }

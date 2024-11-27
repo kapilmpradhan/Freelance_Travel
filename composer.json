@@ -14,6 +14,7 @@
         "laravel/sanctum": "^3.2",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.8",
+        "monolog/monolog": "^3.8",
         "symfony/mailer": "^6.3"
     },
     "require-dev": {

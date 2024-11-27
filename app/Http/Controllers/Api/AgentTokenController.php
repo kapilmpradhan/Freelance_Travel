@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use Carbon\Carbon;
+use App\Logging\Logger;
 use App\Models\AgentToken;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Services\AgentTokenService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class AgentTokenController extends BaseController
 {
@@ -87,7 +89,8 @@ class AgentTokenController extends BaseController
             if ($token_last_update->diffInHours($current_date_time) > 21) {
                 $new_token = AgentTokenService::getAgentToken($agent_username, $agent_password);
                 if (!$new_token) {
-                    return $this->sendError('Invalid credentials'); // TODO: integrate error reporting
+                    Logger::error('Invalid credentials to get agent shared token');
+                    return $this->sendError('Invalid credentials');
                 }
                 $available_shared_token->update($new_token);
             }

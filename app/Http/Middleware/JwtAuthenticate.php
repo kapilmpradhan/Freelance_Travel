@@ -6,7 +6,7 @@ use Closure;
 use App\Services\JwtService;
 use App\Services\ResponseService;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
 class JwtAuthenticate
 {
@@ -41,6 +41,9 @@ class JwtAuthenticate
         if (!$validated_data['user']) {
             return $this->responseService->sendError('User not found', [], 401);
         }
+
+        // Set authenticated user in the application context
+        Auth::login($validated_data['user']);
 
         $request->merge(['user' => $validated_data['user']]);
 

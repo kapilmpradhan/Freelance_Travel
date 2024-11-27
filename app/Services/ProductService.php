@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Logging\Logger;
+
 class ProductService
 {
     public static function getProductDetailsFromApi(int $productId)
     {
         $agentSharedToken = AgentTokenService::getSharedToken();
         if (!$agentSharedToken) {
-            echo 'Unable to get shared agent token. Could not fetch product details.'; // TODO: add error reporting
+            echo 'Unable to get shared agent token. Could not fetch product details.';
+            Logger::error('Agent shared token expired');
             return;
         }
 
