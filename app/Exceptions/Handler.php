@@ -39,11 +39,4 @@ class Handler extends ExceptionHandler
             //
         });
     }
-
-    public function report(Throwable $exception)
-    {
-        Logger::error("Exception occured", $exception);
-
-        parent::report($exception);
-    }
 }

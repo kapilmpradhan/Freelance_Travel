@@ -8,16 +8,16 @@ class Logger
 {
     public static function info($message)
     {
-        Log::channel('console')->info($message);
+        Log::stack(['console', 'single'])->info($message);
     }
 
     public static function debug($message)
     {
-        Log::channel('console')->debug($message);
+        Log::stack(['console', 'single'])->debug($message);
     }
 
     public static function error($message, $exception = null)
     {
-        Log::stack(['console', 'retack'])->error($message, ['exception' => $exception]);
+        Log::stack(['console', 'retack', 'single'])->error($message, ['exception' => $exception]);
     }
 }
