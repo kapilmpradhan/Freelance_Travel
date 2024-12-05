@@ -1,22 +1,10 @@
 version: '3.8'
 
 services:
-  app:
-    image: test:latest
-    container_name: freelance-travel-app
-    platform: linux/amd64
-    ports:
-      - "8000:8000"
-    networks:
-      - laravel
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
     image: mysql:9.0
     container_name: freelance-travel-db
-    platform: linux/amd64
+    platform: linux/arm64
     environment:
       MYSQL_DATABASE: travel_db
       MYSQL_USER: freelance_travel

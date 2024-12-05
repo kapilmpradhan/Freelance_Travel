@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use Exception;
-use App\Models\Product;
 use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\UpdateUserCartItemProductsJob;
+use App\Services\CartItemService;
 
 class CartItemController extends BaseController
 {
@@ -33,35 +33,13 @@ class CartItemController extends BaseController
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;
-        UpdateUserCartItemProductsJob::dispatch($userId);
 
         try {
-            $cartItems = CartItem::where('user_id', $request->user->uuid)
-                                ->select('id', 'product_id', 'product_price_id', 'booking_datetime')
-                                ->get();
+            $cartItems = CartItemService::getUserCartItemsWithProductDetails($userId);
             if ($cartItems) {
-                $cartItems = $cartItems->toArray();
-                $itemsWithProductDetails = [];
-
-                foreach ($cartItems as $item) {
-                    $productId = $item['product_id'];
-
-                    $product = Product::where('product_id', $productId)
-                                    ->orderBy('version', 'desc')
-                                    ->first();
-                    if ($product) {
-                        $item['version'] = $product->version;
-                        $item['details'] = $product->json;
-                    } else {
-                        $item['version'] = 0;
-                        $item['details'] = null;
-                    }
-                    $itemsWithProductDetails[] = $item;
-                }
-                $cartItems = $itemsWithProductDetails;
-            } else {
-                $cartItems = [];
+                UpdateUserCartItemProductsJob::dispatch($userId);
             }
+
             return $this->sendResponse('Cart items', $cartItems);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());

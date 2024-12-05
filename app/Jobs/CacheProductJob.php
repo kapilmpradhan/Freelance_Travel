@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use Exception;
+use App\Logging\Logger;
 use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Bus\Queueable;
@@ -18,15 +19,14 @@ class CacheProductJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected $user_id;
-    protected $productId;
+    protected $product;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($productId)
+    public function __construct($product)
     {
-        $this->productId = $productId;
+        $this->product = $product;
     }
 
     /**
@@ -35,26 +35,38 @@ class CacheProductJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $response = ProductService::getProductDetailsFromApi($this->productId);
+            $tdmsProductId = $this->product->tdms_product_id;
+            $product_exists_in_cache = Product::where('tdms_product_id', $tdmsProductId)
+                                    ->orderBy('version', 'desc')
+                                    ->first();
 
-            if (!$response || !$response['results']) {
-                echo 'Unable to cache product. Product not found. Product id:' . $this->productId;
+            $tdms_product_last_update = ProductService::getProductsLastUpdateFromApi([$tdmsProductId]);
+
+            if ($product_exists_in_cache) {
+                $product_last_update = $product_exists_in_cache->tdms_product_last_update_date;
+                if ($product_last_update === $tdms_product_last_update[$tdmsProductId]) {
+                    Logger::info('No changes to cache. TDMS product id: ' . $product_exists_in_cache->tdms_product_id);
+                    return;
+                }
+            }
+
+            $productDetailsResponse = ProductService::getProductDetailsFromApi($this->product);
+            if (!$productDetailsResponse || !$productDetailsResponse['results']) {
+                Logger::error('Unable to cache product. Product not found. TDMS product id: ' . $tdmsProductId);
             } else {
-                $productDetailsFromApi = $response['results'][0];
+                $productDetailsFromTdms = $productDetailsResponse['results'][0];
 
                 $data = [
-                    "product_id" => $this->productId,
-                    "json" => $productDetailsFromApi
+                    "tdms_product_id" => $tdmsProductId,
+                    "tdms_product_last_update_date" => $tdms_product_last_update[$tdmsProductId],
+                    "json" => $productDetailsFromTdms
                 ];
 
                 Product::create($data);
-                echo 'Product cached. Product id: ' . $this->productId;
+                Logger::info('Product cached. TDMS product id: ' . $tdmsProductId);
             }
         } catch (Exception $e) {
-            echo 'Unable to cache product ('
-            . $this->productId
-            . '). Exception: '
-            . $e->getMessage();
+            Logger::error('Unable to cache product. TDMS product id: ' . $tdmsProductId, $e->getMessage());
         }
     }
 }
