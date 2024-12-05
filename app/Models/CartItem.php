@@ -44,9 +44,9 @@ class CartItem extends Model
 
     public function storeCartItem($data)
     {
-        $product = $this->create($data);
-        CacheProductJob::dispatch($product);
+        $cartItem = $this->create($data);
+        CacheProductJob::dispatch($cartItem);
 
-        return $product;
+        return $cartItem;
     }
 }

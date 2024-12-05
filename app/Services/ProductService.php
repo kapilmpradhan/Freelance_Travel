@@ -11,7 +11,6 @@ class ProductService
         $productIdsArrayToString = implode(',', $productIds);
         $agentSharedToken = AgentTokenService::getSharedToken();
         if (!$agentSharedToken) {
-            echo 'Unable to get shared agent token. Could not fetch product details.';
             Logger::error('Agent shared token expired');
             return;
         }

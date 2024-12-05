@@ -33,13 +33,11 @@ class CartItemController extends BaseController
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;
-
         try {
             $cartItems = CartItemService::getUserCartItemsWithProductDetails($userId);
             if ($cartItems) {
                 UpdateUserCartItemProductsJob::dispatch($userId);
             }
-
             return $this->sendResponse('Cart items', $cartItems);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
