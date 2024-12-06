@@ -15,6 +15,7 @@
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.8",
         "monolog/monolog": "^3.8",
+        "rap2hpoutre/laravel-log-viewer": "^2.4",
         "symfony/mailer": "^6.3"
     },
     "require-dev": {

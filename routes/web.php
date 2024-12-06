@@ -1,10 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\BookingController;
 use App\Http\Controllers\Api\GoogleLoginController;
-// use App\Jobs\UpdateFavoriteNightly;
-// use App\Models\Favourites;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdminAuthController;
+use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,10 +16,6 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-// Route::get('/', function () {
-//     return redirect(config('constants.base_url'));
-// });
 
 
 Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], function () {
@@ -38,13 +34,10 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('auth/google/callback/', [GoogleLoginController::class, 'handleGoogleCallback']);
 });
 
-// Route::get('/test', function (Favourites $favourites) {
-//     // dispatch(new UpdateFavoriteNightly());
-//     // $accessToken = getToken();
-//     // // Log::info("Access token: $accessToken");
-//     // $accessToken = json_decode($accessToken);
-//     // $token = @$accessToken->access_token;
+Route::group(['prefix' => 'admin'], function () {
+    Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::get('logout', [AdminAuthController::class, 'logout'])->name('logout');
+});
 
-//     // $favourites->updateProduct("26401", $token);
-//     // dd(1);
-// });
+Route::middleware('auth')->get('admin/logs', [LogViewerController::class, 'index'])->name('logs');

@@ -12,10 +12,12 @@ use PhpOption\None;
 class JwtService
 {
     protected $secretKey;
+    protected $algorithm;
 
     public function __construct()
     {
         $this->secretKey = env(ENV_KEY_APP_KEY);
+        $this->algorithm = env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM);
     }
 
     // Generate JWT token
@@ -33,7 +35,7 @@ class JwtService
             'exp' => time() + 60 * $exp
         ];
 
-        return JWT::encode($payload, $this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM));
+        return JWT::encode($payload, $this->secretKey, $this->algorithm);
     }
 
     // Validate and decode JWT token
@@ -46,7 +48,7 @@ class JwtService
             ];
         }
         try {
-            $payload = JWT::decode($token, new Key($this->secretKey, env(ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM)));
+            $payload = JWT::decode($token, new Key($this->secretKey, $this->algorithm));
             return [
                 'tokenType' => $payload->iss,
                 'user' => User::find($payload->sub),

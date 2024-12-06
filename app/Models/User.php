@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'uuid';
     protected $keyType = 'string';
-    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type', 'is_ops'];
 
     /**
      * Define a one-to-one relationship with Agent Token.
