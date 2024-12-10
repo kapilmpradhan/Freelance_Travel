@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\MessageBag;
 
 class AdminAuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login');
+        return view('auth.login', ['errors' => session()->get('errors', new MessageBag())]);
     }
 
     public function login(Request $request)
@@ -29,7 +30,9 @@ class AdminAuthController extends Controller
             return redirect()->route('logs');
         }
 
-        return redirect()->back()->with('errors', ['email' => 'Invalid credentials.'])->withInput();
+        return back()->withErrors([
+            'email' => 'These credentials do not match our records.',
+        ])->withInput($request->only('email'));
     }
 
     public function logout()

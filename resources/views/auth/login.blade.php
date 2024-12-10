@@ -6,6 +6,15 @@
 <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
     <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
 
+    <!-- Show Validation Errors -->
+    @if ($errors->any())
+        <div class="mb-4">
+            @foreach ($errors->all() as $error)
+                <div class="text-red-500 text-sm">{{ $error }}</div>
+            @endforeach
+        </div>
+    @endif
+
     <!-- Login Form -->
     <form method="POST" action="{{ route('login.submit') }}">
         @csrf
