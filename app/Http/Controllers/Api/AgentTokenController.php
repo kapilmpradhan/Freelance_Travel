@@ -31,7 +31,10 @@ class AgentTokenController extends BaseController
 
             $agentTokenDetail = AgentTokenService::getAgentToken($data['username'], $data['password']);
             if (!$agentTokenDetail) {
-                return $this->sendError('Invalid credential');
+                return $this->sendError('Agent token info', [
+                    "errorCode" => "100004",
+                    "errorMessage" => "Invalid agent credential"
+                ]);
             }
             $agentTokenDetail['user_id'] = $data['user_id'];
             $agentTokenDetail['username'] = $data['username'];
@@ -40,7 +43,10 @@ class AgentTokenController extends BaseController
             $agentToken = $agentToken->create($agentTokenDetail);
             return $this->sendResponse('Agent token added', $agentToken->toArray(), 201);
         } catch (Exception $e) {
-            return $this->sendError('Error occured');
+            return $this->sendError('Error occured', [
+                "errorCode" => "100005",
+                "errorMessage" => $e->getMessage()
+            ]);
         }
     }
 
@@ -50,10 +56,13 @@ class AgentTokenController extends BaseController
 
         try {
             $agentToken = AgentToken::where('user_id', $user_id)->first();
-
             if (!$agentToken) {
-                return $this->sendResponse('Agent token not added', null);
+                return $this->sendError('Agent token info', [
+                    "errorCode" => "100003",
+                    "errorMessage" => "Agent token not integrated"
+                ]);
             }
+
             // Get the current time
             $current_date_time = Carbon::now();
             $token_last_update = $agentToken->updated_at;
@@ -62,56 +71,57 @@ class AgentTokenController extends BaseController
             if ($token_last_update->diffInHours($current_date_time) > 21) {
                 $new_token = AgentTokenService::getAgentToken($agentToken->username, $agentToken->password);
                 if (!$new_token) {
-                    $new_token = [];
-                    $new_token['access_token'] = '';
+                    return $this->sendError('Agent token info', [
+                        "errorCode" => "100004",
+                        "errorMessage" => "Invalid agent credential"
+                    ], 401);
                 }
                 $agentToken->update($new_token);
             }
             return $this->sendResponse('Agent token info', $agentToken->toArray());
         } catch (Exception $e) {
-            return $this->sendError('Error occured');
+            return $this->sendError('Error occured', [
+                "errorCode" => "100005",
+                "errorMessage" => $e->getMessage()
+            ]);
         }
     }
 
     public function getSharedToken(Request $request)
     {
-        $agent_username = env('SHARED_TOKEN_AGENT_USERNAME');
-        $agent_password = env('SHARED_TOKEN_AGENT_PASSWORD');
+        $agent_username = env('DEFAULT_TOKEN_AGENT_USERNAME');
+        $agent_password = env('DEFAULT_TOKEN_AGENT_PASSWORD');
 
-        $available_shared_token = AgentToken::where('type', 'shared')->first();
+        $default_token = AgentToken::where('type', 'default')->first();
+        $new_token = AgentTokenService::getAgentToken($agent_username, $agent_password);
 
-        if ($available_shared_token) {
+        if (!$new_token) {
+            Logger::error('Invalid credentials to get agent default token');
+            return $this->sendError('Default token info', [
+                "errorCode" => "100004",
+                "errorMessage" => "Invalid agent credential"
+            ], 401);
+        }
+
+        if ($default_token) {
             // Get the current time
             $current_date_time = Carbon::now();
-            $token_last_update = $available_shared_token->updated_at;
+            $token_last_update = $default_token->updated_at;
 
             // Check if the token last updated datetime is more than 21 hours ago
             if ($token_last_update->diffInHours($current_date_time) > 21) {
-                $new_token = AgentTokenService::getAgentToken($agent_username, $agent_password);
-                if (!$new_token) {
-                    Logger::error('Invalid credentials to get agent shared token');
-                    return $this->sendError('Invalid credentials');
-                }
-                $available_shared_token->update($new_token);
+                $default_token->update($new_token);
             }
-            return $this->sendResponse('Shared token', [
-                'access_token' => $available_shared_token->access_token
-            ]);
+            return $this->sendResponse('Shared token info', $default_token->toArray());
         }
 
-        $agent_token_detail = AgentTokenService::getAgentToken($agent_username, $agent_password);
-        if (isset($agent_token_detail['statusCode'])) {
-            return $this->sendError('Invalid credentials');
-        }
-        $agent_token_detail['username'] = 'n/a';
-        $agent_token_detail['password'] = 'n/a';
-        $agent_token_detail['type'] = 'shared';
+        $new_token['username'] = $agent_username;
+        $new_token['password'] = $agent_password;
+        $new_token['type'] = 'default';
 
-        $new_token = AgentToken::create($agent_token_detail);
+        $new_token = AgentToken::create($new_token);
 
-        return $this->sendResponse('Shared token', [
-            'access_token' => $new_token->access_token
-        ]);
+        return $this->sendResponse('Shared token info', $new_token->toArray());
     }
 
     public function updateAgentToken(Request $request, AgentToken $agentToken)
@@ -126,7 +136,10 @@ class AgentTokenController extends BaseController
 
         $availableToken = AgentToken::where('user_id', $user_id)->first();
         if (!$availableToken) {
-            return $this->sendError('Agent token not added');
+            return $this->sendError('Agent token info', [
+                "errorCode" => "100003",
+                "errorMessage" => "Agent token not integrated"
+            ]);
         }
 
         try {
@@ -139,7 +152,10 @@ class AgentTokenController extends BaseController
             $availableToken->update($updatedTokenDetaill);
             return $this->sendResponse('Agent token updated', $availableToken->toArray());
         } catch (Exception $e) {
-            return $this->sendError('Error occured');
+            return $this->sendError('Error occured', [
+                "errorCode" => "100005",
+                "errorMessage" => $e->getMessage()
+            ]);
         }
     }
 
@@ -150,12 +166,18 @@ class AgentTokenController extends BaseController
         try {
             $agentToken = AgentToken::where('user_id', $user_id)->first();
             if (!$agentToken) {
-                return $this->sendError('Agent token not added');
+                return $this->sendError('Agent token info', [
+                    "errorCode" => "100003",
+                    "errorMessage" => "Agent token not integrated"
+                ]);
             }
             $agentToken->delete();
             return $this->sendResponse('Agent token removed');
         } catch (Exception $e) {
-            return $this->sendError('Error occured');
+            return $this->sendError('Error occured', [
+                "errorCode" => "100005",
+                "errorMessage" => $e->getMessage()
+            ]);
         }
     }
 }
