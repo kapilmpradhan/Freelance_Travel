@@ -56,6 +56,6 @@ class AppleLoginController extends BaseController
             "refreshToken" => $jwtService->generateToken($user, 'refresh')
         ];
 
-        return $this->sendResponse($data, 'successfully');
+        return $this->sendResponse('successfully', $data);
     }
 }
