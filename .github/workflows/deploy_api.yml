@@ -6,11 +6,17 @@ on:
       image_name:
         description: 'Docker image name'
         required: false
-        default: 'freelancetravel/api'
+        default: 'truenarydev/ft-api'
       image_tag:
         description: 'Docker image tag'
         required: false
         default: 'latest'
+      docker_hub_username:
+        description: 'Username of Docker hub'
+        required: true
+      docker_hub_password:
+        description: 'Password of Docker hub'
+        required: true
 
 env:
       APP_NAME: ${{ vars.APP_NAME }}
@@ -84,13 +90,14 @@ jobs:
     #   run: |
     #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-    # - name: Log in to Docker Hub
-    #   run: |
-    #     echo "${{ github.event.inputs.docker_hub_password }}" | docker login --username ${{ github.event.inputs.docker_hub_username }} --password-stdin
+    - name: Log in to Docker Hub
+      run: |
+        echo "${{ github.event.inputs.docker_hub_password }}" | docker login --username ${{ github.event.inputs.docker_hub_username }} --password-stdin
 
     - name: Build and push Docker image
       run: |
         docker build -t $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG .
+        docker push $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
 
   deploy:
     runs-on: ubuntu-latest
