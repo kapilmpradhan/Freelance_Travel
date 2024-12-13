@@ -15,6 +15,13 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . .
 
+# Create required storage directories and files
+RUN mkdir -p storage/framework/cache/data && \
+    mkdir -p storage/framework/sessions && \
+    mkdir -p storage/framework/views && \
+    mkdir -p storage/logs && \
+    touch storage/logs/laravel.log
+
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader \
     && php artisan config:cache \
