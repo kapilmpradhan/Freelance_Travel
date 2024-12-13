@@ -5,17 +5,12 @@ on:
     inputs:
       image_tag:
         description: 'Docker image tag to deploy'
-        required: true
+        required: false
+        default: 'freelancetravel/api'
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
         default: 'latest'
-      docker_hub_username:
-        description: 'Docker hub username'
-        required: true
-      docker_hub_password:
-        description: 'Docker hub password'
-        required: true
-      docker_hub_repo:
-        description: 'Docker hub repository name'
-        required: true
 
 env:
       APP_NAME: ${{ vars.APP_NAME }}
@@ -38,7 +33,7 @@ env:
       JWT_TOKEN_ENCRYPT_ALGORITHM: ${{ vars.JWT_TOKEN_ENCRYPT_ALGORITHM }}
       ACCESS_TOKEN_VALIDITY_PERIOD_IN_MINUTES: ${{ vars.ACCESS_TOKEN_VALIDITY_PERIOD_IN_MINUTES }}
       REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES: ${{ vars.REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES }}
-      APP_DOCKER_IMAGE_NAME: ${{ github.event.inputs.docker_hub_repo }}
+      APP_DOCKER_IMAGE_NAME: ${{ github.event.inputs.image_name }}
       APP_DOCKER_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -95,8 +90,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ github.event.inputs.docker_hub_repo }}:${{ github.event.inputs.image_tag }} .
-        docker push $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+        docker build -t $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG .
 
   deploy:
     runs-on: ubuntu-latest
@@ -123,6 +117,7 @@ jobs:
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/api-compose.template.txt > api-compose.yml
         scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~/deploy/api/api-compose.yml
+        scp -i ec2_key.pem -r public $EC2_USER@$EC2_HOST:/usr/share/nginx/html
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
