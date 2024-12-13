@@ -1,25 +1,30 @@
-# Use the official PHP image
-FROM --platform=linux/amd64 php:8.2-cli
-
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y vim libsqlite3-dev curl zip unzip git && \
-    docker-php-ext-install pdo_mysql && \
-    rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
+FROM php:8.2-fpm
 
 # Set working directory
-WORKDIR /ft
+WORKDIR /api
 
-COPY composer.json /ft/
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY composer.json .
 
 # Generate a new composer.lock file and install Laravel dependencies
 RUN composer install --no-scripts --no-autoloader --no-cache
 
-# Copy the rest of the application files
-COPY . /ft
+# Copy existing application code to the container
+COPY . .
 
 # Create required storage directories and files
 RUN mkdir -p storage/framework/cache/data && \
@@ -28,9 +33,6 @@ RUN mkdir -p storage/framework/cache/data && \
     mkdir -p storage/logs && \
     touch storage/logs/laravel.log
 
-# Run composer install with autoloading after copying files
-RUN composer install --optimize-autoloader --no-dev --no-cache
-
-CMD php artisan migrate && \
-    nohup php artisan serve --host=0.0.0.0 --port=8000 & \
-    php artisan queue:work
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]
