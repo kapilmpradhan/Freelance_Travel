@@ -117,7 +117,7 @@ jobs:
         # Create and Copy docker compose file to EC2 instance
         envsubst < deployment/api-compose.template.txt > api-compose.yml
         scp -i ec2_key.pem api-compose.yml $EC2_USER@$EC2_HOST:~/deploy/api/api-compose.yml
-        scp -i ec2_key.pem -r public $EC2_USER@$EC2_HOST:/usr/share/nginx/html
+        scp -i ec2_key.pem -r public $EC2_USER@$EC2_HOST:~/deploy/api/public
 
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
