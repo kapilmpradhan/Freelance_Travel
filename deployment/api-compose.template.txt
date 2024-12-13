@@ -4,7 +4,7 @@ services:
     container_name: freelance-travel-api
     platform: linux/amd64
     ports:
-      - "$APP_PORT:8000"
+      - "$APP_PORT:9000"
     networks:
       ft-network:
         ipv4_address: $API_IP_ADDRESS
