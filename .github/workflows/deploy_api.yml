@@ -3,12 +3,12 @@ name: Freelance travel api deployment
 on:
   workflow_dispatch:
     inputs:
-      image_tag:
-        description: 'Docker image tag to deploy'
+      image_name:
+        description: 'Docker image name'
         required: false
         default: 'freelancetravel/api'
       image_tag:
-        description: 'Docker image tag to deploy'
+        description: 'Docker image tag'
         required: false
         default: 'latest'
 
