@@ -84,9 +84,9 @@ jobs:
     #   run: |
     #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-    - name: Log in to Docker Hub
-      run: |
-        echo "${{ github.event.inputs.docker_hub_password }}" | docker login --username ${{ github.event.inputs.docker_hub_username }} --password-stdin
+    # - name: Log in to Docker Hub
+    #   run: |
+    #     echo "${{ github.event.inputs.docker_hub_password }}" | docker login --username ${{ github.event.inputs.docker_hub_username }} --password-stdin
 
     - name: Build and push Docker image
       run: |
