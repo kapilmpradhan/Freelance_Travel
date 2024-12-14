@@ -131,6 +131,8 @@ jobs:
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
           cd ~/deploy/api
           docker-compose -f api-compose.yml down
+          echo "removing previous images"
+          docker rmi -f $(docker images freelanctravel/ft-api --format "{{.ID}}")
           docker-compose -f api-compose.yml up -d
 
           echo "Reloading Nginx"
