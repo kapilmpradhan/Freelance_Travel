@@ -16,8 +16,8 @@ class JwtService
 
     public function __construct()
     {
-        $this->secretKey = env('ENV_KEY_APP_KEY');
-        $this->algorithm = env('ENV_KEY_JWT_TOKEN_ENCRYPT_ALGORITHM');
+        $this->secretKey = env('APP_KEY');
+        $this->algorithm = env('JWT_TOKEN_ENCRYPT_ALGORITHM');
     }
 
     // Generate JWT token
