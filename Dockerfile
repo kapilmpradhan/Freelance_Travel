@@ -23,11 +23,7 @@ RUN mkdir -p storage/framework/cache/data && \
     touch storage/logs/laravel.log
 
 # Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:clear \
-    && php artisan view:cache
+RUN composer install --no-dev --optimize-autoloader
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -36,4 +32,10 @@ RUN chown -R www-data:www-data /var/www/html \
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-CMD ["php-fpm"]
+CMD php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
+    php-fpm
