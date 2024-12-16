@@ -40,6 +40,6 @@ class BookingController extends Controller
                 return view('email.email', ['data' => $result]);
             }
         }
-        return redirect(env("APP_BASE_URL"));
+        return redirect(config('app.url'));
     }
 }

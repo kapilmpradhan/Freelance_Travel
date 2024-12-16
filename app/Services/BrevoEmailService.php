@@ -11,7 +11,7 @@ class BrevoEmailService implements IEmailService
         try {
             // Send request to Brevo API
             $response = Http::withHeaders([
-                'api-key' => env('BREVO_MAIL_API_KEY'),
+                'api-key' => config('vars.brevo_mail_api_key'),
                 'accept' => 'application/json',
                 'content-type' => 'application/json',
             ])

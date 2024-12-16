@@ -35,7 +35,7 @@ class GoogleLoginController extends BaseController
                 'last_name' => ($name) ? $last_name : null,
                 'email' => $googleUser->email,
                 'is_email_verified' => true,
-                'sso_type' => env('SSO_TYPE_GOOGLE', 'google')
+                'sso_type' => config('vars.sso_type_google')
 
             ];
             $new_user = $user->storeUser($data);
@@ -59,7 +59,7 @@ class GoogleLoginController extends BaseController
         }
 
         // Verify the token's client ID to ensure it's from your app
-        $googleClientIds = explode(',', env('GOOGLE_CLIENT_IDS'));
+        $googleClientIds = explode(',', config('vars.google_client_id'));
         $tokenInfo = $googleService->googleTokenDetail(($data['google_access_token']));
         if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $googleClientIds)) {
             return $this->sendError('Authentication error: Unauthorized client', null, 401);
@@ -86,7 +86,7 @@ class GoogleLoginController extends BaseController
                 'last_name' => ($name) ? $last_name : null,
                 'email' => $email,
                 'is_email_verified' => true,
-                'sso_type' => env('SSO_TYPE_GOOGLE', 'google')
+                'sso_type' => config('vars.sso_type_google')
 
             ];
             $new_user = $user->storeUser($data);

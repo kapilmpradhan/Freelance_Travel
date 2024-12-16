@@ -35,7 +35,7 @@ class SendForgotPasswordOtp implements ShouldQueue
             // Prepare the data for sending via the Brevo API
             $data = [
                 'sender' => [
-                    'email' => env('MAIL_FROM_ADDRESS')
+                    'email' => config('vars.mail_from_address')
                 ],
                 'to' => [
                     [

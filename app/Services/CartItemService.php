@@ -64,7 +64,7 @@ class CartItemService
             return;
         }
 
-        $requestUrl = env('TDMS_API_URL');
+        $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt(
             $curl,
@@ -102,7 +102,7 @@ class CartItemService
             return;
         }
 
-        $requestUrl = env('TDMS_API_URL');
+        $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/bookingdetails/{$productPricesDetailsId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(

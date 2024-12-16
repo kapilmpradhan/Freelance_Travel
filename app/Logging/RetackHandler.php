@@ -30,13 +30,13 @@ class RetackHandler extends AbstractProcessingHandler
         $userContext = $this->getUserContext();
 
         try {
-            $requestUrl = env('RETACK_ERROR_LOGGING_URL');
+            $requestUrl = config('vars.retack_error_logging_url');
 
             // Initialize cURL
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, "{$requestUrl}");
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-                "ENV-KEY: " . env('RETACK_ENV_KEY'),
+                "ENV-KEY: " . config('vars.retack_env_key'),
                 "Content-Type: application/json",
                 "HTTP_X_USER_CONTEXT: {$userContext}",
             ));

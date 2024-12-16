@@ -9,7 +9,7 @@ class AgentTokenService
 {
     public static function getAgentToken(string $username, string $password)
     {
-        $url = env('TDMS_API_URL') . '/agentToken';
+        $url = config('vars.tdms_api_url') . '/agentToken';
 
         $data = [
             'username' => $username,
@@ -42,8 +42,8 @@ class AgentTokenService
     public static function getSharedToken()
     {
         try {
-            $agent_username = env('SHARED_TOKEN_AGENT_USERNAME');
-            $agent_password = env('SHARED_TOKEN_AGENT_PASSWORD');
+            $agent_username = config('vars.default_token_agent_username');
+            $agent_password = config('vars.default_token_agent_password');
 
             $available_shared_token = AgentToken::where('type', 'shared')->first();
 

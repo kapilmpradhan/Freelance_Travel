@@ -15,7 +15,7 @@ class ProductService
             return;
         }
 
-        $requestUrl = env('TDMS_API_URL');
+        $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/lastupdate/{$productIdsArrayToString}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
@@ -42,7 +42,7 @@ class ProductService
             return null;
         }
 
-        $requestUrl = env('TDMS_API_URL');
+        $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/{$productId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(

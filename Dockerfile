@@ -32,7 +32,11 @@ RUN chown -R www-data:www-data /var/www/html \
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-CMD php artisan config:clear && \
+CMD
+    php artisan config:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
     php-fpm

@@ -17,7 +17,7 @@ class GoogleService
 
     public function googleUserDetail($accessToken)
     {
-        if (env('APP_ENV') == 'testing') {
+        if (config('app.env') == 'testing') {
             return[
                 'name' => 'Test User',
                 'email' => 'test@user.com'

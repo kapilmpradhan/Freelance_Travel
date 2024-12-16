@@ -16,17 +16,17 @@ class JwtService
 
     public function __construct()
     {
-        $this->secretKey = env('APP_KEY');
-        $this->algorithm = env('JWT_TOKEN_ENCRYPT_ALGORITHM');
+        $this->secretKey = config('app.key');
+        $this->algorithm = config('vars.jwt_token_encrypt_algorithm');
     }
 
     // Generate JWT token
     public function generateToken(User $user, $tokenType)
     {
         if ($tokenType == 'access') {
-            $exp = env(ENV_KEY_ACCESS_TOKEN_VALIDITY_PERIOD_IN_MINUTES, 10);
+            $exp = config('vars.access_token_validity_period_in_minutes');
         } elseif ($tokenType == 'refresh') {
-            $exp = env(ENV_KEY_REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES, 1000);
+            $exp = config('vars.refresh_token_validity_period_in_minutes');
         }
         $payload = [
             'iss' => $tokenType,

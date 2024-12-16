@@ -83,7 +83,7 @@ class BaseController extends Controller
 
         //  dispatch(new SendMail( $agentEmail, $orderDetail ));
 
-        $url = env('PRODUCTION_URL');
+        $url = config('app.url');
         $accessToken = getToken();
         $accessToken = json_decode($accessToken);
         $token = @$accessToken->access_token;

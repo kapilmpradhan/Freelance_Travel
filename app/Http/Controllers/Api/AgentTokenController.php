@@ -89,8 +89,8 @@ class AgentTokenController extends BaseController
 
     public function getSharedToken(Request $request)
     {
-        $agent_username = env('DEFAULT_TOKEN_AGENT_USERNAME');
-        $agent_password = env('DEFAULT_TOKEN_AGENT_PASSWORD');
+        $agent_username = config('vars.default_token_agent_username');
+        $agent_password = config('vars.default_token_agent_password');
 
         $default_token = AgentToken::where('type', 'default')->first();
         $new_token = AgentTokenService::getAgentToken($agent_username, $agent_password);
