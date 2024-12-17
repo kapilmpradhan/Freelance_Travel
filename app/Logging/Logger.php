@@ -18,6 +18,10 @@ class Logger
 
     public static function error($message, $exception = null)
     {
-        Log::stack(['console', 'retack', 'single'])->error($message, ['exception' => $exception]);
+        Log::stack(['console', 'retack', 'single'])->error(
+            $message,
+            $exception ? ['exception' => $exception]
+                        : []
+        );
     }
 }

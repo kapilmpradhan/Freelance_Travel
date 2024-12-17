@@ -8,7 +8,6 @@ use App\Logging\Logger;
 use App\Models\AgentToken;
 use App\Services\AgentTokenService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AgentTokenController extends BaseController

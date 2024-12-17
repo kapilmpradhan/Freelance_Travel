@@ -22,13 +22,15 @@ class UpdateUserCartItemProductsJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    protected $agentToken;
     protected $userId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($userId)
+    public function __construct($agentToken, $userId)
     {
+        $this->agentToken = $agentToken;
         $this->userId = $userId;
     }
 
@@ -45,11 +47,52 @@ class UpdateUserCartItemProductsJob implements ShouldQueue
                                     ->toArray();
 
             $tdmsProductIdsToString = implode(',', $cartItemsTdmsProductIds);
-            $tdms_products_last_update = ProductService::getProductsLastUpdateFromApi([$tdmsProductIdsToString]);
+            $tdms_products_last_update = ProductService::getProductsLastUpdateFromApi(
+                $this->agentToken,
+                [$tdmsProductIdsToString]
+            );
 
             if (isset($tdms_products_last_update['errors'])) {
                 Logger::error($tdms_products_last_update['message']);
                 return;
+            }
+
+            foreach (array_keys($tdms_products_last_update) as $productId) {
+                $product = Product::where('tdms_product_id', $productId)
+                                ->orderBy('version', 'desc')
+                                ->first();
+                if (!$product) {
+                    Logger::error('Cannot update. No avaialble cached product');
+                    return;
+                }
+                if (
+                    $product->tdms_product_last_update_date
+                    == $tdms_products_last_update[$productId]
+                ) {
+                    $product->counter = $product->counter + 1;
+                    $product->save();
+                    Logger::info('No changes to cache. TDMS product id: ' . $product->tdms_product_id);
+                } else {
+                    $productDetailsResponse = ProductService::getProductDetailsFromApi($this->agentToken, $product);
+                    if (!$productDetailsResponse || !$productDetailsResponse['results']) {
+                        $productDetailsFromTdms = [];
+                        Logger::error(
+                            'Unable to cache product. Product not found. TDMS product id: '
+                            . $productId
+                        );
+                    } else {
+                        $productDetailsFromTdms = $productDetailsResponse['results'][0];
+                    }
+
+                    $data = [
+                        "tdms_product_id" => $productId,
+                        "tdms_product_last_update_date" => $tdms_products_last_update[$productId],
+                        "json" => $productDetailsFromTdms
+                    ];
+
+                    Product::create($data);
+                    Logger::info('Product cached. TDMS product id: ' . $productId);
+                }
             }
 
             foreach ($cartItems as $item) {
@@ -57,8 +100,8 @@ class UpdateUserCartItemProductsJob implements ShouldQueue
                                                 ->where('product_price_details_id', $item->product_price_details_id)
                                                 ->first();
 
-                $tdms_product_availability = CartItemService::getCartItemProductAvailability($item);
-                $tdms_product_booking_details = CartItemService::getCartItemBookingDetails($item);
+                $tdms_product_availability = CartItemService::getCartItemProductAvailability($this->agentToken, $item);
+                $tdms_product_booking_details = CartItemService::getCartItemBookingDetails($this->agentToken, $item);
                 if ($productPriceAvailability) {
                     $productPriceAvailability->update([
                         'booking_details' => $tdms_product_booking_details,
@@ -72,40 +115,8 @@ class UpdateUserCartItemProductsJob implements ShouldQueue
                         'json' => $tdms_product_availability
                     ]);
                 }
-
-                $product = Product::where('tdms_product_id', $item->tdms_product_id)
-                                ->orderBy('version', 'desc')
-                                ->first();
-                if (
-                    $product
-                    && $product->tdms_product_last_update_date
-                    == $tdms_products_last_update[$item->tdms_product_id]
-                ) {
-                    $product->counter = $product->counter + 1;
-                    $product->save();
-                    Logger::info('No changes to cache. TDMS product id: ' . $product->tdms_product_id);
-                } else {
-                    $productDetailsResponse = ProductService::getProductDetailsFromApi($item);
-                    if (!$productDetailsResponse || !$productDetailsResponse['results']) {
-                        $productDetailsFromTdms = [];
-                        Logger::error(
-                            'Unable to cache product. Product not found. TDMS product id: '
-                            . $item->tdms_product_id
-                        );
-                    } else {
-                        $productDetailsFromTdms = $productDetailsResponse['results'][0];
-
-                        $data = [
-                            "tdms_product_id" => $item->tdms_product_id,
-                            "tdms_product_last_update_date" => $tdms_products_last_update[$item->tdms_product_id],
-                            "json" => $productDetailsFromTdms
-                        ];
-
-                        Product::create($data);
-                        Logger::info('Product cached. TDMS product id: ' . $item->tdms_product_id);
-                    }
-                }
             }
+            Logger::info('Product availablity and booking details updated. TDMS product id: ' . $productId);
         } catch (Exception $e) {
             Logger::error('Unable to cache cart items', $e->getMessage());
         }

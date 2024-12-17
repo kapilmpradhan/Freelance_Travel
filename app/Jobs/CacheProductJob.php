@@ -5,6 +5,7 @@ namespace App\Jobs;
 use Exception;
 use App\Logging\Logger;
 use App\Models\Product;
+use App\Models\AgentToken;
 use App\Models\ProductPriceAvailability;
 use App\Services\ProductService;
 use App\Services\CartItemService;
@@ -21,13 +22,15 @@ class CacheProductJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    protected $user;
     protected $cartItem;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($cartItem)
+    public function __construct($user, $cartItem)
     {
+        $this->user = $user;
         $this->cartItem = $cartItem;
     }
 
@@ -47,9 +50,24 @@ class CacheProductJob implements ShouldQueue
                                         ->where('product_price_details_id', $this->cartItem->product_price_details_id)
                                         ->first();
 
-            $tdms_product_last_update = ProductService::getProductsLastUpdateFromApi([$tdmsProductId]);
-            $tdms_product_availability = CartItemService::getCartItemProductAvailability($this->cartItem);
-            $tdms_product_booking_details = CartItemService::getCartItemBookingDetails($this->cartItem);
+            $agentToken = AgentToken::where('user_id', $this->user->uuid)->first();
+            if (!$agentToken) {
+                Logger::error('Agent not integrated');
+                return;
+            }
+
+            $tdms_product_last_update = ProductService::getProductsLastUpdateFromApi(
+                $agentToken->access_token,
+                [$tdmsProductId]
+            );
+            $tdms_product_availability = CartItemService::getCartItemProductAvailability(
+                $agentToken->access_token,
+                $this->cartItem
+            );
+            $tdms_product_booking_details = CartItemService::getCartItemBookingDetails(
+                $agentToken->access_token,
+                $this->cartItem
+            );
 
             if ($productPriceAvailability) {
                 $productPriceAvailability->update([
@@ -73,7 +91,10 @@ class CacheProductJob implements ShouldQueue
                 Logger::info('No changes to cache. TDMS product id: ' . $product_exists_in_cache->tdms_product_id);
                 return;
             } else {
-                $productDetailsResponse = ProductService::getProductDetailsFromApi($this->cartItem);
+                $productDetailsResponse = ProductService::getProductDetailsFromApi(
+                    $agentToken->access_token,
+                    $this->cartItem
+                );
                 if (!$productDetailsResponse || !$productDetailsResponse['results']) {
                     Logger::error('Unable to cache product. Product not found. TDMS product id: ' . $tdmsProductId);
                     return;

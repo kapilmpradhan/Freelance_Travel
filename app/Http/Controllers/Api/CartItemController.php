@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use App\Models\CartItem;
+use App\Models\AgentToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\UpdateUserCartItemProductsJob;
@@ -22,8 +23,16 @@ class CartItemController extends BaseController
             return $this->sendError('Validation Error.', $validate->errors());
         }
 
+        $agentToken = AgentToken::where('user_id', $request->user->uuid)->get();
+        if (!$agentToken) {
+            return $this->sendError('Agent token info', [
+                "errorCode" => "100003",
+                "errorMessage" => "Agent token not integrated"
+            ]);
+        }
+
         try {
-            $cartItem = $cartItem->storeCartItem($data);
+            $cartItem = $cartItem->storeCartItem($request->user, $data);
             return $this->sendResponse('Items added to cart', $cartItem->toArray());
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
@@ -33,10 +42,19 @@ class CartItemController extends BaseController
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;
+
+        $agentToken = AgentToken::where('user_id', $request->user->uuid)->first();
+        if (!$agentToken) {
+            return $this->sendError('Agent token info', [
+                "errorCode" => "100003",
+                "errorMessage" => "Agent token not integrated"
+            ]);
+        }
+
         try {
             $cartItems = CartItemService::getUserCartItemsWithProductDetails($userId);
             if ($cartItems) {
-                UpdateUserCartItemProductsJob::dispatch($userId);
+                UpdateUserCartItemProductsJob::dispatch($agentToken->access_token, $userId);
             }
             return $this->sendResponse('Cart items', $cartItems);
         } catch (Exception $e) {

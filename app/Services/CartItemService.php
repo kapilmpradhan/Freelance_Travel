@@ -48,7 +48,7 @@ class CartItemService
         return $itemsWithProductDetails;
     }
 
-    public static function getCartItemProductAvailability($item)
+    public static function getCartItemProductAvailability($agentToken, $item)
     {
         if (!$item) {
             return null;
@@ -57,12 +57,6 @@ class CartItemService
         $productPricesDetailsId = $item->product_price_details_id;
         $timeId = $item->time_id;
         $startDate = $item->booking_date;
-
-        $agentSharedToken = AgentTokenService::getSharedToken();
-        if (!$agentSharedToken) {
-            Logger::error('Agent shared token expired');
-            return;
-        }
 
         $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
@@ -72,7 +66,7 @@ class CartItemService
             "{$requestUrl}/checkavailabilityrange/{$productPricesDetailsId}/{$timeId}/{$startDate}/1"
         );
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentSharedToken}",
+            "Authorization: Bearer {$agentToken}",
             "Content-Type: application/json",
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -80,33 +74,26 @@ class CartItemService
         $response = curl_exec($curl);
         $result = json_decode($response, true);
 
-        if (isset($result['errors'])) {
+        if (!$result || isset($result['errors'])) {
             return null;
         }
         return $result[0];
     }
 
-    public static function getCartItemBookingDetails($item)
+    public static function getCartItemBookingDetails($agentToken, $item)
     {
         if (!$item) {
             return null;
         }
 
         $productPricesDetailsId = $item->product_price_details_id;
-        $timeId = $item->time_id;
-        $startDate = $item->booking_date;
 
-        $agentSharedToken = AgentTokenService::getSharedToken();
-        if (!$agentSharedToken) {
-            Logger::error('Agent shared token expired');
-            return;
-        }
 
         $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/bookingdetails/{$productPricesDetailsId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentSharedToken}",
+            "Authorization: Bearer {$agentToken}",
             "Content-Type: application/json",
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);

@@ -6,20 +6,15 @@ use App\Logging\Logger;
 
 class ProductService
 {
-    public static function getProductsLastUpdateFromApi($productIds)
+    public static function getProductsLastUpdateFromApi($agentToken, $productIds)
     {
         $productIdsArrayToString = implode(',', $productIds);
-        $agentSharedToken = AgentTokenService::getSharedToken();
-        if (!$agentSharedToken) {
-            Logger::error('Agent shared token expired');
-            return;
-        }
 
         $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/lastupdate/{$productIdsArrayToString}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentSharedToken}",
+            "Authorization: Bearer {$agentToken}",
             "Content-Type: application/json",
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -32,21 +27,15 @@ class ProductService
         return json_decode($response, true);
     }
 
-    public static function getProductDetailsFromApi($product)
+    public static function getProductDetailsFromApi($agentToken, $product)
     {
         $productId = $product->tdms_product_id;
-
-        $agentSharedToken = AgentTokenService::getSharedToken();
-        if (!$agentSharedToken) {
-            Logger::error('Agent shared token expired');
-            return null;
-        }
 
         $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/{$productId}");
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentSharedToken}",
+            "Authorization: Bearer {$agentToken}",
             "Content-Type: application/json",
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);

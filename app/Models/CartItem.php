@@ -42,10 +42,10 @@ class CartItem extends Model
         ];
     }
 
-    public function storeCartItem($data)
+    public function storeCartItem($user, $data)
     {
         $cartItem = $this->create($data);
-        CacheProductJob::dispatch($cartItem);
+        CacheProductJob::dispatch($user, $cartItem);
 
         return $cartItem;
     }

@@ -49,11 +49,14 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
-    Route::get('token/shared', [AgentTokenController::class, 'getSharedToken']);
     Route::get('token/integration', [AgentTokenController::class, 'getAgentToken']);
     Route::post('token/integration', [AgentTokenController::class, 'addAgentToken']);
     Route::put('token/integration', [AgentTokenController::class, 'updateAgentToken']);
     Route::delete('token/integration', [AgentTokenController::class, 'removeAgentToken']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
+    Route::get('token/shared', [AgentTokenController::class, 'getSharedToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {
