@@ -59,7 +59,7 @@ class GoogleLoginController extends BaseController
         }
 
         // Verify the token's client ID to ensure it's from your app
-        $googleClientIds = explode(',', config('vars.google_client_id'));
+        $googleClientIds = explode(',', config('vars.google_client_ids'));
         $tokenInfo = $googleService->googleTokenDetail(($data['google_access_token']));
         if (!isset($tokenInfo['aud']) || !in_array($tokenInfo['aud'], $googleClientIds)) {
             return $this->sendError('Authentication error: Unauthorized client', null, 401);
