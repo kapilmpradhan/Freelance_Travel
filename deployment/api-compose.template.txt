@@ -8,6 +8,26 @@ services:
     networks:
       ft-network:
         ipv4_address: $API_IP_ADDRESS
+  migrator:
+    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    container_name: freelance-travel-migrator
+    platform: linux/amd64
+    entrypoint: >
+      sh -c "
+      for i in 1 2 3 4 5; do
+        echo 'Attempting to run migrations... Attempt #$i';
+        php artisan migrate --force && break;
+        echo 'Migration failed. Retrying in 5 seconds...';
+        sleep 5;
+      done;
+      if [ \$? -ne 0 ]; then
+        echo 'Migration retries exhausted. Exiting.';
+        exit 1;
+      fi;
+      "
+    restart: "no"
+    networks:
+      - ft-network
 
 networks:
   ft-network:
