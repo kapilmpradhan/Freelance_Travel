@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Jobs\UserProfileAgentJob;
 
 class User extends Authenticatable
 {
@@ -16,7 +17,16 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'uuid';
     protected $keyType = 'string';
-    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_email_verified', 'sso_type', 'is_ops'];
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'email',
+        'password',
+        'is_email_verified',
+        'sso_type',
+        'is_ops',
+        'profile_status'
+    ];
 
     /**
      * Define a one-to-one relationship with Agent Token.
@@ -83,7 +93,10 @@ class User extends Authenticatable
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
-        return $this->create($data);
+        $data['profile_status'] = 'in_progress';
+        $user = $this->create($data);
+        UserProfileAgentJob::dispatch($user);
+        return $user;
     }
 
     public function updatePassword($new_password)

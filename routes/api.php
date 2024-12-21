@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\AgentTokenController;
 use App\Http\Controllers\Api\CartItemController;
+use App\Http\Controllers\Api\OtpController;
+use App\Http\Controllers\Api\ProfileAgentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,8 +30,8 @@ use App\Http\Controllers\Api\CartItemController;
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
-    Route::post('login/email/forgot-password/', [UserController::class, 'forgotPasswordSendOtp']);
-    Route::post('email/otp/verify/', [UserController::class, 'verifyOtp']);
+    Route::post('login/email/forgot-password/', [OtpController::class, 'sendOtp']);
+    Route::post('email/otp/verify/', [OtpController::class, 'verifyOtp']);
     Route::post('email/reset-password/', [UserController::class, 'updatePassword']);
     Route::post('login/apple/', [AppleLoginController::class, 'userLoginApple']);
     Route::post('callback/apple/', [AppleLoginController::class, 'appleAuthCallback']);
@@ -40,6 +42,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
     Route::get('detail', [UserController::class, 'userDetail']);
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
+    Route::post('/apple/new-email/add', [AppleLoginController::class, 'getRealEmailOTP']);
+    Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
@@ -53,10 +57,12 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::post('token/integration', [AgentTokenController::class, 'addAgentToken']);
     Route::put('token/integration', [AgentTokenController::class, 'updateAgentToken']);
     Route::delete('token/integration', [AgentTokenController::class, 'removeAgentToken']);
+    Route::get('token/profile', [ProfileAgentController::class, 'getProfileAgent']);
+    Route::post('token/profile/real-email', [AgentTokenController::class, 'getRealEmail']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
-    Route::get('token/shared', [AgentTokenController::class, 'getSharedToken']);
+    Route::get('token/shared', [AgentTokenController::class, 'getDefaultToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {

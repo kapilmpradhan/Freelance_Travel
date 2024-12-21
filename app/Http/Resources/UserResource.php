@@ -16,6 +16,7 @@ class UserResource
             'last_name' => $data->last_name,
             'email' => $data->email,
             'sso_type' => $data->sso_type,
+            'profile_status' => $data->profile_status,
             'is_agent_integrated' => $has_agent_token,
             'created_at' => $data->created_at,
         ];

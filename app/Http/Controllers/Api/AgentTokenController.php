@@ -86,7 +86,7 @@ class AgentTokenController extends BaseController
         }
     }
 
-    public function getSharedToken(Request $request)
+    public function getDefaultToken(Request $request)
     {
         $agent_username = config('vars.default_token_agent_username');
         $agent_password = config('vars.default_token_agent_password');

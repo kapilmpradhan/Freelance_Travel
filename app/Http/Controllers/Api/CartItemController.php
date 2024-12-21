@@ -42,7 +42,6 @@ class CartItemController extends BaseController
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;
-
         $agentToken = AgentToken::where('user_id', $request->user->uuid)->first();
         if (!$agentToken) {
             return $this->sendError('Agent token info', [

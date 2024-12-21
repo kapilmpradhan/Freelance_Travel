@@ -8,8 +8,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Services\IEmailService;
+use App\Logging\Logger;
 
-class SendForgotPasswordOtp implements ShouldQueue
+class SendProfileEmailOtp implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -31,7 +32,6 @@ class SendForgotPasswordOtp implements ShouldQueue
     public function handle(IEmailService $emailService)
     {
         try {
-            // Prepare the data for sending via the Brevo API
             $data = [
                 'sender' => [
                     'email' => config('vars.mail_from_address')
@@ -41,15 +41,15 @@ class SendForgotPasswordOtp implements ShouldQueue
                         'email' => $this->email
                     ]
                 ],
-                'subject' => 'Forgot password OTP',
-                'htmlContent' => view('email.forgotPasswordOTP', ['otp' => $this->otp])->render(),
+                'subject' => 'Verify email',
+                'htmlContent' => view('email.verifyEmailOTP', ['otp' => $this->otp])->render(),
             ];
 
             $response = $emailService->sendMail($data);
 
-            echo $response;
+            Logger::info('Profile setup email verification sent to ' . $this->email);
         } catch (\Exception $e) {
-            echo 'Failed to send email. Error: ' . $e->getMessage();
+            Logger::error('Failed to send email to ' . $this->email, $e);
         }
     }
 }
