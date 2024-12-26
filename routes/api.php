@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\AgentTokenController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\ProfileAgentController;
+use App\Http\Controllers\Api\UserAgentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::delete('token/integration', [AgentTokenController::class, 'removeAgentToken']);
     Route::get('token/profile', [ProfileAgentController::class, 'getProfileAgent']);
     Route::post('token/profile/real-email', [AgentTokenController::class, 'getRealEmail']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent/v2/', 'middleware' => 'auth.jwt'], function () {
+    Route::post('token/integration', [UserAgentController::class, 'addUserAgent']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
