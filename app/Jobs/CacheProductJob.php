@@ -5,8 +5,8 @@ namespace App\Jobs;
 use Exception;
 use App\Logging\Logger;
 use App\Models\Product;
-use App\Models\AgentToken;
 use App\Models\ProductPriceAvailability;
+use App\Services\AgentTokenService;
 use App\Services\ProductService;
 use App\Services\CartItemService;
 use Illuminate\Bus\Queueable;
@@ -50,22 +50,18 @@ class CacheProductJob implements ShouldQueue
                                         ->where('product_price_details_id', $this->cartItem->product_price_details_id)
                                         ->first();
 
-            $agentToken = AgentToken::where('user_id', $this->user->uuid)->first();
-            if (!$agentToken) {
-                Logger::error('Agent not integrated');
-                return;
-            }
+            $default_agent_access_token = AgentTokenService::getDefaultAgentToken();
 
             $tdms_product_last_update = ProductService::getProductsLastUpdateFromApi(
-                $agentToken->access_token,
+                $default_agent_access_token,
                 [$tdmsProductId]
             );
             $tdms_product_availability = CartItemService::getCartItemProductAvailability(
-                $agentToken->access_token,
+                $default_agent_access_token,
                 $this->cartItem
             );
             $tdms_product_booking_details = CartItemService::getCartItemBookingDetails(
-                $agentToken->access_token,
+                $default_agent_access_token,
                 $this->cartItem
             );
 
@@ -92,7 +88,7 @@ class CacheProductJob implements ShouldQueue
                 return;
             } else {
                 $productDetailsResponse = ProductService::getProductDetailsFromApi(
-                    $agentToken->access_token,
+                    $default_agent_access_token,
                     $this->cartItem
                 );
                 if (!$productDetailsResponse || !$productDetailsResponse['results']) {

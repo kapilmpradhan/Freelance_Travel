@@ -2,8 +2,27 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
+use App\Models\AgentToken;
+
 class AgentTokenService
 {
+    public static function getDefaultAgentToken()
+    {
+        // TODO: replace it with AgentDetail
+        $default_agent_token = AgentToken::where('type', 'default')->first();
+
+        if ($default_agent_token->updated_at->diffInHours(Carbon::now()) > 21) {
+            $new_token = self::getAgentToken(
+                username: config('vars.default_token_agent_username'),
+                password: config('vars.default_token_agent_password'),
+            );
+            $default_agent_token->update($new_token);
+        }
+
+        return $default_agent_token->access_token;
+    }
+
     public static function getAgentToken(string $username, string $password)
     {
         $url = config('vars.tdms_api_url') . '/agentToken';

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use App\Jobs\CacheProductJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -44,9 +43,6 @@ class CartItem extends Model
 
     public function storeCartItem($user, $data)
     {
-        $cartItem = $this->create($data);
-        CacheProductJob::dispatch($user, $cartItem);
-
-        return $cartItem;
+        return $this->create($data);
     }
 }
