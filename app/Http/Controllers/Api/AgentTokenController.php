@@ -6,8 +6,8 @@ use Exception;
 use Carbon\Carbon;
 use App\Logging\Logger;
 use App\Models\AgentToken;
-use App\Services\AgentTokenService;
 use Illuminate\Http\Request;
+use App\Services\AgentTokenService;
 use Illuminate\Support\Facades\Validator;
 
 class AgentTokenController extends BaseController
