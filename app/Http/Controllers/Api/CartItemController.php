@@ -6,6 +6,7 @@ use Exception;
 use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Jobs\CacheProductJob;
 use App\Jobs\UpdateUserCartItemProductsJob;
 use App\Services\CartItemService;
 
@@ -37,9 +38,6 @@ class CartItemController extends BaseController
 
         try {
             $cartItems = CartItemService::getUserCartItemsWithProductDetails($userId);
-            if ($cartItems) {
-                UpdateUserCartItemProductsJob::dispatch($agentToken->access_token, $userId);
-            }
             return $this->sendResponse('Cart items', $cartItems);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
