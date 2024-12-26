@@ -67,6 +67,7 @@ class UserProfileAgentJob implements ShouldQueue
             Logger::info('User profile setup complete for ' . $email);
         } catch (Exception $e) {
             Logger::error("User profile setup failed for " . $email, $e);
+            throw $e;
         }
     }
 }

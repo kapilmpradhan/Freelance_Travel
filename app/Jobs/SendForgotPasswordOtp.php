@@ -50,6 +50,7 @@ class SendForgotPasswordOtp implements ShouldQueue
             echo $response;
         } catch (\Exception $e) {
             echo 'Failed to send email. Error: ' . $e->getMessage();
+            throw $e;
         }
     }
 }

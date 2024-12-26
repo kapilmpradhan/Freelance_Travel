@@ -113,6 +113,7 @@ class CacheProductJob implements ShouldQueue
                 . $this->cartItem->tdms_product_id,
                 $e->getMessage()
             );
+            throw $e;
         }
     }
 }

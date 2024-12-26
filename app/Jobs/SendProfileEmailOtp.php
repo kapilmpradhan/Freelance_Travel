@@ -50,6 +50,7 @@ class SendProfileEmailOtp implements ShouldQueue
             Logger::info('Profile setup email verification sent to ' . $this->email);
         } catch (\Exception $e) {
             Logger::error('Failed to send email to ' . $this->email, $e);
+            throw $e;
         }
     }
 }

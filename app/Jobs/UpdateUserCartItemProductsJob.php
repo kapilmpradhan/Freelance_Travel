@@ -119,6 +119,7 @@ class UpdateUserCartItemProductsJob implements ShouldQueue
             Logger::info('Product availablity and booking details updated. TDMS product id: ' . $productId);
         } catch (Exception $e) {
             Logger::error('Unable to cache cart items', $e->getMessage());
+            throw $e;
         }
     }
 }
