@@ -63,7 +63,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent/v2/', 'middleware' => 'auth.jwt'], function () {
-    Route::post('token/integration', [UserAgentController::class, 'addUserAgent']);
+    Route::get('integration', [UserAgentController::class, 'getUserAgents']);
+    Route::post('integration', [UserAgentController::class, 'addUserAgent']);
+    Route::delete('integration/{userAgentId}', [UserAgentController::class, 'deleteUserAgent']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {

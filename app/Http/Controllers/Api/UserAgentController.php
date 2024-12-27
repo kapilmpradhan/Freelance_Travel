@@ -44,4 +44,26 @@ class UserAgentController extends BaseController
             ]);
         }
     }
+
+    public function getUserAgents(Request $request)
+    {
+        $userAgents = UserAgent::where('user_id', $request->user->uuid)->get();
+        return $this->sendResponse('User agents', $userAgents->toArray());
+    }
+
+    public function deleteUserAgent(Request $request, $userAgentId)
+    {
+        if (!$userAgentId) {
+            return $this->sendError('User agent ID required');
+        }
+        $userAgent = UserAgent::where('id', $userAgentId)
+                            ->where('user_id', $request->user->uuid)
+                            ->first();
+        if (!$userAgent) {
+            return $this->sendError('User agent does not exist');
+        }
+
+        $userAgent->delete();
+        return $this->sendResponse('User agent deleted');
+    }
 }
