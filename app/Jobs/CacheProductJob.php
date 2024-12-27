@@ -111,7 +111,7 @@ class CacheProductJob implements ShouldQueue
             Logger::error(
                 'Unable to cache product. TDMS product id: '
                 . $this->cartItem->tdms_product_id,
-                $e->getMessage()
+                $e
             );
             throw $e;
         }
