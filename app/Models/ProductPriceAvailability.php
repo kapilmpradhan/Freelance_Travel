@@ -16,4 +16,9 @@ class ProductPriceAvailability extends Model
         'json' => 'array',
         'booking_details' => 'array',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'tdms_product_id', 'tdms_product_id');
+    }
 }

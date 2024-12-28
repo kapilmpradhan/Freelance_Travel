@@ -23,6 +23,23 @@ class CartItem extends Model
         return $this->belongsTo(User::class, 'user_id', 'uuid');
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'tdms_product_id', 'tdms_product_id');
+    }
+
+    public function productPriceAvailability()
+    {
+        return $this->belongsTo(
+            ProductPriceAvailability::class,
+            'product_price_details_id', // Foreign key in cart_items
+            'product_price_details_id'  // Referenced key in product_price_availabilities
+        )->whereColumn(
+            'cart_items.tdms_product_id', // Ensure tdms_product_id also matches
+            'product_price_availabilities.tdms_product_id'
+        );
+    }
+
     protected function bookingDate(): Attribute
     {
         return Attribute::make(
