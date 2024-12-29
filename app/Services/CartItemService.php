@@ -2,13 +2,149 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Logging\Logger;
 use App\Models\CartItem;
+use App\Models\CartItemAvailability;
 use App\Models\Product;
 use App\Models\ProductPriceAvailability;
 
 class CartItemService
 {
+    /**
+     * @param string $userId
+     * @param int $tdmsProductId
+     * @param int $productPricesDetailsId
+     * @param string $timeId
+     * @param string $startDate
+     * @param int $days
+     * @param int[] $selectedAvailableIndices Array of integers
+     */
+    public static function saveItems(
+        string $userId,
+        int $tdmsProductId,
+        int $productPricesDetailsId,
+        string $timeId,
+        string $startDate,
+        int $days,
+        array $selectedAvailableIndices,
+    ) {
+        try {
+            // Validate that all indices are natural numbers
+            foreach ($selectedAvailableIndices as $selectedIndex) {
+                if (!is_int($selectedIndex) || $selectedIndex < 0) {
+                    return ServiceResponse::badRequest(
+                        message: 'Selected availability indices must be natural numbers',
+                    );
+                }
+            }
+
+            $defaultAgentAccessToken = AgentTokenService::getDefaultAgentToken();
+            $now = Carbon::now();
+            $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
+            if (!$productDetailsResponse) {
+                return ServiceResponse::notFound(
+                    message: 'Product not found',
+                );
+            }
+            $product = $productDetailsResponse['results'][0];
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                $defaultAgentAccessToken,
+                $productPricesDetailsId,
+                $timeId,
+                $startDate,
+                $days,
+            );
+
+            if (empty($productAvailabilities)) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+
+            $maxIndex = max($selectedAvailableIndices);
+            if ($maxIndex >= count($productAvailabilities)) {
+                return ServiceResponse::badRequest(
+                    message: 'Selected availability selectedIndex is out of bounds',
+                );
+            }
+
+            $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
+                $defaultAgentAccessToken,
+                [$tdmsProductId],
+            );
+            if (!$productLastUpdate) {
+                throw new ServiceException(
+                    message: 'Product last update not found',
+                );
+            }
+
+            $productLastUpdate = $productLastUpdate[$tdmsProductId];
+
+            $cartItems = [];
+            $cartItems = DB::transaction(function () use (
+                $tdmsProductId,
+                $product,
+                $now,
+                $productLastUpdate,
+                $productAvailabilities,
+                $userId,
+                $productPricesDetailsId,
+                $timeId,
+                $startDate,
+                $days,
+                $selectedAvailableIndices,
+                $cartItems,
+            ) {
+                $existingProductQ = Product::where('tdms_product_id', $tdmsProductId);
+                if ($existingProductQ->exists()) {
+                    $existingProduct = $existingProductQ->first();
+                    $should_update = empty($existingProduct->tdms_productLastUpdate_date) ||
+                        $now->isAfter($existingProduct->tdms_productLastUpdate_date);
+
+                    if ($should_update) {
+                        // TODO: move existing productDetailsResponse to a product_history table
+                        $existingProduct->update([
+                            'json' => $product,
+                            'tdms_product_last_update_date' => $now,
+                        ]);
+                    }
+                } else {
+                    Product::create([
+                        'tdms_product_id' => $tdmsProductId,
+                        'json' => $product,
+                        'tdms_product_last_update_date' => $now,
+                    ]);
+                }
+
+                foreach ($selectedAvailableIndices as $selectedIndex) {
+                    $availability = $productAvailabilities[$selectedIndex];
+                    $new_cart_item = CartItem::create([
+                        'user_id' => $userId,
+                        'tdms_product_id' => $tdmsProductId,
+                        'product_price_details_id' => $productPricesDetailsId,
+                        'time_id' => $timeId,
+                        'booking_date' => BaseService::stringToDate($startDate),
+                        'start_date' => BaseService::stringToDate($startDate),
+                        'days' => $days,
+                        'selected_index' => $selectedIndex,
+                        'availability' => $availability,
+                        'availability_last_updated_at' => $now,
+                    ]);
+                    array_push($cartItems, $new_cart_item);
+                }
+
+                return $cartItems;
+            });
+
+            return ServiceResponse::success(data: $cartItems);
+        } catch (ServiceException $e) {
+            Logger::error('Failed to save cart items', $e);
+            return $e->toServiceResponse();
+        }
+    }
+
     public static function getUserCartItemsWithProductDetails($userId)
     {
         $cartItems = CartItem::where('user_id', $userId)
@@ -27,13 +163,13 @@ class CartItemService
             $item = $item->toArray();
             $tdmsProductId = $item['tdms_product_id'];
 
-            $product = Product::where('tdms_product_id', $tdmsProductId)
+            $productDetailsResponse = Product::where('tdms_product_id', $tdmsProductId)
                             ->orderBy('version', 'desc')
                             ->first();
-            if ($product) {
-                $item['version'] = $product->version;
-                $item['counter'] = $product->counter;
-                $item['details'] = $product->json;
+            if ($productDetailsResponse) {
+                $item['version'] = $productDetailsResponse->version;
+                $item['counter'] = $productDetailsResponse->counter;
+                $item['details'] = $productDetailsResponse->json;
                 $item['details']['availability'] = $productPriceAvailability
                                                 ? $productPriceAvailability->toArray()
                                                 : [];

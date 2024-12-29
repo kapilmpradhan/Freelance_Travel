@@ -12,8 +12,21 @@ class CartItem extends Model
     use HasFactory;
 
     protected $table = 'cart_items';
-    protected $fillable = ['user_id', 'tdms_product_id', 'product_price_details_id', 'booking_date', 'time_id'];
-
+    protected $fillable = [
+        'user_id',
+        'tdms_product_id',
+        'product_price_details_id',
+        'time_id',
+        'booking_date',
+        'start_date',
+        'days',
+        'selected_index',
+        'availability',
+        'availability_last_updated_at',
+    ];
+    protected $casts = [
+        'availability' => 'array',
+    ];
 
     /**
      * Relationship: Each cartItem belongs to a single user.
@@ -26,6 +39,11 @@ class CartItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'tdms_product_id', 'tdms_product_id');
+    }
+
+    public function availabilities()
+    {
+        return $this->hasMany(CartItemAvailability::class, 'cart_item_id');
     }
 
     public function productPriceAvailability()
@@ -55,6 +73,23 @@ class CartItem extends Model
             'product_price_details_id' => 'required|int',
             'booking_date' => 'required|date_format:j-M-Y',
             'time_id' => 'required|string'
+        ];
+    }
+
+    public static function saveItemsRule()
+    {
+        return [
+            'tdmsProductId' => 'required|integer',
+            'productPricesDetailsId' => 'required|integer',
+            'timeId' => 'required|string',
+            // Must be in format 30-Nov-2012
+            'startDate' => 'required|date|date_format:d-M-Y',
+            // Must be greater than zero
+            'days' => 'required|integer|min:1',
+             // Must be an array with at least one element
+            'selectedAvailableIndices' => 'required|array|min:1',
+            // Each element in the array must be an integer greater than or equal to 0
+            'selectedAvailableIndices.*' => 'integer|min:0',
         ];
     }
 

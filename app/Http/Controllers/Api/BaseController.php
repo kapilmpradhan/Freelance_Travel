@@ -8,6 +8,7 @@ use App\Jobs\SendMail;
 use App\Mail\SendShareToAgent;
 use App\Mail\SendShareToEmail;
 use App\Models\Order;
+use App\Services\ServiceResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -51,6 +52,19 @@ class BaseController extends Controller
         ];
 
         return response()->json($response, 200);
+    }
+
+    public function sendResponseFromService(ServiceResponse $serviceResponse)
+    {
+        $code = $serviceResponse->responseCode;
+        $response = [
+            'success' => $serviceResponse->isSuccess(),
+            'title' => $serviceResponse->message,
+            'code' => $code,
+            'data' => $serviceResponse->data,
+        ];
+
+        return response()->json($response, $code);
     }
 
     public function shareBooking(Request $request)
