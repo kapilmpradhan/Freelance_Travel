@@ -61,6 +61,19 @@ class CartItemController extends BaseController
         }
     }
 
+    public function getItemsInCart(Request $request)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getCartItemsResponse = CartItemService::getItemsInCart(userId: $userId);
+            return $this->sendResponseFromService($getCartItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get items in cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;

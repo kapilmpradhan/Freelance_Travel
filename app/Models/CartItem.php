@@ -66,6 +66,14 @@ class CartItem extends Model
         );
     }
 
+    protected function startDate(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => Carbon::parse($value)->format('d-M-Y'),
+            set: fn ($value) => Carbon::parse($value)->format('Y-m-d')
+        );
+    }
+
     public function addProductsToCartRule()
     {
         return [

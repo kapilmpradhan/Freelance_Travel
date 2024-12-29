@@ -49,6 +49,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::post('items', [CartItemController::class, 'addItemsToCart']);
+    Route::get('items', [CartItemController::class, 'getItemsInCart']);
     Route::post('add', [CartItemController::class, 'addItemToCart']);
     Route::get('list', [CartItemController::class, 'getCartItems']);
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);

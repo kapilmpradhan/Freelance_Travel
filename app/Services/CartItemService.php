@@ -145,6 +145,15 @@ class CartItemService
         }
     }
 
+    public static function getItemsInCart($userId)
+    {
+        $cartItems = CartItem::where('user_id', $userId)
+                        // only return items added from new api
+                        ->whereNotNull('selected_index')
+                        ->get();
+        return ServiceResponse::success(data: $cartItems);
+    }
+
     public static function getUserCartItemsWithProductDetails($userId)
     {
         $cartItems = CartItem::where('user_id', $userId)
