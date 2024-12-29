@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Logging\Logger;
 use App\Models\CartItem;
-use App\Models\CartItemAvailability;
+use App\Models\CartCustomerDetail;
 use App\Models\Product;
 use App\Models\ProductPriceAvailability;
 
@@ -151,7 +151,92 @@ class CartItemService
                         // only return items added from new api
                         ->whereNotNull('selected_index')
                         ->get();
+        $productIds = $cartItems->pluck('tdms_product_id')->unique();
+        $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+        $cartItems->each(function ($cartItem) use ($products) {
+            $cartItem->product = $products->get($cartItem->tdms_product_id);
+        });
         return ServiceResponse::success(data: $cartItems);
+    }
+
+    public static function removeItemFromCart($userId, $cartItemId)
+    {
+        $cartItem = CartItem::where('user_id', $userId)->where('id', $cartItemId)->first();
+
+        if (!$cartItem) {
+            return ServiceResponse::notFound(
+                message: 'Cart item not found',
+            );
+        }
+
+        $cartItem->delete();
+
+        return ServiceResponse::success();
+    }
+
+    /**
+     * Set customer details with customer_index validation and synchronization.
+     *
+     * @param string $userId
+     * @param array $data
+     */
+    public static function setCustomers(string $userId, array $data)
+    {
+        // Validate customer_index sequence
+        $indices = array_column($data, 'customerIndex');
+        sort($indices);
+
+        foreach ($indices as $key => $index) {
+            if ($index !== $key) {
+                return ServiceResponse::badRequest(
+                    message: 'Invalid index',
+                );
+            }
+        }
+
+        DB::transaction(function () use ($userId, $data) {
+            $existingDetails = CartCustomerDetail::where('user_id', $userId)->get()->keyBy('customer_index');
+
+            $newIndices = array_column($data, 'customerIndex');
+
+            // Update or create records
+            foreach ($data as $detail) {
+                CartCustomerDetail::updateOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'customer_index' => $detail['customerIndex'],
+                    ],
+                    [
+                        'user_id' => $userId,
+                        'first_name' => $detail['firstName'],
+                        'last_name' => $detail['lastName'],
+                        'date_of_birth' => $detail['dateOfBirth'],
+                        'email' => $detail['email'],
+                        'postal_code' => $detail['postalCode'] ?? null,
+                        'customer_index' => $detail['customerIndex'],
+                    ],
+                );
+            }
+
+            // Delete records that are in the database but not in the input
+            Logger::debug($existingDetails->keys());
+            $indicesToDelete = $existingDetails->keys()->diff($newIndices);
+            Logger::debug($indicesToDelete);
+            if ($indicesToDelete->isNotEmpty()) {
+                CartCustomerDetail::where('user_id', $userId)
+                    ->whereIn('customer_index', $indicesToDelete)
+                    ->delete();
+            }
+        });
+
+        return ServiceResponse::success();
+    }
+
+    public static function getCustomers(string $userId)
+    {
+        $customerDetails = CartCustomerDetail::where('user_id', $userId)->get();
+        return ServiceResponse::success(data: $customerDetails);
     }
 
     public static function getUserCartItemsWithProductDetails($userId)

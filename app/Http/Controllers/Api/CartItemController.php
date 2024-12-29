@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Exception;
 use App\Logging\Logger;
 use App\Models\CartItem;
+use App\Models\CartCustomerDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\CacheProductJob;
@@ -61,6 +62,42 @@ class CartItemController extends BaseController
         }
     }
 
+    public function setCustomers(Request $request)
+    {
+        $userId = $request->user->uuid;
+        $data = $request->all();
+        $validator = CartCustomerDetail::validator(data: $data);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        try {
+            $setCustomersResponse = CartItemService::setCustomers(
+                userId: $userId,
+                data: $validator->validated()['items'],
+            );
+            return $this->sendResponseFromService($setCustomersResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to set customers of cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getCustomers(Request $request)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getCartCustomersResponse = CartItemService::getCustomers(userId: $userId);
+            return $this->sendResponseFromService($getCartCustomersResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get cart customers details';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function getItemsInCart(Request $request)
     {
         $userId = $request->user->uuid;
@@ -69,6 +106,23 @@ class CartItemController extends BaseController
             return $this->sendResponseFromService($getCartItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get items in cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function removeItemFromCart(Request $request, int $cartItemId)
+    {
+        $userId = $request->user->uuid;
+
+        try {
+            $removeResponse = CartItemService::removeItemFromCart(
+                userId: $userId,
+                cartItemId: $cartItemId,
+            );
+            return $this->sendResponseFromService($removeResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to remove item from cart';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }

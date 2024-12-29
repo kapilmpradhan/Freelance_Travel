@@ -41,11 +41,6 @@ class CartItem extends Model
         return $this->belongsTo(Product::class, 'tdms_product_id', 'tdms_product_id');
     }
 
-    public function availabilities()
-    {
-        return $this->hasMany(CartItemAvailability::class, 'cart_item_id');
-    }
-
     public function productPriceAvailability()
     {
         return $this->belongsTo(
