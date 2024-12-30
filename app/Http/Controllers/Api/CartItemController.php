@@ -111,6 +111,31 @@ class CartItemController extends BaseController
         }
     }
 
+    public function setBookingData(Request $request, int $cartItemId)
+    {
+        $userId = $request->user->uuid;
+        $data = $request->all();
+        $validator = Validator::make($data, CartItem::updateItemBookingDataRule());
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        try {
+            $updateItemBookingDataResponse = CartItemService::updateItemBookingData(
+                userId: $userId,
+                cartItemId: $cartItemId,
+                quantity: $validator->validated()['quantity'],
+                bookingData: $validator->validated()['bookingData'],
+            );
+            return $this->sendResponseFromService($updateItemBookingDataResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to set booking data';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function removeItemFromCart(Request $request, int $cartItemId)
     {
         $userId = $request->user->uuid;

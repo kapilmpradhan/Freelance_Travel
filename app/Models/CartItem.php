@@ -24,10 +24,13 @@ class CartItem extends Model
         'availability',
         'availability_last_updated_at',
         'booking_details',
+        'booking_quantity',
+        'booking_data',
     ];
     protected $casts = [
         'availability' => 'array',
         'booking_details' => 'array',
+        'booking_data' => 'array',
     ];
 
     /**
@@ -95,6 +98,14 @@ class CartItem extends Model
             'selectedAvailableIndices' => 'required|array|min:1',
             // Each element in the array must be an integer greater than or equal to 0
             'selectedAvailableIndices.*' => 'integer|min:0',
+        ];
+    }
+
+    public static function updateItemBookingDataRule()
+    {
+        return [
+            'quantity' => 'required|integer',
+            'bookingData' => 'required',
         ];
     }
 

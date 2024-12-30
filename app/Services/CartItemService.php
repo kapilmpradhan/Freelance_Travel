@@ -178,6 +178,22 @@ class CartItemService
         return ServiceResponse::success(data: $cartItems);
     }
 
+    public static function updateItemBookingData($userId, int $cartItemId, int $quantity, mixed $bookingData)
+    {
+        $cartItem = CartItem::where('user_id', $userId)
+            ->where('id', $cartItemId)
+            ->first();
+
+        if (!$cartItem) {
+            return ServiceResponse::notFound(message: 'Cart item not found');
+        }
+        $cartItem->booking_quantity = $quantity;
+        $cartItem->booking_data = $bookingData;
+
+        $cartItem->save();
+        return ServiceResponse::success('Cart item updated successfully');
+    }
+
     public static function removeItemFromCart($userId, $cartItemId)
     {
         $cartItem = CartItem::where('user_id', $userId)->where('id', $cartItemId)->first();
