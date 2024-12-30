@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Logging\Logger;
+use Illuminate\Support\Facades\Http;
 
 class ProductService
 {
@@ -53,6 +54,30 @@ class ProductService
             return null;
         }
         return $response;
+    }
+
+    public static function getBookingDetails($agentToken, $productPricesDetailsId)
+    {
+        $requestUrl = config('vars.tdms_api_url') . "/bookingdetails/{$productPricesDetailsId}";
+
+        // Send the HTTP GET request
+        $response = Http::withToken($agentToken)
+            ->acceptJson()
+            ->get($requestUrl);
+
+        // Check if the response is successful
+        if ($response->successful()) {
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status(),
+            );
+        } else {
+            return HttpResponse::failed(
+                message: 'Failed to retrieve booking details',
+                responseCode: $response->status(),
+                data: $response->status(),
+            );
+        }
     }
 
     public static function getProductAvailabilitiesFromApi(

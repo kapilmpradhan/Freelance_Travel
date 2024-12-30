@@ -23,9 +23,11 @@ class CartItem extends Model
         'selected_index',
         'availability',
         'availability_last_updated_at',
+        'booking_details',
     ];
     protected $casts = [
         'availability' => 'array',
+        'booking_details' => 'array',
     ];
 
     /**

@@ -70,6 +70,22 @@ class CartItemService
                 );
             }
 
+            $bookingDetailsResponse = ProductService::getBookingDetails(
+                agentToken: $defaultAgentAccessToken,
+                productPricesDetailsId: $productPricesDetailsId,
+            );
+
+            if ($bookingDetailsResponse->isError()) {
+                if ($bookingDetailsResponse->statusCode != 404) {
+                    return ServiceResponse::notFound('Booking details not found');
+                }
+
+                $errorMessage = 'Failed to load booking details';
+                Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
+                throw new ServiceException(message: $errorMessage);
+            }
+            $bookingDetails = $bookingDetailsResponse->data;
+
             $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
                 $defaultAgentAccessToken,
                 [$tdmsProductId],
@@ -96,6 +112,7 @@ class CartItemService
                 $days,
                 $selectedAvailableIndices,
                 $cartItems,
+                $bookingDetails,
             ) {
                 $existingProductQ = Product::where('tdms_product_id', $tdmsProductId);
                 if ($existingProductQ->exists()) {
@@ -131,6 +148,7 @@ class CartItemService
                         'selected_index' => $selectedIndex,
                         'availability' => $availability,
                         'availability_last_updated_at' => $now,
+                        'booking_details' => $bookingDetails,
                     ]);
                     array_push($cartItems, $new_cart_item);
                 }
