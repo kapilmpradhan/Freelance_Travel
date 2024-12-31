@@ -30,7 +30,7 @@ class JwtAuthenticate
             return $this->responseService->sendError('Token not provided', [], 401);
         }
 
-        $validated_data = $this->jwtService->validateToken($token);
+        $validated_data = $this->jwtService->validateAccessToken($token);
 
         if ($validated_data['error']) {
             return $this->responseService->sendError($validated_data['error'], [], 401);

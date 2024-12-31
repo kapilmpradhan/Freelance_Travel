@@ -58,8 +58,11 @@ class AppleLoginController extends BaseController
                 ]);
         }
         $data = [
-            "accessToken" => $jwtService->generateToken($user, 'access'),
-            "refreshToken" => $jwtService->generateToken($user, 'refresh')
+            "accessToken" => $jwtService->generateAccessToken($user),
+            "refreshToken" => $jwtService->generateRefreshToken(
+                $user->uuid,
+                $request->header('User-Agent')
+            )
         ];
 
         return $this->sendResponse('successfully', $data);

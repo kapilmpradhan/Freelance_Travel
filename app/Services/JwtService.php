@@ -6,40 +6,47 @@ use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\User;
+use Carbon\Carbon;
 use Firebase\JWT\ExpiredException;
-use PhpOption\None;
+use Illuminate\Support\Str;
+use App\Models\RefreshToken;
+use App\Services\UserService;
 
 class JwtService
 {
-    protected $secretKey;
-    protected $algorithm;
-
-    public function __construct()
+    public static function generateAccessToken(User $user)
     {
-        $this->secretKey = config('app.key');
-        $this->algorithm = config('vars.jwt_token_encrypt_algorithm');
-    }
-
-    // Generate JWT token
-    public function generateToken(User $user, $tokenType)
-    {
-        if ($tokenType == 'access') {
-            $exp = config('vars.access_token_validity_period_in_minutes');
-        } elseif ($tokenType == 'refresh') {
-            $exp = config('vars.refresh_token_validity_period_in_minutes');
-        }
+        $exp = config('vars.access_token_validity_period_in_minutes');
         $payload = [
-            'iss' => $tokenType,
+            'iss' => 'access',
             'sub' => $user->uuid,
             'iat' => time(),
             'exp' => time() + 60 * $exp
         ];
 
-        return JWT::encode($payload, $this->secretKey, $this->algorithm);
+        return JWT::encode(
+            $payload,
+            config('app.key'),
+            config('vars.jwt_token_encrypt_algorithm')
+        );
+    }
+
+    public function generateRefreshToken($userId, $userAgent)
+    {
+        $randString = Str::random(128);
+        $last_used_at = Carbon::now();
+
+        $refreshToken = RefreshToken::create([
+            "user_id" => $userId,
+            "token" => $randString,
+            "last_used_at" => $last_used_at,
+            "user_agent" => $userAgent
+        ]);
+        return $refreshToken->token;
     }
 
     // Validate and decode JWT token
-    public function validateToken($token)
+    public function validateAccessToken($token)
     {
         if (!$token) {
             return [
@@ -48,7 +55,13 @@ class JwtService
             ];
         }
         try {
-            $payload = JWT::decode($token, new Key($this->secretKey, $this->algorithm));
+            $payload = JWT::decode(
+                $token,
+                new Key(
+                    config('app.key'),
+                    config('vars.jwt_token_encrypt_algorithm')
+                )
+            );
             return [
                 'tokenType' => $payload->iss,
                 'user' => User::find($payload->sub),
@@ -65,5 +78,28 @@ class JwtService
                 'error' => 'Token is invalid.'
             ];
         }
+    }
+
+    public function validateRefreshToken($token, $userId)
+    {
+        $refreshToken = RefreshToken::where('token', $token)
+                                    ->where('user_id', $userId)
+                                    ->first();
+        if (!$refreshToken) {
+            return false;
+        }
+
+        $lastUsed = $refreshToken->last_used_at;
+        $twoWeeksAgo = Carbon::now()->subWeeks(2);
+        if (Carbon::parse($lastUsed)->lessThan($twoWeeksAgo)) {
+            return false;
+        } else {
+            $refreshToken->last_used_at = Carbon::now();
+            $refreshToken->save();
+        }
+
+        $user = User::where('uuid', $refreshToken->user_id)->first();
+        $newAccessToken = JwtService::generateAccessToken($user);
+        return $newAccessToken;
     }
 }

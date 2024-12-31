@@ -44,8 +44,8 @@ class GoogleLoginController extends BaseController
         $user = ($existing_user) ? $existing_user : $new_user;
 
         $data = [
-            "accessToken" => $jwtService->generateToken($user, 'access'),
-            "refreshToken" => $jwtService->generateToken($user, 'refresh')
+            "accessToken" => $jwtService->generateAccessToken($user),
+            "refreshToken" => $jwtService->generateRefreshToken($user->uuid, null)
         ];
 
         return $this->sendResponse('JWT tokens', $data);
@@ -95,8 +95,11 @@ class GoogleLoginController extends BaseController
         $user = ($existing_user) ? $existing_user : $new_user;
 
         $data = [
-            "accessToken" => $jwtService->generateToken($user, 'access'),
-            "refreshToken" => $jwtService->generateToken($user, 'refresh')
+            "accessToken" => $jwtService->generateAccessToken($user),
+            "refreshToken" => $jwtService->generateRefreshToken(
+                $user->uuid,
+                $request->header('User-Agent')
+            )
         ];
 
         return $this->sendResponse('JWT tokens', $data);

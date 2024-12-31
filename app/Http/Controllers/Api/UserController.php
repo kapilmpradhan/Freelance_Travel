@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Jenssegers\Agent\Agent;
 
 class UserController extends BaseController
 {
@@ -39,14 +40,17 @@ class UserController extends BaseController
 
         // Check if the user exists and the password is correct
         if ($user && Hash::check($request->password, $user->password)) {
-            $accessToken = $jwtService->generateToken($user, 'access');
-            $refreshToken = $jwtService->generateToken($user, 'refresh');
+            $accessToken = $jwtService->generateAccessToken($user);
+            $refreshToken = $jwtService->generateRefreshToken(
+                $user->uuid,
+                $request->header('User-Agent')
+            );
 
             $data = [
                 'accessToken' => $accessToken,
                 'refreshToken' => $refreshToken
             ];
-            return $this->sendResponse('JWT tokens', $data);
+            return $this->sendResponse('Access and Refresh tokens', $data);
         } else {
             return $this->sendError('Invalid Credentials');
         }
@@ -120,20 +124,30 @@ class UserController extends BaseController
     public function accessTokenRegenerate(Request $request, JwtService $jwtService)
     {
         $data = $request->all();
-        $refresh_token = $data['refresh_token'];
 
-        $validated_data = $jwtService->validateToken($refresh_token);
+        $validate = Validator::make(
+            $data,
+            [
+                "user_id" => "required",
+                "refresh_token" => "required"
+            ]
+        );
 
-        if ($validated_data['error']) {
-            return $this->sendError($validated_data['error']);
-        } elseif ($validated_data['tokenType'] != 'refresh') {
-            return $this->sendError('Invalid token.');
+        if ($validate->fails()) {
+            return $this->sendError('Error occured', $validate->errors());
         }
 
-        $new_access_token = $jwtService->generateToken($validated_data['user'], 'access');
+        $user_id = $data['user_id'];
+        $refresh_token = $data['refresh_token'];
+
+        $validateRefreshTokenResult = $jwtService->validateRefreshToken($refresh_token, $user_id);
+
+        if (!$validateRefreshTokenResult) {
+            return $this->sendError('Invalid refresh token');
+        }
 
         $data = [
-            'accessToken' => $new_access_token
+            'accessToken' => $validateRefreshTokenResult
         ];
 
         return $this->sendResponse('New access token', $data);
