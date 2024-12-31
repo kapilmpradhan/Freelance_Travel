@@ -45,6 +45,11 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
     Route::post('/apple/new-email/add', [AppleLoginController::class, 'getRealEmailOTP']);
     Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);
+    Route::get('agents', [UserAgentController::class, 'getUserAgents']);
+    Route::get('agents/{userAgentId}', [UserAgentController::class, 'detailUserAgent']);
+    Route::put('agents/{userAgentId}', [UserAgentController::class, 'updateUserAgent']);
+    Route::delete('agents/{userAgentId}', [UserAgentController::class, 'deleteUserAgent']);
+    Route::get('agents/{userAgentId}/token', [UserAgentController::class, 'getUserAgentToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {

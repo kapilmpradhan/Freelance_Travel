@@ -23,5 +23,8 @@ return [
     'tdms_api_url' => env('TDMS_API_URL'),
 
     'retack_error_logging_url' => env('RETACK_ERROR_LOGGING_URL'),
-    'retack_env_key' => env('RETACK_ENV_KEY')
+    'retack_env_key' => env('RETACK_ENV_KEY'),
+
+    'default_agent_branch_code' => env('DEFAULT_AGENT_BRANCH_CODE'),
+    'default_agent_email' => env('DEFAULT_AGENT_EMAIL'),
 ];

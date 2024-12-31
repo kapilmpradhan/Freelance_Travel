@@ -9,8 +9,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Logging\Logger;
-use App\Models\AgentToken;
-use App\Models\ProfileToken;
+use App\Models\UserAgent;
+use App\Models\Agent;
 use App\Services\TdmsService;
 
 class UserProfileAgentJob implements ShouldQueue
@@ -38,29 +38,23 @@ class UserProfileAgentJob implements ShouldQueue
     {
         try {
             $email = $this->user->email;
+            $customerLastOrderBranch = TdmsService::getCustomerLastOrderBranch($email);
+            $defaultAgent = Agent::where('branch_code', config(key: 'vars.default_agent_branch_code'))->first();
 
-            $agent = AgentToken::where('type', 'default')->first();
-
-            $customerLastOrder = TdmsService::getCustomerLastOrder($agent, $email);
-            if ($customerLastOrder) {
-                $agentEmail = $customerLastOrder['salesAgentEmail'];
-                $branchCode = $customerLastOrder['salesBranchCode'];
-            } else {
-                $profileToken = ProfileToken::where('agent_email', $agent->username)->first();
-                if ($profileToken) {
-                    $agentEmail = $profileToken->agent_email;
-                    $branchCode = $profileToken->branch_code;
-                } else {
-                    $agentEmail = $agent->username;
-                    $branchCode = "TST"; # TODO: Modify this after customer API is avaialble.
+            if ($customerLastOrderBranch) {
+                $agent = Agent::where('branch_code', $customerLastOrderBranch)->first();
+                if (!$agent) {
+                    $agent = $defaultAgent;
                 }
+            } else {
+                $agent = $defaultAgent;
             }
 
-            ProfileToken::create([
-                    "agent_email" => $agentEmail,
-                    "user_id" => $this->user->uuid,
-                    "branch_code" => $branchCode,
-                ]);
+            $userAgent = UserAgent::create([
+                "agent_id" => $agent->id,
+                "user_id" => $this->user->uuid,
+                "type" => 'profile'
+            ]);
 
             $this->user->profile_status = 'success';
             $this->user->save();
