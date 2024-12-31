@@ -41,6 +41,14 @@ class UserProfileAgentJob implements ShouldQueue
             $customerLastOrderBranch = TdmsService::getCustomerLastOrderBranch($email);
             $defaultAgent = Agent::where('branch_code', config(key: 'vars.default_agent_branch_code'))->first();
 
+            if (!$defaultAgent) {
+                $defaultAgent = Agent::create([
+                    'branch_code' => config(key: 'vars.default_agent_branch_code'),
+                    'email' => config('vars.default_agent_email'),
+                    'password' => config('vars.default_agent_password')
+                ]);
+            }
+
             if ($customerLastOrderBranch) {
                 $agent = Agent::where('branch_code', $customerLastOrderBranch)->first();
                 if (!$agent) {
