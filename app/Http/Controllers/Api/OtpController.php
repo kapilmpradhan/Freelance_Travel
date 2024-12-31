@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\SendForgotPasswordOtp;
+use App\Models\Otp;
 use App\Services\OtpService;
 
 class OtpController extends BaseController
@@ -42,12 +43,13 @@ class OtpController extends BaseController
     public function verifyOtp(Request $request, User $user)
     {
         $data = $request->all();
-        $user = $request->user;
 
         $validate = Validator::make($data, $user->verifyOtpRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
         }
+
+        $user = User::where('email', $data['email'])->first();
 
         if (!$user) {
             return $this->sendError('Invalid OTP/email');
