@@ -2,12 +2,15 @@
 
 namespace App\Jobs;
 
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use App\Models\User;
 use App\Services\IEmailService;
+use App\Services\OtpService;
 use App\Logging\Logger;
 
 class SendProfileEmailOtp implements ShouldQueue
@@ -17,13 +20,11 @@ class SendProfileEmailOtp implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected $email;
-    protected $otp;
+    protected $userId;
 
-    public function __construct($email, $otp)
+    public function __construct($userId)
     {
-        $this->email = $email;
-        $this->otp = $otp;
+        $this->userId = $userId;
     }
 
     /**
@@ -32,24 +33,33 @@ class SendProfileEmailOtp implements ShouldQueue
     public function handle(IEmailService $emailService)
     {
         try {
+            $user = User::findOrFail($this->userId);
+            $otp = OtpService::generateOtp($user);
+            if ($otp['success'] == false) {
+                throw new Exception($otp['error']);
+            }
+            $email = $user->email;
+            if ($user->sso_type === 'apple') {
+                $email = $user->verified_email;
+            }
             $data = [
                 'sender' => [
                     'email' => config('vars.mail_from_address')
                 ],
                 'to' => [
                     [
-                        'email' => $this->email
+                        'email' => $email
                     ]
                 ],
                 'subject' => 'Verify email',
-                'htmlContent' => view('email.verifyEmailOTP', ['otp' => $this->otp])->render(),
+                'htmlContent' => view('email.verifyEmailOTP', ['otp' => $otp['otpDetails']->otp])->render(),
             ];
 
             $response = $emailService->sendMail($data);
 
-            Logger::info('Profile setup email verification sent to ' . $this->email);
+            Logger::info('Profile setup email verification sent to ' . $email);
         } catch (\Exception $e) {
-            Logger::error('Failed to send email to ' . $this->email, $e);
+            Logger::error('Failed to send email to user with id:' . $this->userId, $e);
             throw $e;
         }
     }

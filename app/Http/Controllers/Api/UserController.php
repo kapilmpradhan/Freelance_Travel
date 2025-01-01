@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Services\JwtService;
 use App\Services\OtpService;
+use App\Jobs\SendProfileEmailOtp;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +24,7 @@ class UserController extends BaseController
 
         $data['sso_type'] = 'email'; // Add email sso to the array
         $new_user = $user->storeUser($data);
+        SendProfileEmailOtp::dispatch($new_user->id);
         $return_data = $userResource->userDetail($new_user);
 
         return $this->sendResponse('successfully', $return_data);

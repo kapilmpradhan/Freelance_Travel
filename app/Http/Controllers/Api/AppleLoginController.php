@@ -73,6 +73,10 @@ class AppleLoginController extends BaseController
         $user = $request->user;
         $data = $request->all();
 
+        if ($user->sso_type !== 'apple') {
+            return $this->sendError('Only allowed to apple login');
+        }
+
         $validate = Validator::make($data, ["new_email" => "required|email"]);
         if ($validate->fails()) {
             return $this->sendError('Error occured', $validate->errors(), 400);
@@ -87,11 +91,8 @@ class AppleLoginController extends BaseController
             return $this->sendError('User profile status is ' . $user->profile_status);
         }
 
-        $otp = OtpService::generateOtp($user);
-        if ($otp['success'] == false) {
-            return $this->sendError($otp['error']);
-        }
-        SendProfileEmailOtp::dispatch($data['new_email'], $otp['otpDetails']->otp);
+        $user->verified_email = $data['new_email'];
+        SendProfileEmailOtp::dispatch($user->id);
 
         return $this->sendResponse('OTP sent to ' . $data['new_email']);
     }

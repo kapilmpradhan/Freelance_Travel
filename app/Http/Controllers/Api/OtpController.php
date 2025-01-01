@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\SendForgotPasswordOtp;
+use App\Jobs\UserProfileAgentJob;
 use App\Models\Otp;
 use App\Services\OtpService;
 
@@ -59,6 +60,10 @@ class OtpController extends BaseController
 
         if ($is_otp_verfied['success'] == false) {
             return $this->sendError($is_otp_verfied['error']);
+        }
+        $updated_user = User::findOrFail($user->id);
+        if ($updated_user->profile_status == 'in_progress') {
+            UserProfileAgentJob::dispatch($updated_user);
         }
 
         return $this->sendResponse('Otp Verfied');
