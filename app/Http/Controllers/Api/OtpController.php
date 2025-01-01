@@ -61,7 +61,7 @@ class OtpController extends BaseController
         if ($is_otp_verfied['success'] == false) {
             return $this->sendError($is_otp_verfied['error']);
         }
-        $updated_user = User::findOrFail($user->id);
+        $updated_user = User::findOrFail($user->uuid);
         if ($updated_user->profile_status == 'in_progress') {
             UserProfileAgentJob::dispatch($updated_user);
         }
