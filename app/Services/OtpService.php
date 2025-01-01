@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Otp;
 use App\Models\User;
@@ -70,9 +71,13 @@ class OtpService
         } elseif (Carbon::now()->diffInSeconds($otp->expire_timestamp) < 0) {
             return ['success' => false, 'error' => 'Expired OTP'];
         } else {
-            $otp->is_verified = true;
-            $otp->save();
+            DB::transaction(function () use ($otp, $user) {
+                $otp->is_verified = true;
+                $otp->save();
 
+                $user->is_email_verified = true;
+                $user->save();
+            });
             return ['success' => true];
         }
     }
