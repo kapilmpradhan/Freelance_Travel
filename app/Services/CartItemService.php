@@ -249,6 +249,7 @@ class CartItemService
                         'email' => $detail['email'],
                         'postal_code' => $detail['postalCode'] ?? null,
                         'customer_index' => $detail['customerIndex'],
+                        'phone_number' => $detail['phoneNumber']
                     ],
                 );
             }
