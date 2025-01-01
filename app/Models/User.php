@@ -27,6 +27,9 @@ class User extends Authenticatable
         'is_ops',
         'profile_status'
     ];
+    protected $casts = [
+        'is_email_verified' => 'boolean',
+    ];
 
     /**
      * Define a one-to-one relationship with Agent Token.

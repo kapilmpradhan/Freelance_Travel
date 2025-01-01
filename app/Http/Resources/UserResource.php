@@ -18,6 +18,7 @@ class UserResource
             'sso_type' => $data->sso_type,
             'profile_status' => $data->profile_status,
             'is_agent_integrated' => $has_agent_token,
+            'is_email_verified' => $data->is_email_verified,
             'created_at' => $data->created_at,
         ];
     }
