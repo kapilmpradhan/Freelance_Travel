@@ -92,7 +92,7 @@ class AppleLoginController extends BaseController
         }
 
         $user->verified_email = $data['new_email'];
-        SendProfileEmailOtp::dispatch($user->id);
+        SendProfileEmailOtp::dispatch($user->uuid);
 
         return $this->sendResponse('OTP sent to ' . $data['new_email']);
     }

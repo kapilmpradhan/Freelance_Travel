@@ -24,7 +24,7 @@ class UserController extends BaseController
 
         $data['sso_type'] = 'email'; // Add email sso to the array
         $new_user = $user->storeUser($data);
-        SendProfileEmailOtp::dispatch($new_user->id);
+        SendProfileEmailOtp::dispatch($new_user->uuid);
         $return_data = $userResource->userDetail($new_user);
 
         return $this->sendResponse('successfully', $return_data);
