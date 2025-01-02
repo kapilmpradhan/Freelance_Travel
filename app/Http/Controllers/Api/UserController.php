@@ -30,6 +30,17 @@ class UserController extends BaseController
         return $this->sendResponse('successfully', $return_data);
     }
 
+    public function sendVerificationEmail(Request $request)
+    {
+        $user = $request->user;
+        if ($user->is_email_verified) {
+            return $this->sendError('Email already verified');
+        }
+        SendProfileEmailOtp::dispatch($user->uuid);
+
+        return $this->sendResponse('Verification email sent');
+    }
+
     public function userLoginEmail(Request $request, User $user, JwtService $jwtService)
     {
         $validate = Validator::make($request->all(), $user->emailLoginRule());
@@ -103,6 +114,14 @@ class UserController extends BaseController
         }
 
         try {
+            // user did not complete verify email,
+            // lost password but update pasword from otp
+            // so set email to verified
+            if (!$user->is_email_verified && $user->sso_type === 'email') {
+                $user->is_email_verified = true;
+                $user->save();
+                UserProfileAgentJob::dispatch($user);
+            }
             $user->updatePassword($data['new_password']);
             return $this->sendResponse('Password changed successfully');
         } catch (\Exception $e) {

@@ -53,9 +53,13 @@ class AppleLoginController extends BaseController
                     'first_name' => $first_name,
                     'last_name' => $last_name,
                     'sso_type' => 'apple',
-                    'is_email_verfied' => true,
-                    'profile_status' => $requires_real_email ? 'require_real_email' : 'in_progress'
+                    'is_email_verfied' => !$requires_real_email,
+                    'profile_status' => $requires_real_email ? 'require_real_email' : 'in_progress',
+                    'verified_email' => $requires_real_email ? null : $email,
                 ]);
+            if (!$requires_real_email) {
+                UserProfileAgentJob::dispatch($user);
+            }
         }
         $data = [
             "accessToken" => $jwtService->generateAccessToken($user),
@@ -77,6 +81,10 @@ class AppleLoginController extends BaseController
             return $this->sendError('Only allowed to apple login');
         }
 
+        if ($user->profile_status !== 'require_real_email') {
+            return $this->sendError('User profile status is ' . $user->profile_status);
+        }
+
         $validate = Validator::make($data, ["new_email" => "required|email"]);
         if ($validate->fails()) {
             return $this->sendError('Error occured', $validate->errors(), 400);
@@ -87,11 +95,8 @@ class AppleLoginController extends BaseController
             return $this->sendError('User with email already exists');
         }
 
-        if ($user->profile_status !== 'require_real_email') {
-            return $this->sendError('User profile status is ' . $user->profile_status);
-        }
-
         $user->verified_email = $data['new_email'];
+        $user->save();
         SendProfileEmailOtp::dispatch($user->uuid);
 
         return $this->sendResponse('OTP sent to ' . $data['new_email']);
@@ -102,7 +107,7 @@ class AppleLoginController extends BaseController
         $user = $request->user;
         $data = $request->all();
 
-        $validate = Validator::make($data, ["otp" => "string|required", "new_email" => "email|required"]);
+        $validate = Validator::make($data, ["otp" => "string|required"]);
         if ($validate->fails()) {
             return $this->sendError('Error occured', $validate->errors(), 400);
         }
@@ -111,11 +116,9 @@ class AppleLoginController extends BaseController
         if ($otp['success'] == false) {
             return $this->sendError($otp['error']);
         }
-
-        $user->profile_status = 'in_progress';
+        $user->is_email_verified = true;
         $user->save();
 
-        $user->email = $data['new_email'];
         UserProfileAgentJob::dispatch($user);
 
         return $this->sendResponse('Private apple account connected to real email account.');

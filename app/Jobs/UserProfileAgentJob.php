@@ -37,7 +37,10 @@ class UserProfileAgentJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $email = $this->user->email;
+            if ($this->user->is_email_verified) {
+                throw new Exception('Email not verified');
+            }
+            $email = $this->user->verified_email ?? $this->user->email;
             $customerLastOrderBranch = TdmsService::getCustomerLastOrderBranch($email);
             $defaultAgent = Agent::where('branch_code', config(key: 'vars.default_agent_branch_code'))->first();
 

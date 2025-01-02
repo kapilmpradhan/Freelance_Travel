@@ -40,6 +40,9 @@ class SendProfileEmailOtp implements ShouldQueue
             }
             $email = $user->email;
             if ($user->sso_type === 'apple') {
+                if (is_null($user->verified_email)) {
+                    throw new Exception('Verified email not set to send otp');
+                }
                 $email = $user->verified_email;
             }
             $data = [

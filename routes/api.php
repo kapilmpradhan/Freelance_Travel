@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\UserAgentController;
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
+    Route::post('email/send-verification', [UserController::class, 'sendVerificationEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
     Route::post('login/email/forgot-password/', [OtpController::class, 'sendOtp']);
     Route::post('email/otp/verify/', [OtpController::class, 'verifyOtp']);
