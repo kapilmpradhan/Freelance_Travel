@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Logging\Logger;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Otp;
@@ -57,6 +58,7 @@ class OtpService
             $newOtp = Otp::create(['user_id' => $user->uuid,'otp' => $otpValue]);
             return ['success' => true, 'otpDetails' => $newOtp];
         } catch (\Exception $e) {
+            Logger::error("Generate OTP exception", $e);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

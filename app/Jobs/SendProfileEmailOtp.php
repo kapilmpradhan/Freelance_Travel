@@ -36,7 +36,8 @@ class SendProfileEmailOtp implements ShouldQueue
             $user = User::findOrFail($this->userId);
             $otp = OtpService::generateOtp($user);
             if ($otp['success'] == false) {
-                throw new Exception($otp['error']);
+                Logger::info($otp['error']);
+                return;
             }
             $email = $user->email;
             if ($user->sso_type === 'apple') {
