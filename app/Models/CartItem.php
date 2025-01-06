@@ -26,6 +26,7 @@ class CartItem extends Model
         'booking_details',
         'booking_quantity',
         'booking_data',
+        'user_order_id',
     ];
     protected $casts = [
         'availability' => 'array',
@@ -112,5 +113,14 @@ class CartItem extends Model
     public function storeCartItem($user, $data)
     {
         return $this->create($data);
+    }
+
+    public static function userCartItems($userId)
+    {
+        return CartItem::where('user_id', $userId)
+            // only return items added from new api
+            ->whereNotNull('selected_index')
+            // filter processed items
+            ->whereNull('user_order_id');
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\CacheProductJob;
 use App\Jobs\UpdateUserCartItemProductsJob;
+use App\Services\BookingService;
 use App\Services\CartItemService;
 
 class CartItemController extends BaseController
@@ -181,6 +182,27 @@ class CartItemController extends BaseController
             ]);
         } catch (Exception $e) {
             return $this->sendError('Error occured');
+        }
+    }
+
+    public function submitOrder(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, ["paymentType" => "required|in:email-quote,pay-now"]);
+
+        if ($validate->fails()) {
+            return $this->sendError("Place order failed", $validate->errors());
+        }
+
+        try {
+            $postOrderResponse = BookingService::postOrder(
+                userId: $request->user->uuid,
+                intent: $data['paymentType'],
+                processAsQuote: true,
+            );
+            return $this->sendResponseFromService($postOrderResponse);
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
         }
     }
 }

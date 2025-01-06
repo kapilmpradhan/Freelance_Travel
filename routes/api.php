@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\AgentTokenController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\ProfileAgentController;
@@ -62,6 +63,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::get('customers', [CartItemController::class, 'getCustomers']);
     Route::post('add', [CartItemController::class, 'addItemToCart']);
     Route::get('list', [CartItemController::class, 'getCartItems']);
+    Route::post('order', [CartItemController::class, 'submitOrder']);
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
 });
 

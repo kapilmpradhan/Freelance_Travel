@@ -398,8 +398,12 @@
                 </div>
                 <div class="agent-box">
                     <h3>Hello {{ @$data->redeemers[0]['firstName'] }} {{ @$data->redeemers[0]['lastName'] }},</h3>
-                    <p>Please find the details of your FreelanceTravel quote from {{ @$data->agent['firstName'] }}
-                        {{ @$data->agent['lastName'] }} below.</p>
+                    @if(!empty($data->agent['firstName']))
+                        <p>
+                            Please find the details of your FreelanceTravel quote from 
+                            {{ $data->agent['firstName'] }} {{ $data->agent['lastName'] ?? '' }} below.
+                        </p>
+                    @endif
                     <p>To confirm your quote click ‘BOOK NOW’ to open a secure quotes page including your payment link.When you
                         have completed payment your booking will be automatically confirmed and your tickets will be emailed to
                         you.</p>

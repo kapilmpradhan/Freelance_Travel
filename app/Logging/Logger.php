@@ -16,12 +16,11 @@ class Logger
         Log::stack(['console', 'single'])->debug($message);
     }
 
-    public static function error($message, $exception = null)
+    public static function error($message, $exception = null, $extra = null)
     {
         Log::stack(['console', 'retack', 'single'])->error(
             $message,
-            $exception ? ['exception' => $exception]
-                        : []
+            ['exception' => $exception ?? $message, 'extra' => $extra ?? []]
         );
     }
 }

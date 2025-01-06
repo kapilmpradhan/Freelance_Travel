@@ -4,11 +4,13 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use App\Models\Product;
 use App\Models\ProductPriceAvailability;
+use App\Models\UserOrder;
 
 class CartItemService
 {
@@ -40,7 +42,8 @@ class CartItemService
                 }
             }
 
-            $defaultAgentAccessToken = AgentTokenService::getDefaultAgentToken();
+            $userAgent = UserAgentService::getUserProfileAgent($userId);
+            $defaultAgentAccessToken = $userAgent->access_token;
             $now = Carbon::now();
             $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
             if (!$productDetailsResponse) {
@@ -165,10 +168,7 @@ class CartItemService
 
     public static function getItemsInCart($userId)
     {
-        $cartItems = CartItem::where('user_id', $userId)
-                        // only return items added from new api
-                        ->whereNotNull('selected_index')
-                        ->get();
+        $cartItems = CartItem::userCartItems($userId)->get();
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
@@ -370,5 +370,36 @@ class CartItemService
             return null;
         }
         return $result;
+    }
+
+    public static function cleanCartItems(
+        string $userId,
+        $bookingReference,
+        $cartItemIds,
+        $requestData,
+        $responseData,
+        $intent,
+    ) {
+        DB::transaction(function () use (
+            $bookingReference,
+            $cartItemIds,
+            $responseData,
+            $requestData,
+            $intent,
+            $userId,
+        ) {
+            //TODO: remove customers
+            $userOrder = UserOrder::create([
+                'booking_reference' => $bookingReference,
+                'cart_item_ids' => $cartItemIds,
+                'user_id' => $userId,
+                'request_data' => $requestData,
+                'response_data' => $responseData,
+            ]);
+
+            if ($intent == 'email-quote') {
+                CartItem::whereIn('id', $cartItemIds)->update(['user_order_id' => $userOrder->id]);
+            }
+        });
     }
 }
