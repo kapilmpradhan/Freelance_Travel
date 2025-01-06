@@ -12,6 +12,7 @@ use App\Jobs\CacheProductJob;
 use App\Jobs\UpdateUserCartItemProductsJob;
 use App\Services\BookingService;
 use App\Services\CartItemService;
+use App\Models\UserOrder;
 
 class CartItemController extends BaseController
 {
@@ -203,6 +204,30 @@ class CartItemController extends BaseController
             return $this->sendResponseFromService($postOrderResponse);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function completeOrder(Request $request)
+    {
+        $params = $request->query();
+
+        $validate = Validator::make($params, [
+            "bookingReference" => "required|string"
+        ]);
+
+        if ($validate->fails()) {
+            return $this->sendError('Complete order error', $validate->errors());
+        }
+        $validated = $validate->validated();
+
+        try {
+            BookingService::completeOrder(
+                bookingReference: $validated['bookingReference'],
+            );
+            return $this->sendResponse('Order complete');
+        } catch (Exception $e) {
+            Logger::error(message: 'Order complete fail', exception: $e);
+            return $this->sendError('Order complete fail');
         }
     }
 }

@@ -13,12 +13,15 @@ class UserOrder extends Model
     protected $fillable = [
         'booking_reference',
         'cart_item_ids', // needed to
+        'is_paid',
+        'intent',
         'user_id',
         'request_data',
         'response_data',
     ];
     protected $casts = [
         'cart_item_ids' => 'array',
+        'is_paid' => 'boolean',
         'request_data' => 'array',
         'response_data' => 'array',
     ];

@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Jobs\SendShareMailJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use App\Models\User;
+use App\Models\UserOrder;
 use App\Services\TdmsService;
 use App\Services\UserAgentService;
 
@@ -236,5 +238,21 @@ class BookingService
         }
 
         return ServiceResponse::success(data: $orderRequestData);
+    }
+
+    public static function completeOrder(string $bookingReference)
+    {
+        $userOrder = UserOrder::where('booking_reference', $bookingReference)->first();
+        if (is_null($userOrder)) {
+            return ServiceResponse::notFound(message: 'Booking reference not found');
+        }
+
+        DB::transaction(function () use ($userOrder) {
+            $userOrder->is_paid = true;
+
+            CartItem::whereIn('id', $userOrder->cart_item_ids)
+            ->update(['user_order_id' => $userOrder->id]);
+        });
+        return ServiceResponse::success();
     }
 }

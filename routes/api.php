@@ -67,6 +67,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {
+    Route::put('order/complete', [CartItemController::class, 'completeOrder']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
     Route::get('token/integration', [AgentTokenController::class, 'getAgentToken']);
     Route::post('token/integration', [AgentTokenController::class, 'addAgentToken']);

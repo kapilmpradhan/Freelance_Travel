@@ -11,6 +11,7 @@ use App\Models\CartCustomerDetail;
 use App\Models\Product;
 use App\Models\ProductPriceAvailability;
 use App\Models\UserOrder;
+use Exception;
 
 class CartItemService
 {
@@ -385,19 +386,20 @@ class CartItemService
             $cartItemIds,
             $responseData,
             $requestData,
-            $intent,
+            $updateCartItems,
             $userId,
         ) {
             //TODO: remove customers
             $userOrder = UserOrder::create([
                 'booking_reference' => $bookingReference,
                 'cart_item_ids' => $cartItemIds,
+                'intent' => $intent,
                 'user_id' => $userId,
                 'request_data' => $requestData,
                 'response_data' => $responseData,
             ]);
 
-            if ($intent == 'email-quote') {
+            if ($intent === 'email-quote') { // emailing quote should remove items from cart
                 CartItem::whereIn('id', $cartItemIds)->update(['user_order_id' => $userOrder->id]);
             }
         });
