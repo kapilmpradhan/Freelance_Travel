@@ -13,6 +13,7 @@ use App\Jobs\UpdateUserCartItemProductsJob;
 use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Models\UserOrder;
+use App\Services\TdmsService;
 
 class CartItemController extends BaseController
 {
@@ -229,5 +230,19 @@ class CartItemController extends BaseController
             Logger::error(message: 'Order complete fail', exception: $e);
             return $this->sendError('Order complete fail');
         }
+    }
+
+    public function getBookings(Request $request)
+    {
+        $user = $request->user();
+        $page = $request->query('page');
+        $afterDate = $request->query('afterDate');
+
+        $bookings = TdmsService::getCustomerBookings($user->email, $page, $afterDate);
+        if (!$bookings) {
+            return $this->sendError('Could not fetch customer bookings');
+        }
+
+        return $this->sendResponse('Customer bookings', $bookings);
     }
 }

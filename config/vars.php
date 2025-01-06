@@ -17,10 +17,11 @@ return [
     'access_token_validity_period_in_minutes' => env('ACCESS_TOKEN_VALIDITY_PERIOD_IN_MINUTES'),
     'refresh_token_validity_period_in_minutes' => env('REFRESH_TOKEN_VALIDITY_PERIOD_IN_MINUTES'),
 
-    'default_token_agent_username' => env('DEFAULT_TOKEN_AGENT_USERNAME'),
-    'default_token_agent_password' => env('DEFAULT_TOKEN_AGENT_PASSWORD'),
+    'tdms_customer_api_username' => env('TDMS_CUSTOMER_API_USERNAME'),
+    'tdms_customer_api_password' => env('TDMS_CUSTOMER_API_PASSWORD'),
 
     'tdms_api_url' => env('TDMS_API_URL'),
+    'tdms_customer_api_url' => env('TDMS_CUSTOMER_API_URL'),
 
     'retack_error_logging_url' => env('RETACK_ERROR_LOGGING_URL'),
     'retack_env_key' => env('RETACK_ENV_KEY'),

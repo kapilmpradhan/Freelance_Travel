@@ -39,11 +39,11 @@ class TdmsService
 
     public static function getCustomerLastOrderBranch($customerEmail)
     {
-        $url = config('vars.tdms_api_url') . "/customerOrders?email={$customerEmail}";
+        $url = config('vars.tdms_customer_api_url') . "?email={$customerEmail}";
 
         // Credentials from config
-        $username = config('vars.default_token_agent_username');
-        $password = config('vars.default_token_agent_password');
+        $username = config('vars.tdms_customer_api_username');
+        $password = config('vars.tdms_customer_api_password');
 
         $response = Http::withBasicAuth($username, $password)
             ->withHeaders([
@@ -149,5 +149,34 @@ class TdmsService
             "error" => $data['statusText'],
             "message" => $data["message"]
         ];
+    }
+
+    public static function getCustomerBookings($customerEmail, $page, $afterDate)
+    {
+        $url = config('vars.tdms_customer_api_url') . "?email={$customerEmail}";
+        if (!empty($page)) {
+            $url .= "&page=$page";
+        }
+
+        if (!empty($afterDate)) {
+            $url .= "&afterDate=$afterDate";
+        }
+
+        // Credentials from config
+        $username = config('vars.tdms_customer_api_username');
+        $password = config('vars.tdms_customer_api_password');
+
+        $response = Http::withBasicAuth($username, $password)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->get($url);
+
+        // Check if the request was successful
+        $data = $response->json();
+        if ($response->successful()) {
+            return $data;
+        }
+        return null;
     }
 }
