@@ -386,7 +386,7 @@ class CartItemService
             $cartItemIds,
             $responseData,
             $requestData,
-            $updateCartItems,
+            $intent,
             $userId,
         ) {
             //TODO: remove customers
