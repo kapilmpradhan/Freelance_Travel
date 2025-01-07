@@ -37,7 +37,7 @@ class UserProfileAgentJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            if ($this->user->is_email_verified) {
+            if (!$this->user->is_email_verified) {
                 throw new Exception('Email not verified');
             }
             $email = $this->user->verified_email ?? $this->user->email;
@@ -71,7 +71,7 @@ class UserProfileAgentJob implements ShouldQueue
             $this->user->save();
             Logger::info('User profile setup complete for ' . $email);
         } catch (Exception $e) {
-            Logger::error("User profile setup failed for " . $email, $e);
+            Logger::error("User profile setup failed for " . $this->user->uuid, $e);
             throw $e;
         }
     }
