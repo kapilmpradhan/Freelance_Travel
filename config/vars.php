@@ -29,4 +29,6 @@ return [
     'default_agent_branch_code' => env('DEFAULT_AGENT_BRANCH_CODE'),
     'default_agent_email' => env('DEFAULT_AGENT_EMAIL'),
     'default_agent_password' => env('DEFAULT_AGENT_PASSWORD'),
+    'default_agent_token_username' => env('DEFAULT_AGENT_EMAIL'),
+    'default_agent_token_password' => env('DEFAULT_AGENT_PASSWORD'),
 ];

@@ -89,6 +89,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent/v2/'
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
     Route::get('token/shared', [AgentTokenController::class, 'getDefaultToken']);
+    Route::get('token/default', [AgentTokenController::class, 'getDefaultToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {

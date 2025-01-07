@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Exception;
 use Carbon\Carbon;
 use App\Logging\Logger;
+use App\Models\Agent;
 use App\Models\AgentToken;
 use Illuminate\Http\Request;
 use App\Services\AgentTokenService;
@@ -88,39 +89,27 @@ class AgentTokenController extends BaseController
 
     public function getDefaultToken(Request $request)
     {
-        $agent_username = config('vars.default_token_agent_username');
-        $agent_password = config('vars.default_token_agent_password');
+        $agent_username = config('vars.default_agent_email');
+        $agent_password = config('vars.default_agent_password');
 
-        $default_token = AgentToken::where('type', 'default')->first();
-        $new_token = AgentTokenService::getAgentToken($agent_username, $agent_password);
-
-        if (!$new_token) {
-            Logger::error('Invalid credentials to get agent default token');
-            return $this->sendError('Default token info', [
-                "errorCode" => "100004",
-                "errorMessage" => "Invalid agent credential"
-            ], 401);
-        }
-
-        if ($default_token) {
-            // Get the current time
-            $current_date_time = Carbon::now();
-            $token_last_update = $default_token->updated_at;
-
-            // Check if the token last updated datetime is more than 21 hours ago
-            if ($token_last_update->diffInHours($current_date_time) > 21) {
-                $default_token->update($new_token);
+        $default_token = Agent::where('email', $agent_username)->first();
+        if (!$default_token) {
+            if (!$default_token) {
+                Logger::error('Default agent credentials invalid for ' . $default_token->email);
+                return $this->sendError("Internal server error");
             }
-            return $this->sendResponse('Shared token info', $default_token->toArray());
         }
 
-        $new_token['username'] = $agent_username;
-        $new_token['password'] = $agent_password;
-        $new_token['type'] = 'default';
+        // Get the current time
+        $current_date_time = Carbon::now();
+        $token_last_update = $default_token->updated_at;
 
-        $new_token = AgentToken::create($new_token);
-
-        return $this->sendResponse('Shared token info', $new_token->toArray());
+        // Check if the token last updated datetime is more than 21 hours ago
+        if ($token_last_update->diffInHours($current_date_time) > 21) {
+            $defaultAgentToken = AgentTokenService::getAgentToken($agent_username, $agent_password);
+            $default_token->update(['access_token' => $defaultAgentToken['access_token']]);
+        }
+        return $this->sendResponse('Default token', ['access_token' => $default_token->access_token]);
     }
 
     public function updateAgentToken(Request $request, AgentToken $agentToken)
