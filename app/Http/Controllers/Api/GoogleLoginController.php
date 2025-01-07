@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Services\GoogleService;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Api\BaseController;
+use App\Jobs\UserProfileAgentJob;
 
 class GoogleLoginController extends BaseController
 {
@@ -90,6 +91,7 @@ class GoogleLoginController extends BaseController
 
             ];
             $new_user = $user->storeUser($data);
+            UserProfileAgentJob::dispatch($new_user);
         }
 
         $user = ($existing_user) ? $existing_user : $new_user;

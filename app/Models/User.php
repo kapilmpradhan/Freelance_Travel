@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use App\Jobs\UserProfileAgentJob;
 
 class User extends Authenticatable
 {
@@ -99,7 +98,6 @@ class User extends Authenticatable
         }
         $data['profile_status'] = 'in_progress';
         $user = $this->create($data);
-        UserProfileAgentJob::dispatch($user);
         return $user;
     }
 

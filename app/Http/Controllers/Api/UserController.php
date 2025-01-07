@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Jenssegers\Agent\Agent;
+use App\Jobs\UserProfileAgentJob;
 
 class UserController extends BaseController
 {
