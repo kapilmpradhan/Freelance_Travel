@@ -221,6 +221,7 @@ class BookingService
             $emailData = [
                 'bookingReference' => $bookingReference,
                 'quantity' => self::getTotalNumberOfItems(cartItems: $cartItems),
+                'totalCharged' => $orderRequestData['totalCharged'],
                 'redeemers' => $orderRequestData['redeemers'],
                 'agent' => $agentData,
                 'purchaseDate' => null,
