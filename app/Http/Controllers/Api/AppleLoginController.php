@@ -53,7 +53,7 @@ class AppleLoginController extends BaseController
                     'first_name' => $first_name,
                     'last_name' => $last_name,
                     'sso_type' => 'apple',
-                    'is_email_verfied' => !$requires_real_email,
+                    'is_email_verified' => !$requires_real_email,
                     'profile_status' => $requires_real_email ? 'require_real_email' : 'in_progress',
                     'verified_email' => $requires_real_email ? null : $email,
                 ]);
