@@ -184,11 +184,15 @@ class BookingService
             throw new ServiceException(message: "Failed to submit order");
         }
 
+        $webAppReturnUrl = $onlinePaymentMethod['paymentReturnUrl'] + '/' + config(
+            'vars.web_order_check_url',
+            'order/check',
+        ) + "?bookingReference=${$bookingReference}";
         $getPaymentGatewayUriResponse = TdmsService::getPaymentGatewayUri(
             agentToken: $agent->access_token,
             bookingReference: $bookingReference,
             paymentAmount: $paymentAmount,
-            returnUrl: $onlinePaymentMethod['paymentReturnUrl'],
+            returnUrl: $webAppReturnUrl,
         );
         if ($getPaymentGatewayUriResponse['success'] === false) {
             throw new ServiceException(
