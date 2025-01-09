@@ -240,10 +240,13 @@ class BookingService
         ));
 
         if ($intent == 'pay-now') {
-            return ServiceResponse::success(data: $getPaymentGatewayUriResponse['data']);
+            return ServiceResponse::success(data: [
+                "bookingReference" => $bookingReference,
+                "payNow" => $getPaymentGatewayUriResponse['data']
+            ]);
         }
 
-        return ServiceResponse::success(data: $orderRequestData);
+        return ServiceResponse::success(data: ['bookingReference' => $bookingReference]);
     }
 
     public static function completeOrder(string $bookingReference)
