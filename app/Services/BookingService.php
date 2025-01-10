@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\UserOrder;
 use App\Services\TdmsService;
 use App\Services\UserAgentService;
+use Carbon\Carbon;
 
 class BookingService
 {
@@ -154,6 +155,10 @@ class BookingService
 
         $cartItems = CartItem::userCartItems($userId)->get();
         $cartItemIds = $cartItems->pluck('id')->toArray();
+        if (!$cartItemIds) {
+            return ServiceResponse::badRequest('No items available in cart');
+        }
+
         $customers = CartCustomerDetail::where('user_id', $userId)->get();
 
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
@@ -224,7 +229,7 @@ class BookingService
                 'totalCharged' => $orderRequestData['totalCharged'],
                 'redeemers' => $orderRequestData['redeemers'],
                 'agent' => $agentData,
-                'purchaseDate' => null,
+                'purchaseDate' => Carbon::now(),
                 'paymentLink' => $getPaymentGatewayUriResponse['data']['redirectUrl']
             ];
         }
