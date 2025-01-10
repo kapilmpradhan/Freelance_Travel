@@ -230,7 +230,7 @@ class BookingService
                 'redeemers' => $orderRequestData['redeemers'],
                 'agent' => $agentData,
                 'purchaseDate' => Carbon::now(),
-                'paymentLink' => $getPaymentGatewayUriResponse['data']['redirectUrl']
+                'paymentLink' => $getPaymentGatewayUriResponse['data']['quoteUrl']
             ];
         }
 
