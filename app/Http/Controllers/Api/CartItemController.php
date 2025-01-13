@@ -129,7 +129,7 @@ class CartItemController extends BaseController
                 userId: $userId,
                 cartItemId: $cartItemId,
                 quantity: $validator->validated()['quantity'],
-                bookingData: $validator->validated()['bookingData'],
+                bookingData: $validator->validated()['bookingData'] ?? [],
             );
             return $this->sendResponseFromService($updateItemBookingDataResponse);
         } catch (Exception $e) {

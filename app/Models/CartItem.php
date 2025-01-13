@@ -106,7 +106,7 @@ class CartItem extends Model
     {
         return [
             'quantity' => 'required|integer',
-            'bookingData' => 'required',
+            'bookingData' => 'array'
         ];
     }
 
