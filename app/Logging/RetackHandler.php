@@ -18,12 +18,13 @@ class RetackHandler extends AbstractProcessingHandler
     protected function write(LogRecord $record): void
     {
         $exception = $record['context']['exception'] ?? null;
+        $extra = $record['context']['extra'] ?? null;
 
         $logData = [
             'title' => $record['message'],
             'stack_trace' => $exception instanceof \Throwable
                             ? $exception->getTraceAsString()
-                            : 'No stack trace available'
+                            : 'No stack trace available. Available data: ' . json_encode($extra),
         ];
 
         // Fetch the user context (from session, auth user, etc.)

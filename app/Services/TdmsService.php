@@ -117,7 +117,11 @@ class TdmsService
         Logger::error("Failed to create order", extra: [
             'userId' => $userId,
             'requestData' => $data,
-            'response' => $response,
+            'responseData' => [
+                "statusCode" => $response->status(),
+                "headers" => $response->headers(),
+                "body" => $response->body(),
+            ]
         ]);
         return null;
     }
