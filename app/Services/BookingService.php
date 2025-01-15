@@ -242,6 +242,10 @@ class BookingService
             responseData: $orderResponse,
             intent: $intent,
             emailData: $emailData,
+            paymentGateway: [
+                "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
+                "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']
+            ]
         ));
 
         if ($intent == 'pay-now') {

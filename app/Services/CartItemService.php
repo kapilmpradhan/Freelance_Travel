@@ -400,6 +400,7 @@ class CartItemService
         $requestData,
         $responseData,
         $intent,
+        $paymentGateway
     ) {
         DB::transaction(function () use (
             $bookingReference,
@@ -408,6 +409,7 @@ class CartItemService
             $requestData,
             $intent,
             $userId,
+            $paymentGateway
         ) {
             //TODO: remove customers
             $userOrder = UserOrder::create([
@@ -417,6 +419,7 @@ class CartItemService
                 'user_id' => $userId,
                 'request_data' => $requestData,
                 'response_data' => $responseData,
+                'payment_gateway' => $paymentGateway
             ]);
 
             if ($intent === 'email-quote') { // emailing quote should remove items from cart
@@ -440,6 +443,7 @@ class CartItemService
             "bookingReference" => $userOrder->booking_reference,
             "intent" => $userOrder->intent,
             "cart_item_ids" => $userOrder->cart_item_ids,
+            "paymentGateway" => $userOrder->payment_gateway,
             "is_paid" => $userOrder->is_paid
         ];
 

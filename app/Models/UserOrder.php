@@ -18,11 +18,13 @@ class UserOrder extends Model
         'user_id',
         'request_data',
         'response_data',
+        'payment_gateway'
     ];
     protected $casts = [
         'cart_item_ids' => 'array',
         'is_paid' => 'boolean',
         'request_data' => 'array',
         'response_data' => 'array',
+        'payment_gateway' => 'array'
     ];
 }
