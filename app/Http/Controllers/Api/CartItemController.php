@@ -262,4 +262,21 @@ class CartItemController extends BaseController
             return $this->sendError($errorMessage);
         }
     }
+
+    public function getCustomerOrderDetail(Request $request, $bookingReference)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getCustomerOrderResponse = CartItemService::getCustomerOrder(
+                userId: $userId,
+                bookingReference: $bookingReference
+            );
+
+            return $this->sendResponseFromService($getCustomerOrderResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get customer order';
+            Logger::error('Customer order exception', $e);
+            return $this->sendError($errorMessage);
+        }
+    }
 }

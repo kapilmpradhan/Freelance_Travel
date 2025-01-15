@@ -70,6 +70,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {
     Route::get('{bookingReference}/items', [CartItemController::class, 'getCartDetailsByBookingReference']);
+    Route::get('{bookingReference}/detail', [CartItemController::class, 'getCustomerOrderDetail']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {

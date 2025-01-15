@@ -424,4 +424,25 @@ class CartItemService
             }
         });
     }
+
+    public static function getCustomerOrder($userId, $bookingReference)
+    {
+        $userOrder = UserOrder::where('user_id', $userId)
+                              ->where('booking_reference', $bookingReference)
+                              ->first();
+
+        if (!$userOrder) {
+            return ServiceResponse::notFound('No user order available');
+        }
+
+        $data = [
+            "userId" => $userOrder->user_id,
+            "bookingReference" => $userOrder->booking_reference,
+            "intent" => $userOrder->intent,
+            "cart_item_ids" => $userOrder->cart_item_ids,
+            "is_paid" => $userOrder->is_paid
+        ];
+
+        return ServiceResponse::success($data);
+    }
 }
