@@ -68,6 +68,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {
+    Route::get('{bookingReference}/items', [CartItemController::class, 'getCartDetailsByBookingReference']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {
     Route::put('order/complete', [CartItemController::class, 'completeOrder']);
 });

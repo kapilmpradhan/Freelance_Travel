@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\CacheProductJob;
 use App\Jobs\UpdateUserCartItemProductsJob;
+use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Models\UserOrder;
@@ -244,5 +245,21 @@ class CartItemController extends BaseController
         }
 
         return $this->sendResponse('Customer bookings', $bookings);
+    }
+
+    public function getCartDetailsByBookingReference(Request $request, $bookingReference)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getCartItemsResponse = CartItemService::getCartItemsByBookingReference(
+                userId: $userId,
+                bookingReference: $bookingReference
+            );
+            return $this->sendResponseFromService($getCartItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get detail';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
     }
 }

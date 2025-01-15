@@ -179,6 +179,26 @@ class CartItemService
         return ServiceResponse::success(data: $cartItems);
     }
 
+    public static function getCartItemsByBookingReference($userId, $bookingReference)
+    {
+        $userOrder = UserOrder::where('booking_reference', $bookingReference)
+                            ->where('user_id', $userId)
+                            ->first();
+        if (!$userOrder) {
+            return ServiceResponse::notFound('No user order available');
+        }
+
+        $cartItems = CartItem::whereIn('id', $userOrder->cart_item_ids)->get();
+        $productIds = $cartItems->pluck('tdms_product_id');
+        $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+        $cartItems->each(function ($cartItem) use ($products) {
+            $cartItem->product = $products->get($cartItem->tdms_product_id);
+        });
+
+        return ServiceResponse::success($cartItems);
+    }
+
     public static function updateItemBookingData($userId, int $cartItemId, int $quantity, mixed $bookingData)
     {
         $cartItem = CartItem::where('user_id', $userId)
