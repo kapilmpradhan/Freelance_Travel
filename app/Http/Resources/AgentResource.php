@@ -26,7 +26,7 @@ class AgentResource
     public static function userAgentDetails($agent)
     {
         $agent = $agent->toArray();
-        unset($agent['access_token']);
+        unset($agent['access_token'], $agent['is_active'], $agent['is_deleted']);
 
         return $agent;
     }

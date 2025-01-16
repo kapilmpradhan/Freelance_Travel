@@ -2,170 +2,87 @@
 
 namespace App\Http\Controllers\Api;
 
-use Exception;
-use Carbon\Carbon;
 use App\Models\UserAgent;
 use Illuminate\Http\Request;
-use App\Services\AgentTokenService;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
-use App\Logging\Logger;
-use App\Models\Agent;
+use App\Services\UserAgentService;
 
 class UserAgentController extends BaseController
 {
-    public function addUserAgent(Request $request)
+    public function addUserAgent(Request $request, UserAgent $userAgent)
     {
+        $userId = $request->user->uuid;
+        if ($userAgent->getActiveAgent($userId)) {
+            return $this->sendError('Agent already integrated');
+        }
+
         $data = $request->all();
-        $data['user_id'] = $request->user->uuid;
         $validate = Validator::make($data, ['username' => 'required|email', 'password' => 'required|string']);
         if ($validate->fails()) {
             return $this->sendError('Error occured', $validate->errors(), 400);
         }
-        $userAgentExists = UserAgent::where('email', $data['username'])
-                                    ->where('user_id', $request->user->uuid)
-                                    ->first();
-        if ($userAgentExists) {
-            return $this->sendError('Agent with that username already exists');
-        }
 
-        $agentDetail = AgentTokenService::getAgentToken($data['username'], $data['password']);
-        if (!$agentDetail) {
-            return $this->sendError('Agent token info', [
-                "errorCode" => "100004",
-                "errorMessage" => "Invalid agent credential"
-            ], 401);
-        }
+        $addUserAgentResponse = UserAgentService::addUserAgent(
+            userId: $userId,
+            username: $data['username'],
+            password: $data['password']
+        );
 
-        try {
-            $agentDetail["email"] = $data["username"];
-            $agentDetail["password"] = $data["password"];
-            $agentDetail["user_id"] = $request->user->uuid;
-            $agentDetail["status"] = 'ok';
-            $agentDetail['type'] = 'integration';
-
-            $userAgent = UserAgent::create($agentDetail);
-
-            $agentResource = AgentResource::agentOverview($userAgent);
-
-            return $this->sendResponse('Agent added', $agentResource, 201);
-        } catch (Exception $e) {
-            return $this->sendError('Error occured', [
-                "errorCode" => "100005",
-                "errorMessage" => $e->getMessage()
-            ]);
-        }
+        return $this->sendResponseFromService($addUserAgentResponse);
     }
 
-    public function getUserAgents(Request $request)
+    public function getUserAgent(Request $request, UserAgent $userAgent)
     {
-        $userAgents = UserAgent::where('user_id', $request->user->uuid)->get();
-        $agentResource = AgentResource::allAgentDetails($userAgents);
-        return $this->sendResponse('User agents', $agentResource);
-    }
-
-    public function detailUserAgent(Request $request, $userAgentId)
-    {
-        $userAgent = UserAgent::where('user_id', $request->user->uuid)
-                              ->where('id', $userAgentId)
-                              ->first();
-
-        if (!$userAgent) {
-            $this->sendError('User agent not found');
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+        if (!$agent) {
+            return $this->sendError('Needs agent integration');
         }
 
-        $agentResource = AgentResource::userAgentDetails($userAgent);
+        $agentData = AgentResource::userAgentDetails($agent);
 
-        return $this->sendResponse("User agent detail", $agentResource);
+        return $this->sendResponse("User agent details", $agentData);
     }
 
-    public function updateUserAgent(Request $request, $userAgentId)
+    public function updateUserAgent(Request $request, UserAgent $userAgent)
     {
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+        if (!$agent) {
+            return $this->sendError('No agent integrated');
+        }
+
         $data = $request->all();
-        $validate = Validator::make($data, ['password' => 'required|string']);
+        $validate = Validator::make($data, ['username' => 'required|email', 'password' => 'required|string']);
         if ($validate->fails()) {
             return $this->sendError('Error occured', $validate->errors(), 400);
         }
 
-        $userAgent = UserAgent::where('id', $userAgentId)
-                            ->where('user_id', $request->user->uuid)
-                            ->where('type', 'integration')
-                            ->first();
-        if (!$userAgent) {
-            return $this->sendError('User agent does not exist');
-        }
+        $updateUserAgentResponse = UserAgentService::updateUserAgent(
+            agent: $agent,
+            username: $data['username'],
+            password: $data['password']
+        );
 
-        $agentDetail = AgentTokenService::getAgentToken($userAgent->email, $data['password']);
-        if (!$agentDetail) {
-            return $this->sendError('Agent token info', [
-                "errorCode" => "100004",
-                "errorMessage" => "Invalid agent credential"
-            ], 401);
-        }
-
-        $userAgent->password = $data['password'];
-        $userAgent->update($agentDetail);
-        $userAgent->save();
-
-        return $this->sendResponse('Password updated');
+        return $this->sendResponseFromService($updateUserAgentResponse);
     }
 
-    public function deleteUserAgent(Request $request, $userAgentId)
+    public function getUserAgentToken(Request $request, UserAgent $userAgent)
     {
-        if (!$userAgentId) {
-            return $this->sendError('User agent ID required');
-        }
-        $userAgent = UserAgent::where('id', $userAgentId)
-                            ->where('user_id', $request->user->uuid)
-                            ->where('type', 'integration')
-                            ->first();
-        if (!$userAgent) {
-            return $this->sendError('User agent does not exist');
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+        if (!$agent) {
+            return $this->sendError('User agent not integrated');
         }
 
-        $userAgent->delete();
-        return $this->sendResponse('User agent deleted');
+        $getUserAgentResponse = UserAgentService::getUserAgentToken($userId, $agent);
+        return $this->sendResponseFromService($getUserAgentResponse);
     }
 
-    public function getUserAgentToken(Request $request, $userAgentId)
+    public function getDefaultAgentToken(Request $request)
     {
-        $userAgent = UserAgent::where('user_id', $request->user->uuid)
-                              ->where('id', $userAgentId)
-                              ->first();
-
-        if (!$userAgent) {
-            $this->sendError('User agent not found');
-        }
-
-        if ($userAgent->type === 'profile') {
-            $userAgent = Agent::where('id', $userAgent->agent_id)->first();
-        }
-
-        if (!$userAgent->access_token) {
-            $agentToken = AgentTokenService::getAgentToken($userAgent->email, $userAgent->password);
-            if (!$agentToken) {
-                Logger::error('Agent credentials invalid for ' . $userAgent->email);
-                return $this->sendError("Error occurred");
-            }
-            $userAgent->update(['access_token' => $agentToken['access_token']]);
-        }
-
-        // Get the current time
-        $current_date_time = Carbon::now();
-        $token_last_update = $userAgent->updated_at;
-
-        // Check if the token last updated datetime is more than 21 hours ago
-        if ($token_last_update->diffInHours($current_date_time) > 21) {
-            $new_token = AgentTokenService::getAgentToken($userAgent->email, $userAgent->password);
-            if (!$new_token) {
-                return $this->sendError('Agent token info', [
-                    "errorCode" => "100004",
-                    "errorMessage" => "Invalid agent credential"
-                ], 401);
-            }
-            $userAgent->update(["access_token" => $new_token['access_token']]);
-        }
-
-        return $this->sendResponse("User agent detail", ["access_token" => $userAgent->access_token]);
+        $getdefaultAgentTokenResponse = UserAgentService::getDefaultAgentToken();
+        return $this->sendResponseFromService($getdefaultAgentTokenResponse);
     }
 }

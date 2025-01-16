@@ -16,6 +16,7 @@ class UserAgent extends Model
         'type',
         'email',
         'password',
+        'branch_code',
         'status',
         'access_token',
         'expires_in',
@@ -25,7 +26,9 @@ class UserAgent extends Model
         'bank_account',
         'bank_country_short_code',
         'business_number',
-        'trading_name'
+        'trading_name',
+        'is_active',
+        'is_deleted'
     ];
 
     protected $hidden = ['password'];
@@ -33,5 +36,15 @@ class UserAgent extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'uuid');
+    }
+
+    public function getActiveAgent($userId)
+    {
+        return $this::where('user_id', $userId)
+                    ->where('type', 'integration')
+                    ->where('is_active', true)
+                    ->where('is_deleted', false)
+                    ->orderByDesc('created_at')
+                    ->first();
     }
 }

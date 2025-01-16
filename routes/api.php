@@ -47,11 +47,6 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
     Route::post('/apple/new-email/add', [AppleLoginController::class, 'getRealEmailOTP']);
     Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);
-    Route::get('agents', [UserAgentController::class, 'getUserAgents']);
-    Route::get('agents/{userAgentId}', [UserAgentController::class, 'detailUserAgent']);
-    Route::put('agents/{userAgentId}', [UserAgentController::class, 'updateUserAgent']);
-    Route::delete('agents/{userAgentId}', [UserAgentController::class, 'deleteUserAgent']);
-    Route::get('agents/{userAgentId}/token', [UserAgentController::class, 'getUserAgentToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
@@ -78,23 +73,14 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], fu
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
-    Route::get('token/integration', [AgentTokenController::class, 'getAgentToken']);
-    Route::post('token/integration', [AgentTokenController::class, 'addAgentToken']);
-    Route::put('token/integration', [AgentTokenController::class, 'updateAgentToken']);
-    Route::delete('token/integration', [AgentTokenController::class, 'removeAgentToken']);
-    Route::get('token/profile', [ProfileAgentController::class, 'getProfileAgent']);
-    Route::post('token/profile/real-email', [AgentTokenController::class, 'getRealEmail']);
-});
-
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent/v2/', 'middleware' => 'auth.jwt'], function () {
-    Route::get('integration', [UserAgentController::class, 'getUserAgents']);
+    Route::get('integration', [UserAgentController::class, 'getUserAgent']);
+    Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);
     Route::post('integration', [UserAgentController::class, 'addUserAgent']);
-    Route::delete('integration/{userAgentId}', [UserAgentController::class, 'deleteUserAgent']);
+    Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
-    Route::get('token/shared', [AgentTokenController::class, 'getDefaultToken']);
-    Route::get('token/default', [AgentTokenController::class, 'getDefaultToken']);
+    Route::get('default/token', [UserAgentController::class, 'getDefaultAgentToken']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => '', 'middleware' => 'checkToken'], function () {

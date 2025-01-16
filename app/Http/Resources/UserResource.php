@@ -2,13 +2,15 @@
 
 namespace App\Http\Resources;
 
-use App\Models\AgentToken;
+use App\Models\UserAgent;
 
 class UserResource
 {
     public function userDetail($data)
     {
-        $has_agent_token = AgentToken::where('user_id', $data->uuid)->exists();
+        $userAgent = new UserAgent();
+        $activeAgent = $userAgent->getActiveAgent($data->uuid);
+        $hasUserAgent = $activeAgent ? true : false;
 
         return [
             'id' => $data->uuid,
@@ -17,7 +19,7 @@ class UserResource
             'email' => $data->email,
             'sso_type' => $data->sso_type,
             'profile_status' => $data->profile_status,
-            'is_agent_integrated' => $has_agent_token,
+            'is_agent_integrated' => $hasUserAgent,
             'is_email_verified' => $data->is_email_verified,
             'created_at' => $data->created_at,
         ];
