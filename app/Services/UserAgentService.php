@@ -133,4 +133,14 @@ class UserAgentService
         $agent->update($newAgentDetail);
         return ServiceResponse::success();
     }
+
+    public static function unlinkAgent($agent)
+    {
+        $agent->update([
+            'is_active' => false,
+            'is_deleted' => true,
+        ]);
+
+        return ServiceResponse::success();
+    }
 }

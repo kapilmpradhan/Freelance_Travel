@@ -73,7 +73,7 @@ class UserAgentController extends BaseController
         $userId = $request->user->uuid;
         $agent = $userAgent->getActiveAgent($userId);
         if (!$agent) {
-            return $this->sendError('User agent not integrated');
+            return $this->sendError('No agent integrated');
         }
 
         $getUserAgentResponse = UserAgentService::getUserAgentToken($userId, $agent);
@@ -84,5 +84,18 @@ class UserAgentController extends BaseController
     {
         $getdefaultAgentTokenResponse = UserAgentService::getDefaultAgentToken();
         return $this->sendResponseFromService($getdefaultAgentTokenResponse);
+    }
+
+    public function unlinkUserAgent(Request $request, UserAgent $userAgent)
+    {
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+        if (!$agent) {
+            return $this->sendError('No agent integrated');
+        }
+
+        $unkinkAgentResponse = UserAgentService::unlinkAgent($agent);
+
+        return $this->sendResponseFromService($unkinkAgentResponse);
     }
 }

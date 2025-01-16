@@ -77,6 +77,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);
     Route::post('integration', [UserAgentController::class, 'addUserAgent']);
     Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
+    Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
