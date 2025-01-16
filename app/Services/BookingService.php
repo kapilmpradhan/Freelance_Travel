@@ -151,7 +151,11 @@ class BookingService
 
     public static function postOrder(string $userId, string $intent, bool $processAsQuote = true)
     {
-        $agent = UserAgentService::getUserProfileAgent($userId);
+        $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
+        if ($getAgentResponse->isError()) {
+            return $getAgentResponse;
+        }
+        $agent = $getAgentResponse->data;
 
         $cartItems = CartItem::userCartItems($userId)->get();
         $cartItemIds = $cartItems->pluck('id')->toArray();

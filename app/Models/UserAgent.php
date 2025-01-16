@@ -47,4 +47,12 @@ class UserAgent extends Model
                     ->orderByDesc('created_at')
                     ->first();
     }
+
+    public function getDefaultAgent()
+    {
+        return $this::where('branch_code', config('vars.default_agent_branch_code'))
+                    ->where('email', config('vars.default_agent_email'))
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+    }
 }

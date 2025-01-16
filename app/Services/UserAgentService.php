@@ -72,6 +72,24 @@ class UserAgentService
         return ServiceResponse::success(["access_token" => $refreshedAgent->access_token]);
     }
 
+    public static function getUserAgentIfExistsElseDefault($userId)
+    {
+        $userAgent = new UserAgent();
+        $activeAgent = $userAgent->getActiveAgent($userId);
+        if ($activeAgent) {
+            $agent = $activeAgent;
+        } else {
+            $agent = $userAgent->getDefaultAgent();
+        }
+
+        $refreshAgent = self::refreshAgent($agent);
+        if (!$refreshAgent) {
+            return ServiceResponse::badRequest('Could not get agent');
+        }
+
+        return ServiceResponse::success($refreshAgent);
+    }
+
     public static function getBranchCodeOfAgent($agentToken)
     {
         $bookingReferenceResponse = TdmsService::getBookingRefrence($agentToken);
