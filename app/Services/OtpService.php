@@ -79,7 +79,7 @@ class OtpService
 
                 $user->is_email_verified = true;
                 if ($user->profile_status === 'require_real_email') {
-                    $user->profile_status = 'in_progress';
+                    $user->profile_status = 'success';
                 }
                 $user->save();
             });

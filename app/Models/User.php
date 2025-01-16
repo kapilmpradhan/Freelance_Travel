@@ -96,7 +96,8 @@ class User extends Authenticatable
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
-        $data['profile_status'] = 'in_progress';
+        $data['profile_status'] = 'success';
+        $data['is_email_verified'] = false;
         $user = $this->create($data);
         return $user;
     }

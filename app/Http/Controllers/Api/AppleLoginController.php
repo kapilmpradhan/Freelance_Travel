@@ -54,12 +54,9 @@ class AppleLoginController extends BaseController
                     'last_name' => $last_name,
                     'sso_type' => 'apple',
                     'is_email_verified' => !$requires_real_email,
-                    'profile_status' => $requires_real_email ? 'require_real_email' : 'in_progress',
+                    'profile_status' => $requires_real_email ? 'require_real_email' : 'success',
                     'verified_email' => $requires_real_email ? null : $email,
                 ]);
-            if (!$requires_real_email) {
-                UserProfileAgentJob::dispatch($user);
-            }
         }
         $data = [
             "accessToken" => $jwtService->generateAccessToken($user),
@@ -116,10 +113,8 @@ class AppleLoginController extends BaseController
         if ($otp['success'] == false) {
             return $this->sendError($otp['error']);
         }
-        $user->is_email_verified = true;
         $user->save();
 
-        UserProfileAgentJob::dispatch($user);
 
         return $this->sendResponse('Private apple account connected to real email account.');
     }

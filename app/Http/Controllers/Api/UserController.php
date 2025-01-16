@@ -120,7 +120,6 @@ class UserController extends BaseController
             if (!$user->is_email_verified && $user->sso_type === 'email') {
                 $user->is_email_verified = true;
                 $user->save();
-                UserProfileAgentJob::dispatch($user);
             }
             $user->updatePassword($data['new_password']);
             return $this->sendResponse('Password changed successfully');

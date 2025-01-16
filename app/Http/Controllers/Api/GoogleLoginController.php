@@ -87,11 +87,10 @@ class GoogleLoginController extends BaseController
                 'last_name' => ($name) ? $last_name : null,
                 'email' => $email,
                 'is_email_verified' => true,
-                'sso_type' => config('vars.sso_type_google')
-
+                'sso_type' => config('vars.sso_type_google'),
+                'profile_status' => 'success'
             ];
             $new_user = $user->storeUser($data);
-            UserProfileAgentJob::dispatch($new_user);
         }
 
         $user = ($existing_user) ? $existing_user : $new_user;
