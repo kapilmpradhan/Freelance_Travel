@@ -43,8 +43,10 @@ class CartItemService
                 }
             }
 
-            $userAgent = UserAgentService::getUserProfileAgent($userId);
+            $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
+            $userAgent = $userAgentResponse->data;
             $defaultAgentAccessToken = $userAgent->access_token;
+
             $now = Carbon::now();
             $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
             if (!$productDetailsResponse) {
