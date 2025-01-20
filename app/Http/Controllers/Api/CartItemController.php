@@ -53,10 +53,11 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
                 productPricesDetailsId: $data['productPricesDetailsId'],
-                timeId: $data['timeId'],
+                timeId: $data['timeId'] ?? null,
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
+                bookingData: $data['bookingData'] ?? []
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {

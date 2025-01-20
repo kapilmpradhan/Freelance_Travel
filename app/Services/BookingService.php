@@ -52,13 +52,37 @@ class BookingService
     public static function buildRedeemerProductBookingData($cartItem)
     {
         $booking_details = $cartItem->booking_details;
+        $booking_data = $cartItem->booking_data;
+
+        $pickupLocations = $booking_details['pickupLocations'] ?? null;
+        $pickupId = $booking_data['pickupId'] ?? null;
+        $selectedPickup = [];
+        if ($pickupLocations && $pickupId) {
+            $selectedPickup = array_filter($pickupLocations, function ($location) use ($pickupId) {
+                return $location['PickupID'] === $pickupId;
+            });
+
+            $selectedPickup = !empty($selectedPickup) ? reset($selectedPickup) : [];
+        }
+
+        $bookingTimes = $booking_details['bookingTimes'] ?? null;
+        $timeId = $booking_data['timeId'] ?? null;
+        $selectedTime = [];
+        if ($bookingTimes && $timeId) {
+            $selectedTime = array_filter($bookingTimes, function ($time) use ($timeId) {
+                return $time['BookingTimeID'] === $timeId;
+            });
+
+            $selectedTime = !empty($selectedTime) ? reset($selectedTime) : [];
+        }
         return [
-            "timeId" => $cartItem->availability['BookingTimeID'],
             "bookingComment" => "",
-            "travelDate" => $cartItem->availability['BookingDate'],
-            "pickupLocation" => $booking_details['pickupDetail']['pickupLocation'] ?? null,
-            "pickupTime" => $booking_details['pickupDetail']['pickupTime'] ?? null,
-            "pickupId" => $booking_details['pickupDetail']['pickupId'] ?? null,
+            "travelDate" => $cartItem->availability['BookingDate'] ?? null,
+            "timeId" => $selectedTime['BookingTimeID'] ?? null,
+            "commences" => $selectedTime['BookingTime'] ?? null,
+            "pickupId" => $selectedPickup['pickupId'] ?? null,
+            "pickupTime" => $selectedPickup['pickupTime'] ?? null,
+            "pickupLocation" => $selectedPickup['pickupLocation'] ?? null,
         ];
     }
 
@@ -81,9 +105,10 @@ class BookingService
             // TODO: populate product based on selection
             if ($customer->customer_index === 0) {
                 foreach ($cartItems as $cartItem) {
-                    $bookingData = $cartItem->booking_data ?? [];
+                    $bookingData = $cartItem->booking_data;
+                    $optionalData = $bookingData['optionalData'];
                     $optionalFields = [];
-                    foreach ($bookingData as $key => $value) {
+                    foreach ($optionalData as $key => $value) {
                         $optionalFields[] = [
                             "optionalFieldId" => $key,
                             "fieldText" => $value

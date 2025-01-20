@@ -90,7 +90,9 @@ class CartItem extends Model
         return [
             'tdmsProductId' => 'required|integer',
             'productPricesDetailsId' => 'required|integer',
-            'timeId' => 'required|string',
+            'timeId' => 'string',
+            'bookingData' => 'array',
+            'bookingData.timeId' => 'string',
             // Must be in format 30-Nov-2012
             'startDate' => 'required|date|date_format:d-M-Y',
             // Must be greater than zero
@@ -106,7 +108,9 @@ class CartItem extends Model
     {
         return [
             'quantity' => 'required|integer',
-            'bookingData' => 'array'
+            'bookingData' => 'array',
+            'bookingData.pickupId' => 'string',
+            'bookingData.optionalData' => 'array',
         ];
     }
 

@@ -28,7 +28,8 @@ class CartItemService
         string $userId,
         int $tdmsProductId,
         int $productPricesDetailsId,
-        string $timeId,
+        string|null $timeId,
+        array $bookingData,
         string $startDate,
         int $days,
         array $selectedAvailableIndices,
@@ -41,6 +42,15 @@ class CartItemService
                         message: 'Selected availability indices must be natural numbers',
                     );
                 }
+            }
+
+            // If timeId is present use that, else use timeId from bookingData.
+            // If both not available set to 0.
+            // In future will only use timeId available in bookingData.
+            if ($timeId) {
+                $bookingData['timeId'] = $timeId;
+            } elseif (!isset($bookingData['timeId'])) {
+                $bookingData['timeId'] = '0';
             }
 
             $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
@@ -58,7 +68,7 @@ class CartItemService
             $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
                 $defaultAgentAccessToken,
                 $productPricesDetailsId,
-                $timeId,
+                $bookingData['timeId'],
                 $startDate,
                 $days,
             );
@@ -113,7 +123,7 @@ class CartItemService
                 $productAvailabilities,
                 $userId,
                 $productPricesDetailsId,
-                $timeId,
+                $bookingData,
                 $startDate,
                 $days,
                 $selectedAvailableIndices,
@@ -147,7 +157,6 @@ class CartItemService
                         'user_id' => $userId,
                         'tdms_product_id' => $tdmsProductId,
                         'product_price_details_id' => $productPricesDetailsId,
-                        'time_id' => $timeId,
                         'booking_date' => BaseService::stringToDate($startDate),
                         'start_date' => BaseService::stringToDate($startDate),
                         'days' => $days,
@@ -155,6 +164,7 @@ class CartItemService
                         'availability' => $availability,
                         'availability_last_updated_at' => $now,
                         'booking_details' => $bookingDetails,
+                        'booking_data' => $bookingData
                     ]);
                     array_push($cartItems, $new_cart_item);
                 }
@@ -211,7 +221,10 @@ class CartItemService
             return ServiceResponse::notFound(message: 'Cart item not found');
         }
         $cartItem->booking_quantity = $quantity;
-        $cartItem->booking_data = $bookingData;
+        $currentBookingData = $cartItem->booking_data;
+        $currentBookingData['pickupId'] = $bookingData['pickupId'] ?? null;
+        $currentBookingData['optionalData'] = $bookingData['optionalData'] ?? null;
+        $cartItem->booking_data = $currentBookingData;
 
         $cartItem->save();
         return ServiceResponse::success('Cart item updated successfully');
