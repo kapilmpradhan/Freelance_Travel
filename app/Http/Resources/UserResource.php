@@ -12,7 +12,7 @@ class UserResource
         $activeAgent = $userAgent->getActiveAgent($data->uuid);
         $hasUserAgent = $activeAgent ? true : false;
 
-        return [
+        $returnData =  [
             'id' => $data->uuid,
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
@@ -23,5 +23,11 @@ class UserResource
             'is_email_verified' => $data->is_email_verified,
             'created_at' => $data->created_at,
         ];
+
+        if ($data->sso_type === 'apple') {
+            $returnData['verified_email'] = $data['verified_email'];
+        }
+
+        return $returnData;
     }
 }
