@@ -296,6 +296,7 @@ class BookingService
 
         DB::transaction(function () use ($userOrder) {
             $userOrder->is_paid = true;
+            $userOrder->save();
 
             CartItem::whereIn('id', $userOrder->cart_item_ids)
             ->update(['user_order_id' => $userOrder->id]);
