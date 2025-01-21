@@ -223,7 +223,9 @@ class CartItemService
         $cartItem->booking_quantity = $quantity;
         $currentBookingData = $cartItem->booking_data;
         $currentBookingData['pickupId'] = $bookingData['pickupId'] ?? null;
-        $currentBookingData['optionalData'] = $bookingData['optionalData'] ?? null;
+        $currentBookingData['optionalData'] = !empty($bookingData['optionalData'])
+                                              ? $bookingData['optionalData']
+                                              : null;
         $cartItem->booking_data = $currentBookingData;
 
         $cartItem->save();
