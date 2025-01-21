@@ -15,6 +15,7 @@ use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Models\UserOrder;
 use App\Services\TdmsService;
+use App\Services\UserAgentService;
 
 class CartItemController extends BaseController
 {
@@ -213,7 +214,6 @@ class CartItemController extends BaseController
     public function completeOrder(Request $request)
     {
         $params = $request->query();
-
         $validate = Validator::make($params, [
             "bookingReference" => "required|string"
         ]);
@@ -223,15 +223,9 @@ class CartItemController extends BaseController
         }
         $validated = $validate->validated();
 
-        try {
-            BookingService::completeOrder(
-                bookingReference: $validated['bookingReference'],
-            );
-            return $this->sendResponse('Order complete');
-        } catch (Exception $e) {
-            Logger::error(message: 'Order complete fail', exception: $e);
-            return $this->sendError('Order complete fail');
-        }
+        $completeBookingResponse = CartItemService::completeBooking($validated['bookingReference']);
+
+        return $this->sendResponseFromService($completeBookingResponse);
     }
 
     public function getBookings(Request $request)

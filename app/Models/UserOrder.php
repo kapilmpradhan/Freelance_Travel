@@ -12,6 +12,8 @@ class UserOrder extends Model
     protected $table = 'user_orders';
     protected $fillable = [
         'booking_reference',
+        'order_id',
+        'user_agent_id',
         'cart_item_ids', // needed to
         'is_paid',
         'intent',

@@ -30,7 +30,8 @@ class CleanCartItems implements ShouldQueue
             requestData: $event->requestData,
             responseData: $event->responseData,
             userId: $event->userId,
-            paymentGateway: $event->paymentGateway
+            paymentGateway: $event->paymentGateway,
+            userAgentId: $event->userAgentId
         );
         Logger::info("Cached orders of user {$event->userId}");
     }

@@ -20,12 +20,14 @@ class OrderPosted
     public $requestData;
     public $userId;
     public $paymentGateway;
+    public $userAgentId;
 
     /**
      * Create a new event instance.
      */
     public function __construct(
         $userId,
+        $userAgentId,
         $bookingReference,
         $cartItemIds,
         $requestData,
@@ -42,5 +44,6 @@ class OrderPosted
         $this->requestData = $requestData;
         $this->userId = $userId;
         $this->paymentGateway = $paymentGateway;
+        $this->userAgentId = $userAgentId;
     }
 }

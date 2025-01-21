@@ -417,7 +417,8 @@ class CartItemService
         $requestData,
         $responseData,
         $intent,
-        $paymentGateway
+        $paymentGateway,
+        $userAgentId
     ) {
         DB::transaction(function () use (
             $bookingReference,
@@ -426,7 +427,8 @@ class CartItemService
             $requestData,
             $intent,
             $userId,
-            $paymentGateway
+            $paymentGateway,
+            $userAgentId,
         ) {
             //TODO: remove customers
             $userOrder = UserOrder::create([
@@ -436,7 +438,9 @@ class CartItemService
                 'user_id' => $userId,
                 'request_data' => $requestData,
                 'response_data' => $responseData,
-                'payment_gateway' => $paymentGateway
+                'payment_gateway' => $paymentGateway,
+                'user_agent_id' => $userAgentId,
+                'order_id' => $responseData['id']
             ]);
 
             if ($intent === 'email-quote') { // emailing quote should remove items from cart
@@ -465,5 +469,48 @@ class CartItemService
         ];
 
         return ServiceResponse::success($data);
+    }
+
+    public static function completeBooking($bookingReference)
+    {
+        $userOrder = UserOrder::where('booking_reference', $bookingReference)->first();
+
+        $getAgentResponse = UserAgentService::getUserAgentById($userOrder->user_agent_id);
+        if ($getAgentResponse->isError()) {
+            return $getAgentResponse;
+        }
+
+        $agent = $getAgentResponse->data;
+
+        // checkIfCustomerOrderStatusIsOrder checks order status of provided bookingReference
+        // If in Order status, we do not need to convert quote as it is already an order
+        // If not in Order status, we need to convert quote to order
+        $checkIfOrderStatusIsOrder = TdmsService::checkIfCustomerOrderStatusIsOrder(
+            agentToken: $agent->access_token,
+            orderId: $userOrder->order_id
+        );
+
+        if ($checkIfOrderStatusIsOrder->responseCode == 404) {
+            $convertQuoteToOrderResponse = TdmsService::convertQuoteToOrder(
+                $agent->access_token,
+                $bookingReference
+            );
+
+            if ($convertQuoteToOrderResponse->isError()) {
+                return $convertQuoteToOrderResponse;
+            }
+        } elseif ($checkIfOrderStatusIsOrder->responseCode == 400) {
+            return $checkIfOrderStatusIsOrder;
+        }
+
+        try {
+            BookingService::completeOrder(
+                bookingReference: $bookingReference,
+            );
+            return ServiceResponse::success();
+        } catch (Exception $e) {
+            Logger::error(message: 'Order completion failed', exception: $e);
+            return ServiceResponse::badRequest(message: 'Order completion failed');
+        }
     }
 }

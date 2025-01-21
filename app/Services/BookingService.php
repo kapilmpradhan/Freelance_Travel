@@ -265,6 +265,7 @@ class BookingService
 
         event(new OrderPosted(
             userId: $userId,
+            userAgentId: $agent->id,
             bookingReference: $bookingReference,
             cartItemIds: $cartItemIds,
             requestData: $orderRequestData,

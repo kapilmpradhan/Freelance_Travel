@@ -183,4 +183,64 @@ class TdmsService
         }
         return null;
     }
+
+    public static function convertQuoteToOrder($agentToken, $bookingReference)
+    {
+        $url = config('vars.tdms_api_url') . "/order/{$bookingReference}/convertQuote";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$agentToken}"
+        ])
+        ->post($url);
+
+        // Check if the request was successful
+        $data = $response->json();
+        if (isset($data['errors'])) {
+            return ServiceResponse::badRequest(
+                message: $data['message']
+            );
+        }
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error converting quote to order',
+                extra: [
+                    "bookingReference" => $bookingReference,
+                    "responseData" => $data
+                ]
+            );
+        }
+
+        return ServiceResponse::success();
+    }
+
+    public static function checkIfCustomerOrderStatusIsOrder($agentToken, $orderId)
+    {
+        $url = config('vars.tdms_api_url') . "/customerOrderDetail";
+
+        $response = Http::withQueryParameters([
+            "searchOnlyStatus" => "Order",
+            "orderId" => $orderId
+        ])
+        ->withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$agentToken}"
+        ])
+        ->get($url);
+
+        $responseStatus = $response->status();
+
+        if ($responseStatus == 200) {
+            return ServiceResponse::success();
+        } elseif ($responseStatus == 404) {
+            return ServiceResponse::notFound();
+        } else {
+            Logger::error(
+                message: "Error while fetching customer order detail",
+                extra: ["orderId" => $orderId]
+            );
+            return ServiceResponse::badRequest(message: 'Internal server error');
+        }
+    }
 }

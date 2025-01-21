@@ -161,4 +161,19 @@ class UserAgentService
 
         return ServiceResponse::success();
     }
+
+    public static function getUserAgentById($userAgentId)
+    {
+        $userAgent = UserAgent::where('id', $userAgentId)->first();
+        if (!$userAgent) {
+            return ServiceResponse::badRequest(
+                message: "Agent not found"
+            );
+        }
+
+        $refreshedAgent = UserAgentService::refreshAgent($userAgent);
+        return ServiceResponse::success(
+            data: $refreshedAgent
+        );
+    }
 }
