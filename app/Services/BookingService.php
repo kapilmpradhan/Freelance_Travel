@@ -106,7 +106,7 @@ class BookingService
             if ($customer->customer_index === 0) {
                 foreach ($cartItems as $cartItem) {
                     $bookingData = $cartItem->booking_data;
-                    $optionalData = $bookingData['optionalData'];
+                    $optionalData = $bookingData['optionalData'] ?? [];
                     $optionalFields = [];
                     foreach ($optionalData as $key => $value) {
                         $optionalFields[] = [
