@@ -234,12 +234,18 @@ class CartItemController extends BaseController
         $page = $request->query('page');
         $afterDate = $request->query('afterDate');
 
-        $bookings = TdmsService::getCustomerBookings($user->email, $page, $afterDate);
-        if (!$bookings) {
-            return $this->sendError('Could not fetch customer bookings');
-        }
+        try {
+            $bookings = TdmsService::getCustomerBookings($user->email, $page, $afterDate);
+            if (!$bookings) {
+                return $this->sendError('Could not fetch customer bookings');
+            }
 
-        return $this->sendResponse('Customer bookings', $bookings);
+            return $this->sendResponse('Customer bookings', $bookings);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get customer bookings';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
     }
 
     public function getCartDetailsByBookingReference(Request $request, $bookingReference)

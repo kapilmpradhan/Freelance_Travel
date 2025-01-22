@@ -157,13 +157,13 @@ class TdmsService
 
     public static function getCustomerBookings($customerEmail, $page, $afterDate)
     {
-        $url = config('vars.tdms_customer_api_url') . "?email={$customerEmail}";
+        $url = config('vars.tdms_customer_api_url') . "?email=" . rawurlencode($customerEmail);
         if (!empty($page)) {
-            $url .= "&page=$page";
+            $url .= "&page=" . rawurlencode($page);
         }
 
         if (!empty($afterDate)) {
-            $url .= "&afterDate=$afterDate";
+            $url .= "&afterDate=" . rawurlencode($afterDate);
         }
 
         // Credentials from config
@@ -181,6 +181,15 @@ class TdmsService
         if ($response->successful()) {
             return $data;
         }
+        Logger::error(
+            message: 'Error fetching customer orders',
+            extra: [
+                "customerEmail" => $$customerEmail,
+                "page" => $page,
+                "afterData" => $afterDate,
+                "responseData" => $data
+            ]
+        );
         return null;
     }
 
