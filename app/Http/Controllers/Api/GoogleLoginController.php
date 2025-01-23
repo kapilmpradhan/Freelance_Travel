@@ -90,7 +90,7 @@ class GoogleLoginController extends BaseController
                 'sso_type' => config('vars.sso_type_google'),
                 'profile_status' => 'success'
             ];
-            $new_user = $user->storeUser($data);
+            $new_user = User::create($data);
         }
 
         $user = ($existing_user) ? $existing_user : $new_user;
