@@ -25,7 +25,11 @@ class User extends Authenticatable
         'is_email_verified',
         'sso_type',
         'is_ops',
-        'profile_status'
+        'profile_status',
+        'date_of_birth',
+        'phone_number',
+        'post_code',
+        'country'
     ];
     protected $casts = [
         'is_email_verified' => 'boolean',
@@ -90,6 +94,17 @@ class User extends Authenticatable
         ];
     }
 
+    public function updateProfileRule()
+    {
+        return [
+            "first_name" => "required|string",
+            "last_name" => "required|string",
+            "date_of_birth" => "required|date",
+            "phone_number" => "required|numeric|digits_between:8,15",
+            "post_code" => "required|numeric",
+            "country" => "required|string"
+        ];
+    }
 
     public function storeUser($data)
     {

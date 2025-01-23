@@ -44,6 +44,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
     Route::get('detail', [UserController::class, 'userDetail']);
+    Route::put('detail', [UserController::class, 'updateProfile']);
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
     Route::post('/apple/new-email/add', [AppleLoginController::class, 'getRealEmailOTP']);
     Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);

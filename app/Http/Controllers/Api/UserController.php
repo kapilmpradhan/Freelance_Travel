@@ -11,6 +11,8 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\UserProfileAgentJob;
+use App\Services\ServiceException;
+use App\Services\UserService;
 
 class UserController extends BaseController
 {
@@ -171,5 +173,25 @@ class UserController extends BaseController
         ];
 
         return $this->sendResponse('New access token', $data);
+    }
+
+    public function updateProfile(Request $request, UserResource $userResource)
+    {
+        $data = $request->all();
+        $user = $request->user;
+
+        $validator = Validator::make($data, $user->updateProfileRule());
+        if ($validator->fails()) {
+            return $this->sendError('Profile update failed', $validator->errors());
+        }
+
+        $validatedData = $validator->validate();
+
+        try {
+            $updateUserProfileResponse = UserService::updateUserProfile($user, $validatedData);
+            return $this->sendResponseFromService($updateUserProfileResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
     }
 }
