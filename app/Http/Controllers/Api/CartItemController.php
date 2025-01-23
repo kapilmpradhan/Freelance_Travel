@@ -71,7 +71,7 @@ class CartItemController extends BaseController
     public function setCustomers(Request $request)
     {
         $userId = $request->user->uuid;
-        $data = $request->all();
+        $data = json_decode($request->getContent(), associative: true);
         $validator = CartCustomerDetail::validator(data: $data);
 
         if ($validator->fails()) {
