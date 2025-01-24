@@ -100,8 +100,8 @@ class User extends Authenticatable
             "first_name" => "required|string",
             "last_name" => "required|string",
             "date_of_birth" => "required|date",
-            "phone_number" => "required|numeric|digits_between:8,15",
-            "post_code" => "required|numeric",
+            "phone_number" => "required|string",
+            "post_code" => "required|string",
             "country" => "required|string"
         ];
     }
