@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Jobs\SetupProfileJob;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
@@ -34,6 +36,14 @@ class User extends Authenticatable
     protected $casts = [
         'is_email_verified' => 'boolean',
     ];
+
+    protected function dateOfBirth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => Carbon::parse($value)->format('d-M-Y'),
+            set: fn ($value) => Carbon::parse($value)->format('Y-m-d')
+        );
+    }
 
     /**
      * Define a one-to-one relationship with Agent Token.
@@ -99,7 +109,7 @@ class User extends Authenticatable
         return [
             "first_name" => "required|string",
             "last_name" => "required|string",
-            "date_of_birth" => "required|date",
+            "date_of_birth" => "required|date_format:d-M-Y",
             "phone_number" => "required|string",
             "post_code" => "required|string",
             "country" => "required|string"

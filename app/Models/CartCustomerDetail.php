@@ -54,7 +54,7 @@ class CartCustomerDetail extends Model
             'items.*.lastName' => 'required|string|max:255',
             'items.*.dateOfBirth' => 'required|date_format:d-M-Y',
             'items.*.email' => 'required|email|max:255',
-            'items.*.phoneNumber' => 'required|integer|min:99999',
+            'items.*.phoneNumber' => 'required|string',
             'items.*.postalCode' => 'required|string|max:20',
             'items.*.customerIndex' => 'required|integer|min:0',
             ]
