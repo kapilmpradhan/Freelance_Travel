@@ -91,19 +91,19 @@ class BookingService
         $redeemers = [];
         foreach ($customers as $customer) {
             $redeemer = [
-                "emailAddress" => $customer->email,
-                "firstName" => $customer->first_name,
-                "lastName" => $customer->last_name,
-                "phone" => strVal($customer->phone_number),
-                "redeemerCountry" => "036",
-                "dateOfBirth" => $customer->date_of_birth,
-                "postcode" => $customer->postal_code,
+                "emailAddress" => $customer['email'],
+                "firstName" => $customer['first_name'],
+                "lastName" => $customer['last_name'],
+                "phone" => strVal($customer['phone_number']),
+                "redeemerCountry" => $customer['country_code'],
+                "dateOfBirth" => $customer['date_of_birth'],
+                "postcode" => $customer['postal_code'],
                 'products' => [],
             ];
 
             // Assumes all the products are booked for the first customer
             // TODO: populate product based on selection
-            if ($customer->customer_index === 0) {
+            if ($customer['customer_index'] === 0) {
                 foreach ($cartItems as $cartItem) {
                     $bookingData = $cartItem->booking_data;
                     $optionalData = $bookingData['optionalData'] ?? [];
@@ -174,7 +174,7 @@ class BookingService
         return $orderData;
     }
 
-    public static function postOrder(string $userId, string $intent, bool $processAsQuote = true)
+    public static function basePostOrder(string $userId, string $intent, array $customers, bool $processAsQuote = true)
     {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         if ($getAgentResponse->isError()) {
@@ -187,8 +187,6 @@ class BookingService
         if (!$cartItemIds) {
             return ServiceResponse::badRequest('No items available in cart');
         }
-
-        $customers = CartCustomerDetail::where('user_id', $userId)->get();
 
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
         if (is_null($onlinePaymentMethod)) {
@@ -286,6 +284,47 @@ class BookingService
         }
 
         return ServiceResponse::success(data: ['bookingReference' => $bookingReference]);
+    }
+
+    public static function postOrder(string $userId, string $intent, bool $processAsQuote = true)
+    {
+        $customers = CartCustomerDetail::where('user_id', $userId)->get()->toArray();
+        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $processAsQuote);
+
+        return $basePostOrderResponse;
+    }
+
+    public static function postOrderV2(string $userId, string $intent, bool $processAsQuote = true)
+    {
+        $user = User::where('uuid', $userId)->first();
+        $checkIfUserContainsLeadCustomerDetailResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
+        if ($checkIfUserContainsLeadCustomerDetailResponse->isError()) {
+            return ServiceResponse::badRequest(message: 'Unable to get lead customer details');
+        }
+        $leadCustomer = [
+            "email" => $user->email,
+            "first_name" => $user->first_name,
+            "last_name" => $user->last_name,
+            "phone_number" => $user->phone_number,
+            "country_code" => $user->country_code,
+            "date_of_birth" => $user->date_of_birth,
+            "postal_code" => $user->post_code,
+            "customer_index" => 0
+        ];
+
+        // Lead customer is indexed 0 so others customers index are incremented by 1 in memory.
+        $customers = CartCustomerDetail::where('user_id', $userId)
+                            ->orderBy('customer_index', 'desc')
+                            ->get()
+                            ->map(function ($customer) {
+                                $customer->customer_index += 1;
+                                return $customer;
+                            })
+                            ->toArray();
+        $customers = array_merge([$leadCustomer], $customers);
+        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $processAsQuote);
+
+        return $basePostOrderResponse;
     }
 
     public static function completeOrder(string $bookingReference)

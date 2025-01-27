@@ -211,6 +211,27 @@ class CartItemController extends BaseController
         }
     }
 
+    public function submitOrderV2(Request $request)
+    {
+        $data = $request->all();
+        $validate = Validator::make($data, ["paymentType" => "required|in:email-quote,pay-now"]);
+
+        if ($validate->fails()) {
+            return $this->sendError("Place order failed", $validate->errors());
+        }
+
+        try {
+            $postOrderResponse = BookingService::postOrderV2(
+                userId: $request->user->uuid,
+                intent: $data['paymentType'],
+                processAsQuote: true,
+            );
+            return $this->sendResponseFromService($postOrderResponse);
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
     public function completeOrder(Request $request)
     {
         $params = $request->query();

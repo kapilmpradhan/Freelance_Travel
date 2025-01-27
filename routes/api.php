@@ -60,6 +60,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::post('add', [CartItemController::class, 'addItemToCart']);
     Route::get('list', [CartItemController::class, 'getCartItems']);
     Route::post('order', [CartItemController::class, 'submitOrder']);
+    Route::post('order/v2', [CartItemController::class, 'submitOrderV2']);
     Route::get('bookings', [CartItemController::class, 'getBookings']);
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
 });

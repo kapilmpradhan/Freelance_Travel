@@ -22,4 +22,20 @@ class UserService
             throw new ServiceException($errorMessage);
         }
     }
+
+    public static function checkIfUserContainsLeadCustomerDetail($user)
+    {
+        if (
+            $user->first_name
+            && $user->last_name
+            && $user->date_of_birth
+            && $user->phone_number
+            && $user->post_code
+            && $user->country_code
+        ) {
+            return ServiceResponse::success();
+        }
+
+        return ServiceResponse::notFound();
+    }
 }

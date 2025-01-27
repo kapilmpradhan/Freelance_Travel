@@ -20,7 +20,7 @@ class UserResource
             'date_of_birth' => $data->date_of_birth,
             'phone_number' => $data->phone_number,
             'post_code' => $data->post_code,
-            'country' => $data->country,
+            'country_code' => $data->country_code,
             'sso_type' => $data->sso_type,
             'profile_status' => $data->profile_status,
             'is_agent_integrated' => $hasUserAgent,

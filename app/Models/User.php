@@ -31,7 +31,7 @@ class User extends Authenticatable
         'date_of_birth',
         'phone_number',
         'post_code',
-        'country'
+        'country_code'
     ];
     protected $casts = [
         'is_email_verified' => 'boolean',
@@ -112,7 +112,7 @@ class User extends Authenticatable
             "date_of_birth" => "required|date_format:d-M-Y",
             "phone_number" => "required|string",
             "post_code" => "required|string",
-            "country" => "required|string"
+            "country_code" => "required|string"
         ];
     }
 
