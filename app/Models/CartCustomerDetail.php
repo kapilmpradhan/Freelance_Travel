@@ -49,7 +49,7 @@ class CartCustomerDetail extends Model
         return Validator::make(
             ['items' => $data], // Wrap data in a parent key
             [
-            'items' => 'required|array',
+            'items' => 'array',
             'items.*.firstName' => 'required|string|max:255',
             'items.*.lastName' => 'required|string|max:255',
             'items.*.dateOfBirth' => 'required|date_format:d-M-Y',
