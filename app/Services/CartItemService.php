@@ -285,6 +285,7 @@ class CartItemService
                         'last_name' => $detail['lastName'],
                         'date_of_birth' => $detail['dateOfBirth'],
                         'email' => $detail['email'],
+                        'country_code' => $detail['countryCode'],
                         'postal_code' => $detail['postalCode'] ?? null,
                         'customer_index' => $detail['customerIndex'],
                         'phone_number' => $detail['phoneNumber']
