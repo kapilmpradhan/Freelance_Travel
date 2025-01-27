@@ -274,22 +274,29 @@ class CartItemService
 
             // Update or create records
             foreach ($data as $detail) {
+                $customerData = [
+                    'user_id' => $userId,
+                    'first_name' => $detail['firstName'],
+                    'last_name' => $detail['lastName'],
+                    'date_of_birth' => $detail['dateOfBirth'],
+                    'email' => $detail['email'],
+                    'country_code' => $detail['countryCode'] ?? "036",
+                    'postal_code' => $detail['postalCode'] ?? null,
+                    'customer_index' => $detail['customerIndex'],
+                    'phone_number' => $detail['phoneNumber']
+                ];
+
+                // Only add country_code if it exists in $detail
+                if (isset($detail['countryCode'])) {
+                    $customerData['country_code'] = $detail['countryCode'];
+                }
+
                 CartCustomerDetail::updateOrCreate(
                     [
                         'user_id' => $userId,
                         'customer_index' => $detail['customerIndex'],
                     ],
-                    [
-                        'user_id' => $userId,
-                        'first_name' => $detail['firstName'],
-                        'last_name' => $detail['lastName'],
-                        'date_of_birth' => $detail['dateOfBirth'],
-                        'email' => $detail['email'],
-                        'country_code' => $detail['countryCode'],
-                        'postal_code' => $detail['postalCode'] ?? null,
-                        'customer_index' => $detail['customerIndex'],
-                        'phone_number' => $detail['phoneNumber']
-                    ],
+                    $customerData
                 );
             }
 

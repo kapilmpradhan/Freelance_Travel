@@ -56,7 +56,7 @@ class CartCustomerDetail extends Model
             'items.*.email' => 'required|email|max:255',
             'items.*.phoneNumber' => 'required|string',
             'items.*.postalCode' => 'required|string|max:20',
-            'items.*.countryCode' => 'required|string',
+            'items.*.countryCode' => 'string',
             'items.*.customerIndex' => 'required|integer|min:0',
             ]
         );
