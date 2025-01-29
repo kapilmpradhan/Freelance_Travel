@@ -40,8 +40,8 @@ class User extends Authenticatable
     protected function dateOfBirth(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => Carbon::parse($value)->format('d-M-Y'),
-            set: fn ($value) => Carbon::parse($value)->format('Y-m-d')
+            get: fn($value) => $value ? Carbon::parse($value)->format('d-M-Y') : null,
+            set: fn($value) => $value ? Carbon::parse($value)->format('Y-m-d') : null
         );
     }
 
