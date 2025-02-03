@@ -9,13 +9,10 @@ use App\Models\CartCustomerDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\CacheProductJob;
-use App\Jobs\UpdateUserCartItemProductsJob;
-use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\CartItemService;
-use App\Models\UserOrder;
+use App\Services\ServiceException;
 use App\Services\TdmsService;
-use App\Services\UserAgentService;
 
 class CartItemController extends BaseController
 {
@@ -206,8 +203,8 @@ class CartItemController extends BaseController
                 processAsQuote: true,
             );
             return $this->sendResponseFromService($postOrderResponse);
-        } catch (Exception $e) {
-            return $this->sendError($e->getMessage());
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
         }
     }
 

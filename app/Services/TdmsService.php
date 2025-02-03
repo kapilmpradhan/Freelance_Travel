@@ -110,9 +110,12 @@ class TdmsService
             ->withBody(json_encode($data))
             ->post($url);
 
+        $data = $response->json();
         if ($response->successful()) {
-            $data = $response->json();
-            return $data;
+            return ServiceResponse::success(
+                message: "Order placed",
+                data: $data
+            );
         }
         Logger::error("Failed to create order", extra: [
             'userId' => $userId,
@@ -123,7 +126,10 @@ class TdmsService
                 "body" => $response->body(),
             ]
         ]);
-        return null;
+        return ServiceResponse::badRequest(
+            message: "Failed to create order",
+            data: $data
+        );
     }
 
     public static function getPaymentGatewayUri($agentToken, $bookingReference, $paymentAmount, $returnUrl)

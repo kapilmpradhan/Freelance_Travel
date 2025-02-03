@@ -212,13 +212,15 @@ class BookingService
         $bookingReference = $orderRequestData['bookingReference'];
         $paymentAmount = $orderRequestData['totalCharged'];
 
-        $orderResponse = TdmsService::placeOrder(
+        $placeOrderResponse = TdmsService::placeOrder(
             agentToken: $agent->access_token,
             data: $orderRequestData,
             userId: $userId,
         );
-        if (is_null($orderResponse)) {
-            throw new ServiceException(message: "Failed to submit order");
+
+        $orderResponseData = $placeOrderResponse->data;
+        if ($placeOrderResponse->isError()) {
+            throw new ServiceException($orderResponseData['message']);
         }
 
         $getPaymentGatewayUriResponse = TdmsService::getPaymentGatewayUri(
@@ -267,7 +269,7 @@ class BookingService
             bookingReference: $bookingReference,
             cartItemIds: $cartItemIds,
             requestData: $orderRequestData,
-            responseData: $orderResponse,
+            responseData: $orderResponseData,
             intent: $intent,
             emailData: $emailData,
             paymentGateway: [
