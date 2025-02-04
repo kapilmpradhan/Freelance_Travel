@@ -188,6 +188,16 @@ class BookingService
             return ServiceResponse::badRequest('No items available in cart');
         }
 
+        $validateProductAvailabilityResponse = CartItemService::validateProductAvailability(
+            agentToken: $agent->access_token,
+            cartItems: $cartItems
+        );
+        if ($validateProductAvailabilityResponse->isError()) {
+            return $validateProductAvailabilityResponse;
+        }
+
+        $customers = CartCustomerDetail::where('user_id', $userId)->get();
+
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
         if (is_null($onlinePaymentMethod)) {
             throw new ServiceException('Missing online payment method');

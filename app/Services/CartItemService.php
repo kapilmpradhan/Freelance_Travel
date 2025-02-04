@@ -521,4 +521,44 @@ class CartItemService
             return ServiceResponse::badRequest(message: 'Order completion failed');
         }
     }
+
+    public static function validateProductAvailability($agentToken, $cartItems)
+    {
+        $errorData = [];
+        foreach ($cartItems as $cartItem) {
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                agentToken: $agentToken,
+                productPricesDetailsId: $cartItem->product_price_details_id,
+                timeId: $cartItem->booking_data['timeId'],
+                startDate: $cartItem->start_date,
+                days: $cartItem->days
+            );
+
+            if (empty($productAvailabilities)) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+
+            $productAvailability = $productAvailabilities[$cartItem->selected_index];
+
+            if ($productAvailability['NumAvailable'] < $cartItem->booking_quantity) {
+                $errorData[] = [
+                    $cartItem->product_price_details_id => [
+                        "availableQty" => $productAvailability['NumAvailable'],
+                        "requestedQty" => $cartItem->booking_quantity
+                    ]
+                ];
+            }
+
+            if ($errorData) {
+                return ServiceResponse::badRequest(
+                    message: "Requested quantity not available",
+                    data: $errorData
+                );
+            } else {
+                return ServiceResponse::success();
+            }
+        }
+    }
 }
