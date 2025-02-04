@@ -33,6 +33,8 @@ jobs:
       - name: Checkout Code
         run: |
           git clone --branch ${{ github.event.inputs.github-branch-name }} --single-branch git@github.com:websitetravel/freelance-website.git
+      - name: Setup index html
+        run: envsubst < public/index.tpl.html > public/index.html
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
