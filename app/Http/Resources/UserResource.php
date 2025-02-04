@@ -14,6 +14,7 @@ class UserResource
 
         $returnData =  [
             'id' => $data->uuid,
+            'title' => $data->title,
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
             'email' => $data->email,

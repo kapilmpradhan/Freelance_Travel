@@ -4,10 +4,12 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
+use App\Jobs\CacheProductJob;
 use App\Jobs\SendShareMailJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\UserOrder;
 use App\Services\TdmsService;
@@ -91,6 +93,7 @@ class BookingService
         $redeemers = [];
         foreach ($customers as $customer) {
             $redeemer = [
+                "title" => $customer['title'] ?? null,
                 "emailAddress" => $customer['email'],
                 "firstName" => $customer['first_name'],
                 "lastName" => $customer['last_name'],
@@ -174,6 +177,47 @@ class BookingService
         return $orderData;
     }
 
+    public static function validateCartItemAvailability($agentToken, $cartItems)
+    {
+        $unavailableProducts = [];
+
+        foreach ($cartItems as $cartItem) {
+            $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)->first();
+            if (!$product) {
+                CacheProductJob::dispatchSync(
+                    user: null,
+                    cartItem: $cartItem
+                );
+                $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)->first();
+            }
+
+            $availability = ProductService::getProductAvailabilitiesFromApi(
+                agentToken: $agentToken,
+                productPricesDetailsId: $cartItem->product_price_details_id,
+                timeId: 0,
+                startDate: $cartItem->booking_date,
+                days: 1
+            )[0];
+
+            $availableNumber = $availability['NumAvailable'];
+            if ($availableNumber < $cartItem->booking_quantity) {
+                $unavailableProducts[] = [
+                    $cartItem->tdms_product_id => "Available quantity: {$availableNumber}"
+                ];
+            }
+        };
+
+        if (!empty($unavailableProducts)) {
+            return ServiceResponse::badRequest(
+                message: 'Some products or quantity not available',
+                data: $unavailableProducts
+            );
+        }
+        return ServiceResponse::success(
+            message: "All items are available"
+        );
+    }
+
     public static function basePostOrder(string $userId, string $intent, array $customers, bool $processAsQuote = true)
     {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
@@ -197,6 +241,17 @@ class BookingService
         }
 
         $customers = CartCustomerDetail::where('user_id', $userId)->get();
+        $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
+            $agent->access_token,
+            $cartItems
+        );
+        $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
+            agentToken: $agent->access_token,
+            cartItems: $cartItems
+        );
+        if ($get_validate_cart_items_response->isError()) {
+            return $get_validate_cart_items_response;
+        };
 
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
         if (is_null($onlinePaymentMethod)) {
@@ -315,6 +370,7 @@ class BookingService
         }
         $leadCustomer = [
             "email" => $user->email,
+            "title" => $user->title ?? null,
             "first_name" => $user->first_name,
             "last_name" => $user->last_name,
             "phone_number" => $user->phone_number,

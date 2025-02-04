@@ -19,6 +19,7 @@ class User extends Authenticatable
     protected $primaryKey = 'uuid';
     protected $keyType = 'string';
     protected $fillable = [
+        'title',
         'first_name',
         'last_name',
         'email',
@@ -107,6 +108,7 @@ class User extends Authenticatable
     public function updateProfileRule()
     {
         return [
+            "title" => "in:Mr,Mrs",
             "first_name" => "required|string",
             "last_name" => "required|string",
             "date_of_birth" => "required|date_format:d-M-Y",

@@ -15,6 +15,7 @@ class CartCustomerDetail extends Model
     protected $table = 'cart_customer_details';
     protected $fillable = [
         'user_id',
+        'title',
         'first_name',
         'last_name',
         'date_of_birth',
@@ -50,6 +51,7 @@ class CartCustomerDetail extends Model
             ['items' => $data], // Wrap data in a parent key
             [
             'items' => 'array',
+            'items.*.title' => 'in:Mr,Mrs',
             'items.*.firstName' => 'required|string|max:255',
             'items.*.lastName' => 'required|string|max:255',
             'items.*.dateOfBirth' => 'required|date_format:d-M-Y',

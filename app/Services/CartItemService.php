@@ -276,6 +276,7 @@ class CartItemService
             foreach ($data as $detail) {
                 $customerData = [
                     'user_id' => $userId,
+                    'title' => $detail['title'] ?? null,
                     'first_name' => $detail['firstName'],
                     'last_name' => $detail['lastName'],
                     'date_of_birth' => $detail['dateOfBirth'],
