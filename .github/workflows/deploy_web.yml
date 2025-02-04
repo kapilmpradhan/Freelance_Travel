@@ -18,6 +18,7 @@ on:
 
 env:
   S3_BUCKET_NAME: apptest-freelance-travel-com
+  CLARITY_CODE_BLOCK : ${{ vars.CLARITY_CODE_BLOCK }}
 
 jobs:
   build:
