@@ -15,6 +15,10 @@ on:
       github-branch-name:
         description: 'Github repo branch name for web.'
         required: true
+      environment:
+        description: 'Environment to deploy to (staging or production)'
+        required: true
+        default: 'staging'
 
 env:
   S3_BUCKET_NAME: apptest-freelance-travel-com
@@ -23,8 +27,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
+      - name: Fail on Invalid Environment
+        if: ${{ github.event.inputs.environment != 'staging' && github.event.inputs.environment != 'production' }}
+        run: |
+          echo "Invalid environment: ${{ github.event.inputs.environment }}. Options are 'staging' or 'production."
+          exit 1
+
       - name: Set up SSH for Deploy Key
         run: |
           mkdir ~/.ssh
@@ -50,7 +61,7 @@ jobs:
         working-directory: freelance-website
 
       - name: Build Frontend
-        run: npm run build:staging
+        run: npm run build:${{ github.event.inputs.environment }}
         working-directory: freelance-website
       
       # Configure AWS credentials

@@ -6,7 +6,7 @@ services:
     ports:
       - "$APP_PORT:9000"
     networks:
-      ft-network:
+      $NETWORK_NAME:
         ipv4_address: $API_IP_ADDRESS
   migrator:
     image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
@@ -15,8 +15,8 @@ services:
     entrypoint: php artisan migrate --force
     restart: "no"
     networks:
-      - ft-network
+      - $NETWORK_NAME
 
 networks:
-  ft-network:
+  $NETWORK_NAME:
     external: true
