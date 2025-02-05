@@ -91,6 +91,7 @@ class CartItem extends Model
             'tdmsProductId' => 'required|integer',
             'productPricesDetailsId' => 'required|integer',
             'timeId' => 'string',
+            'commences' => 'string',
             'bookingData' => 'array',
             'bookingData.timeId' => 'string',
             // Must be in format 30-Nov-2012

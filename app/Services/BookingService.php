@@ -53,39 +53,9 @@ class BookingService
 
     public static function buildRedeemerProductBookingData($cartItem)
     {
-        $booking_details = $cartItem->booking_details;
-        $booking_data = $cartItem->booking_data;
-
-        $pickupLocations = $booking_details['pickupLocations'] ?? null;
-        $pickupId = $booking_data['pickupId'] ?? null;
-        $selectedPickup = [];
-        if ($pickupLocations && $pickupId) {
-            $selectedPickup = array_filter($pickupLocations, function ($location) use ($pickupId) {
-                return $location['PickupID'] === $pickupId;
-            });
-
-            $selectedPickup = !empty($selectedPickup) ? reset($selectedPickup) : [];
-        }
-
-        $bookingTimes = $booking_details['bookingTimes'] ?? null;
-        $timeId = $booking_data['timeId'] ?? null;
-        $selectedTime = [];
-        if ($bookingTimes && $timeId) {
-            $selectedTime = array_filter($bookingTimes, function ($time) use ($timeId) {
-                return $time['BookingTimeID'] === $timeId;
-            });
-
-            $selectedTime = !empty($selectedTime) ? reset($selectedTime) : [];
-        }
-        return [
-            "bookingComment" => "",
-            "travelDate" => $cartItem->availability['BookingDate'] ?? null,
-            "timeId" => $selectedTime['BookingTimeID'] ?? null,
-            "commences" => $selectedTime['BookingTime'] ?? null,
-            "pickupId" => $selectedPickup['pickupId'] ?? null,
-            "pickupTime" => $selectedPickup['pickupTime'] ?? null,
-            "pickupLocation" => $selectedPickup['pickupLocation'] ?? null,
-        ];
+        $bookingData = $cartItem->booking_data;
+        unset($bookingData['optionalData']);
+        return $bookingData;
     }
 
     public static function buildRedeemersData($cartItems, $customers)
@@ -240,7 +210,6 @@ class BookingService
             return $validateProductAvailabilityResponse;
         }
 
-        $customers = CartCustomerDetail::where('user_id', $userId)->get();
         $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
             $agent->access_token,
             $cartItems

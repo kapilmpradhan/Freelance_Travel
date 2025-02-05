@@ -52,6 +52,7 @@ class CartItemController extends BaseController
                 tdmsProductId: $data['tdmsProductId'],
                 productPricesDetailsId: $data['productPricesDetailsId'],
                 timeId: $data['timeId'] ?? null,
+                commences: $data['commences'] ?? null,
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
