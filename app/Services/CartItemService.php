@@ -29,7 +29,7 @@ class CartItemService
         int $tdmsProductId,
         int $productPricesDetailsId,
         string|null $timeId,
-        string $commences,
+        string|null $commences,
         array $bookingData,
         string $startDate,
         int $days,
