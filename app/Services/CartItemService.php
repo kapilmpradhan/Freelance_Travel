@@ -159,7 +159,7 @@ class CartItemService
                         'user_id' => $userId,
                         'tdms_product_id' => $tdmsProductId,
                         'product_price_details_id' => $productPricesDetailsId,
-                        'booking_date' => BaseService::stringToDate($startDate),
+                        'booking_date' => BaseService::stringToDate($availability['BookingDate']),
                         'start_date' => BaseService::stringToDate($startDate),
                         'days' => $days,
                         'selected_index' => $selectedIndex,
