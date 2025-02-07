@@ -54,6 +54,7 @@ class BookingService
     public static function buildRedeemerProductBookingData($cartItem)
     {
         $bookingData = $cartItem->booking_data;
+        $bookingData['travelDate'] = $cartItem->booking_date;
         unset($bookingData['optionalData']);
         return $bookingData;
     }
@@ -214,10 +215,7 @@ class BookingService
             $agent->access_token,
             $cartItems
         );
-        $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
-            agentToken: $agent->access_token,
-            cartItems: $cartItems
-        );
+
         if ($get_validate_cart_items_response->isError()) {
             return $get_validate_cart_items_response;
         };
