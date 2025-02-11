@@ -74,6 +74,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], fu
     Route::put('order/complete', [CartItemController::class, 'completeOrder']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'product'], function () {
+    Route::get('feed/categories', [CartItemController::class, 'categories']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
     Route::get('integration', [UserAgentController::class, 'getUserAgent']);
     Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);

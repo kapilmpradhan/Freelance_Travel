@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Jobs\CacheProductJob;
 use App\Services\BookingService;
 use App\Services\CartItemService;
+use App\Services\ProductCategoryService;
 use App\Services\ServiceException;
 use App\Services\TdmsService;
 
@@ -39,7 +40,7 @@ class CartItemController extends BaseController
 
     public function addItemsToCart(Request $request)
     {
-        $data = $request-> all();
+        $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsRule());
 
         if ($validated->fails()) {
@@ -298,5 +299,12 @@ class CartItemController extends BaseController
             Logger::error('Customer order exception', $e);
             return $this->sendError($errorMessage);
         }
+    }
+
+    public function categories(Request $request)
+    {
+        $getProductCategories = ProductCategoryService::getCategories();
+
+        return $this->sendResponseFromService($getProductCategories);
     }
 }
