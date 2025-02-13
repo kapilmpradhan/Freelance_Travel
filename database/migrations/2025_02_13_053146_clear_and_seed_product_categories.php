@@ -12,24 +12,31 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Swap the column names
         Schema::table('product_categories', function (Blueprint $table) {
-            $table->renameColumn('category', 'temp_column');
+            $table->renameColumn('category', 'temp_category');
+        });
+
+        Schema::table('product_categories', function (Blueprint $table) {
             $table->renameColumn('label', 'category');
-            $table->renameColumn('temp_column', 'label');
+        });
+
+        Schema::table('product_categories', function (Blueprint $table) {
+            $table->renameColumn('temp_category', 'label');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // Swap the column names back
         Schema::table('product_categories', function (Blueprint $table) {
-            $table->renameColumn('label', 'temp_column');
-            $table->renameColumn('category', 'label');
-            $table->renameColumn('temp_column', 'category');
+            $table->renameColumn('category', 'temp_category');
+        });
+
+        Schema::table('product_categories', function (Blueprint $table) {
+            $table->renameColumn('label', 'category');
+        });
+
+        Schema::table('product_categories', function (Blueprint $table) {
+            $table->renameColumn('temp_category', 'label');
         });
     }
 };
