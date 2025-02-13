@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\DTOs\AddToQuote;
 use App\Jobs\CacheProductJob;
 use App\Services\BookingService;
 use App\Services\CartItemService;
@@ -67,6 +68,66 @@ class CartItemController extends BaseController
         }
     }
 
+    public function addItemsInNewQuote(Request $request)
+    {
+        $data = $request->all();
+        $validated = Validator::make($data, CartItem::saveItemsInNewQuote());
+
+        if ($validated->fails()) {
+            return $this->sendError('Validation Error.', $validated->errors());
+        }
+
+        try {
+            $saveItemsResponse = CartItemService::saveItems(
+                userId: $request->user->uuid,
+                tdmsProductId: $data['tdmsProductId'],
+                productPricesDetailsId: $data['productPricesDetailsId'],
+                timeId: $data['timeId'] ?? null,
+                commences: $data['commences'] ?? null,
+                startDate: $data['startDate'],
+                days: $data['days'],
+                selectedAvailableIndices: $data['selectedAvailableIndices'],
+                bookingData: $data['bookingData'] ?? [],
+                addToQuote: AddToQuote::new(title: $data['quoteTitle']),
+            );
+            return $this->sendResponseFromService($saveItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to create new quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function addItemsInExistingQuote(Request $request, string $quoteId)
+    {
+        $data = $request->all();
+        $validated = Validator::make($data, CartItem::saveItemsRule());
+
+        if ($validated->fails()) {
+            return $this->sendError('Validation Error.', $validated->errors());
+        }
+
+        try {
+            $saveItemsResponse = CartItemService::saveItems(
+                userId: $request->user->uuid,
+                tdmsProductId: $data['tdmsProductId'],
+                productPricesDetailsId: $data['productPricesDetailsId'],
+                timeId: $data['timeId'] ?? null,
+                commences: $data['commences'] ?? null,
+                startDate: $data['startDate'],
+                days: $data['days'],
+                selectedAvailableIndices: $data['selectedAvailableIndices'],
+                bookingData: $data['bookingData'] ?? [],
+                addToQuote: AddToQuote::existing(quoteId: $quoteId),
+            );
+            return $this->sendResponseFromService($saveItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to add items to quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function setCustomers(Request $request)
     {
         $userId = $request->user->uuid;
@@ -103,14 +164,77 @@ class CartItemController extends BaseController
         }
     }
 
+    public function getQuotes(Request $request)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getQuotesResponse = CartItemService::getQuotes(userId: $userId);
+            return $this->sendResponseFromService($getQuotesResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get quotes';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function setQuoteCustomers(Request $request, string $quoteId)
+    {
+        $userId = $request->user->uuid;
+        $data = json_decode($request->getContent(), associative: true);
+        $validator = CartCustomerDetail::validator(data: $data);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        try {
+            $setCustomersResponse = CartItemService::setCustomers(
+                userId: $userId,
+                data: $validator->validated()['items'],
+                quoteId: $quoteId,
+            );
+            return $this->sendResponseFromService($setCustomersResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to set customers of quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getQuoteCustomers(Request $request, string $quoteId)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getCartCustomersResponse = CartItemService::getCustomers(userId: $userId, quoteId: $quoteId);
+            return $this->sendResponseFromService($getCartCustomersResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get quote customers details';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function getItemsInCart(Request $request)
     {
         $userId = $request->user->uuid;
         try {
-            $getCartItemsResponse = CartItemService::getItemsInCart(userId: $userId);
+            $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId);
             return $this->sendResponseFromService($getCartItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get items in cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getItemsInQuote(Request $request, string $quoteId)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getQuoteItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, quoteId: $quoteId);
+            return $this->sendResponseFromService($getQuoteItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get items in quote';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
@@ -152,7 +276,7 @@ class CartItemController extends BaseController
             );
             return $this->sendResponseFromService($removeResponse);
         } catch (Exception $e) {
-            $errorMessage = 'Failed to remove item from cart';
+            $errorMessage = "Failed to remove item from " . ($request->is('quotes/*') ? "quote" : "cart");
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
@@ -224,6 +348,21 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
                 processAsQuote: true,
+            );
+            return $this->sendResponseFromService($postOrderResponse);
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function submitQuoteOrder(Request $request, string $quoteId)
+    {
+        try {
+            $postOrderResponse = BookingService::postOrderV2(
+                userId: $request->user->uuid,
+                intent: $data['paymentType'],
+                processAsQuote: true,
+                quoteId: $quoteId,
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (Exception $e) {

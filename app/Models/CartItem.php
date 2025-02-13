@@ -27,6 +27,7 @@ class CartItem extends Model
         'booking_quantity',
         'booking_data',
         'user_order_id',
+        'quote_id',
     ];
     protected $casts = [
         'availability' => 'array',
@@ -85,24 +86,33 @@ class CartItem extends Model
         ];
     }
 
+    protected static array $baseSaveItemsRule = [
+        'tdmsProductId' => 'required|integer',
+        'productPricesDetailsId' => 'required|integer',
+        'timeId' => 'string',
+        'commences' => 'string|nullable',
+        'bookingData' => 'array',
+        'bookingData.timeId' => 'string',
+        // Must be in format 30-Nov-2012
+        'startDate' => 'required|date|date_format:d-M-Y',
+        // Must be greater than zero
+        'days' => 'required|integer|min:1',
+         // Must be an array with at least one element
+        'selectedAvailableIndices' => 'required|array|min:1',
+        // Each element in the array must be an integer greater than or equal to 0
+        'selectedAvailableIndices.*' => 'integer|min:0',
+    ];
+
     public static function saveItemsRule()
     {
-        return [
-            'tdmsProductId' => 'required|integer',
-            'productPricesDetailsId' => 'required|integer',
-            'timeId' => 'string',
-            'commences' => 'string|nullable',
-            'bookingData' => 'array',
-            'bookingData.timeId' => 'string',
-            // Must be in format 30-Nov-2012
-            'startDate' => 'required|date|date_format:d-M-Y',
-            // Must be greater than zero
-            'days' => 'required|integer|min:1',
-             // Must be an array with at least one element
-            'selectedAvailableIndices' => 'required|array|min:1',
-            // Each element in the array must be an integer greater than or equal to 0
-            'selectedAvailableIndices.*' => 'integer|min:0',
-        ];
+        return self::$baseSaveItemsRule;
+    }
+
+    public static function saveItemsInNewQuote()
+    {
+        return array_merge(self::$baseSaveItemsRule, [
+            'quoteTitle' => 'required|string',
+        ]);
     }
 
     public static function updateItemBookingDataRule()
@@ -129,6 +139,17 @@ class CartItem extends Model
     public static function userCartItems($userId)
     {
         return CartItem::where('user_id', $userId)
+            ->whereNull('quote_id')
+            // only return items added from new api
+            ->whereNotNull('selected_index')
+            // filter processed items
+            ->whereNull('user_order_id');
+    }
+
+    public static function userQuoteItems(string $userId, string $quoteId)
+    {
+        return CartItem::where('user_id', $userId)
+            ->where('quote_id', $quoteId)
             // only return items added from new api
             ->whereNotNull('selected_index')
             // filter processed items

@@ -10,8 +10,15 @@ class Quote extends Model
     use HasFactory;
 
     protected $table = 'quotes';
-    protected $fillable = ['email', 'json'];
-
+    protected $fillable = [
+        'user_id',
+        'title',
+        'is_paid',
+        'user_order_id',
+    ];
+    protected $casts = [
+        'is_paid' => 'boolean',
+    ];
 
     public function callApi($url, $token)
     {

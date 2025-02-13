@@ -4,12 +4,14 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\DTOs\AddToQuote;
 use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use App\Models\Product;
 use App\Models\ProductPriceAvailability;
+use App\Models\Quote;
 use App\Models\UserOrder;
 use Exception;
 
@@ -34,6 +36,7 @@ class CartItemService
         string $startDate,
         int $days,
         array $selectedAvailableIndices,
+        AddToQuote $addToQuote,
     ) {
         try {
             // Validate that all indices are natural numbers
@@ -131,6 +134,7 @@ class CartItemService
                 $selectedAvailableIndices,
                 $cartItems,
                 $bookingDetails,
+                $addToQuote,
             ) {
                 $existingProductQ = Product::where('tdms_product_id', $tdmsProductId);
                 if ($existingProductQ->exists()) {
@@ -153,8 +157,35 @@ class CartItemService
                     ]);
                 }
 
+                if (!is_null($addToQuote)) {
+                    if ($addToQuote->isNew) {
+                        $quote = Quote::create([
+                            'user_id' => $userId,
+                            'title' => $addToQuote->title,
+                        ]);
+                    } else {
+                        $quote = Quote::where('id', $addToQuote->quoteId)->first();
+                    }
+                }
+
                 foreach ($selectedAvailableIndices as $selectedIndex) {
                     $availability = $productAvailabilities[$selectedIndex];
+                    $new_cart_data = [
+                        'user_id' => $userId,
+                        'tdms_product_id' => $tdmsProductId,
+                        'product_price_details_id' => $productPricesDetailsId,
+                        'booking_date' => BaseService::stringToDate($availability['BookingDate']),
+                        'start_date' => BaseService::stringToDate($startDate),
+                        'days' => $days,
+                        'selected_index' => $selectedIndex,
+                        'availability' => $availability,
+                        'availability_last_updated_at' => $now,
+                        'booking_details' => $bookingDetails,
+                        'booking_data' => $bookingData
+                    ];
+                    if (!is_null($quote)) {
+                        $new_cart_data['quote_id'] = $quote->id;
+                    }
                     $new_cart_item = CartItem::create([
                         'user_id' => $userId,
                         'tdms_product_id' => $tdmsProductId,
@@ -181,9 +212,12 @@ class CartItemService
         }
     }
 
-    public static function getItemsInCart($userId)
+    public static function getItemsInCartOrQuote($userId, $quoteId)
     {
-        $cartItems = CartItem::userCartItems($userId)->get();
+        $cartItems = (is_null($quoteId)
+            ? CartItem::userCartItems($userId)
+            : CartItem::userQuoteItems($userId, $quoteId)
+        )->get();
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
@@ -191,6 +225,12 @@ class CartItemService
             $cartItem->product = $products->get($cartItem->tdms_product_id);
         });
         return ServiceResponse::success(data: $cartItems);
+    }
+
+    public static function getQuotes($userId, bool $isPaid = false)
+    {
+        $quotes = Quote::where('user_id', $userId)->where('is_paid', $isPaid)->get();
+        return ServiceResponse::success(data: $quotes);
     }
 
     public static function getCartItemsByBookingReference($userId, $bookingReference)
@@ -256,7 +296,7 @@ class CartItemService
      * @param string $userId
      * @param array $data
      */
-    public static function setCustomers(string $userId, array $data)
+    public static function setCustomers(string $userId, array $data, string $quoteId)
     {
         // Validate customer_index sequence
         $indices = array_column($data, 'customerIndex');
@@ -270,8 +310,20 @@ class CartItemService
             }
         }
 
-        DB::transaction(function () use ($userId, $data) {
-            $existingDetails = CartCustomerDetail::where('user_id', $userId)->get()->keyBy('customer_index');
+        if (!is_null($quoteId)) {
+            $quote = Quote::where('id', $quoteid)->first();
+            if (is_null($quote)) {
+                return ServiceResponse::notFound('Quote not found');
+            }
+            if ($quote->user_id !== $userId) {
+                return ServiceResponse::badRequest('Permission denied');
+            }
+        }
+
+        DB::transaction(function () use ($userId, $data, $quoteId) {
+            $existingDetails = CartCustomerDetail::where('user_id', $userId)
+                ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
+                ->get()->keyBy('customer_index');
 
             $newIndices = array_column($data, 'customerIndex');
 
@@ -294,12 +346,17 @@ class CartItemService
                 if (isset($detail['countryCode'])) {
                     $customerData['country_code'] = $detail['countryCode'];
                 }
+                $columnsToMatch = [
+                    'user_id' => $userId,
+                    'customer_index' => $detail['customerIndex'],
+                ];
+                if (!is_null($quoteId)) {
+                    $columnsToMatch['quote_id'] = $quoteId;
+                    $customerData['quote_id'] = $quoteId;
+                }
 
                 CartCustomerDetail::updateOrCreate(
-                    [
-                        'user_id' => $userId,
-                        'customer_index' => $detail['customerIndex'],
-                    ],
+                    $columnsToMatch,
                     $customerData
                 );
             }
@@ -318,9 +375,11 @@ class CartItemService
         return ServiceResponse::success();
     }
 
-    public static function getCustomers(string $userId)
+    public static function getCustomers(string $userId, string $quoteId)
     {
-        $customerDetails = CartCustomerDetail::where('user_id', $userId)->get();
+        $customerDetails = CartCustomerDetail::where('user_id', $userId)
+        ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
+        ->get();
         return ServiceResponse::success(data: $customerDetails);
     }
 

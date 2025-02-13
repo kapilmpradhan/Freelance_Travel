@@ -23,7 +23,8 @@ class CartCustomerDetail extends Model
         'postal_code',
         'customer_index',
         'country_code',
-        'phone_number'
+        'phone_number',
+        'quote_id',
     ];
 
     public function user()

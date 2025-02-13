@@ -10,6 +10,7 @@ use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use App\Models\Product;
+use App\Models\Quote;
 use App\Models\User;
 use App\Models\UserOrder;
 use App\Services\TdmsService;
@@ -189,15 +190,23 @@ class BookingService
         );
     }
 
-    public static function basePostOrder(string $userId, string $intent, array $customers, bool $processAsQuote = true)
-    {
+    public static function basePostOrder(
+        string $userId,
+        string $intent,
+        array $customers,
+        string $quoteId,
+        bool $processAsQuote = true
+    ) {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         if ($getAgentResponse->isError()) {
             return $getAgentResponse;
         }
         $agent = $getAgentResponse->data;
 
-        $cartItems = CartItem::userCartItems($userId)->get();
+        $cartItems = (is_null($quoteId)
+            ? CartItem::userCartItems($userId)
+            : CartItem::userQuoteItems($userId, $quoteId)
+        )->get();
         $cartItemIds = $cartItems->pluck('id')->toArray();
         if (!$cartItemIds) {
             return ServiceResponse::badRequest('No items available in cart');
@@ -328,7 +337,7 @@ class BookingService
         return $basePostOrderResponse;
     }
 
-    public static function postOrderV2(string $userId, string $intent, bool $processAsQuote = true)
+    public static function postOrderV2(string $userId, string $intent, string $quoteId, bool $processAsQuote = true)
     {
         $user = User::where('uuid', $userId)->first();
         $checkIfUserContainsLeadCustomerDetailResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
@@ -349,6 +358,7 @@ class BookingService
 
         // Lead customer is indexed 0 so others customers index are incremented by 1 in memory.
         $customers = CartCustomerDetail::where('user_id', $userId)
+                            ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
                             ->orderBy('customer_index', 'desc')
                             ->get()
                             ->map(function ($customer) {
@@ -369,12 +379,18 @@ class BookingService
             return ServiceResponse::notFound(message: 'Booking reference not found');
         }
 
+        $cartItemQ = CartItem::whereIn('id', $userOrder->cart_item_ids);
+        $quoteIds = $cartItemQ->select('quote_id')->distinct()->pluck('quote_id');
+
         DB::transaction(function () use ($userOrder) {
             $userOrder->is_paid = true;
             $userOrder->save();
 
-            CartItem::whereIn('id', $userOrder->cart_item_ids)
-            ->update(['user_order_id' => $userOrder->id]);
+            $cartItemQ->update(['user_order_id' => $userOrder->id]);
+            Quote::whereIn('id', $quoteIds)->update([
+                'is_paid' => true,
+                'user_order_id' => $userOrder->id
+            ]);
         });
         return ServiceResponse::success();
     }
