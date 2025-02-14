@@ -208,7 +208,7 @@ class BookingService
             : CartItem::userQuoteItems($userId, $quoteId)
         )->get();
         $cartItemIds = $cartItems->pluck('id')->toArray();
-        if (!$cartItemIds) {
+        if (empty($cartItemIds)) {
             return ServiceResponse::badRequest('No items available in cart');
         }
 
