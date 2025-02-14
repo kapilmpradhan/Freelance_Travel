@@ -194,7 +194,7 @@ class BookingService
         string $userId,
         string $intent,
         array $customers,
-        string $quoteId,
+        string $quoteId = null,
         bool $processAsQuote = true
     ) {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
@@ -337,8 +337,12 @@ class BookingService
         return $basePostOrderResponse;
     }
 
-    public static function postOrderV2(string $userId, string $intent, string $quoteId, bool $processAsQuote = true)
-    {
+    public static function postOrderV2(
+        string $userId,
+        string $intent,
+        string $quoteId = null,
+        bool $processAsQuote = true
+    ) {
         $user = User::where('uuid', $userId)->first();
         $checkIfUserContainsLeadCustomerDetailResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
         if ($checkIfUserContainsLeadCustomerDetailResponse->isError()) {

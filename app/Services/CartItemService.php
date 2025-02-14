@@ -36,7 +36,7 @@ class CartItemService
         string $startDate,
         int $days,
         array $selectedAvailableIndices,
-        AddToQuote $addToQuote,
+        AddToQuote $addToQuote = null,
     ) {
         try {
             // Validate that all indices are natural numbers
@@ -212,7 +212,7 @@ class CartItemService
         }
     }
 
-    public static function getItemsInCartOrQuote($userId, $quoteId)
+    public static function getItemsInCartOrQuote($userId, $quoteId = null)
     {
         $cartItems = (is_null($quoteId)
             ? CartItem::userCartItems($userId)
@@ -296,7 +296,7 @@ class CartItemService
      * @param string $userId
      * @param array $data
      */
-    public static function setCustomers(string $userId, array $data, string $quoteId)
+    public static function setCustomers(string $userId, array $data, string $quoteId = null)
     {
         // Validate customer_index sequence
         $indices = array_column($data, 'customerIndex');
@@ -375,7 +375,7 @@ class CartItemService
         return ServiceResponse::success();
     }
 
-    public static function getCustomers(string $userId, string $quoteId)
+    public static function getCustomers(string $userId, string $quoteId = null)
     {
         $customerDetails = CartCustomerDetail::where('user_id', $userId)
         ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
