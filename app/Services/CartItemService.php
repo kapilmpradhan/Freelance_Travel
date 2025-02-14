@@ -157,6 +157,7 @@ class CartItemService
                     ]);
                 }
 
+                $quote = null;
                 if (!is_null($addToQuote)) {
                     if ($addToQuote->isNew) {
                         $quote = Quote::create([
@@ -310,6 +311,7 @@ class CartItemService
             }
         }
 
+        $quote = null;
         if (!is_null($quoteId)) {
             $quote = Quote::where('id', $quoteid)->first();
             if (is_null($quote)) {
