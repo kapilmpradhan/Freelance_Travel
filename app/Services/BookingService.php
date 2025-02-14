@@ -332,7 +332,7 @@ class BookingService
     public static function postOrder(string $userId, string $intent, bool $processAsQuote = true)
     {
         $customers = CartCustomerDetail::where('user_id', $userId)->get()->toArray();
-        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $processAsQuote);
+        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, null, $processAsQuote);
 
         return $basePostOrderResponse;
     }
@@ -371,7 +371,7 @@ class BookingService
                             })
                             ->toArray();
         $customers = array_merge([$leadCustomer], $customers);
-        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $processAsQuote);
+        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $quoteId, $processAsQuote);
 
         return $basePostOrderResponse;
     }
