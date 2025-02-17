@@ -187,19 +187,7 @@ class CartItemService
                     if (!is_null($quote)) {
                         $new_cart_data['quote_id'] = $quote->id;
                     }
-                    $new_cart_item = CartItem::create([
-                        'user_id' => $userId,
-                        'tdms_product_id' => $tdmsProductId,
-                        'product_price_details_id' => $productPricesDetailsId,
-                        'booking_date' => BaseService::stringToDate($availability['BookingDate']),
-                        'start_date' => BaseService::stringToDate($startDate),
-                        'days' => $days,
-                        'selected_index' => $selectedIndex,
-                        'availability' => $availability,
-                        'availability_last_updated_at' => $now,
-                        'booking_details' => $bookingDetails,
-                        'booking_data' => $bookingData
-                    ]);
+                    $new_cart_item = CartItem::create($new_cart_data);
                     array_push($cartItems, $new_cart_item);
                 }
 
