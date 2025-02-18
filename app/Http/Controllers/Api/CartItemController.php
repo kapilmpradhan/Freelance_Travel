@@ -282,6 +282,22 @@ class CartItemController extends BaseController
         }
     }
 
+    public function removeQuote(Request $request, int $quoteId)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $removeResponse = CartItemService::removeQuote(
+                quoteId: $quoteId,
+                userId: $userId
+            );
+            return $this->sendResponseFromService($removeResponse);
+        } catch (Exception $e) {
+            $errorMessage = "Failed to remove quote";
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;

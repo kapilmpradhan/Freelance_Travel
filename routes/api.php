@@ -69,6 +69,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::post('new', [CartItemController::class, 'addItemsInNewQuote']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add', [CartItemController::class, 'addItemsInExistingQuote']);
+    Route::delete('{quoteId}', [CartItemController::class, 'removeQuote']);
     Route::put('items/{cartItemId}', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
     Route::put('{quoteId}/customers', [CartItemController::class, 'setQuoteCustomers']);

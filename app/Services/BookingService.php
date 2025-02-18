@@ -203,7 +203,8 @@ class BookingService
         }
         $agent = $getAgentResponse->data;
 
-        $cartItems = (is_null($quoteId)
+        $cartItems = (
+            is_null($quoteId)
             ? CartItem::userCartItems($userId)
             : CartItem::userQuoteItems($userId, $quoteId)
         )->get();
@@ -362,7 +363,7 @@ class BookingService
 
         // Lead customer is indexed 0 so others customers index are incremented by 1 in memory.
         $customers = CartCustomerDetail::where('user_id', $userId)
-                            ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
+                            ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
                             ->orderBy('customer_index', 'desc')
                             ->get()
                             ->map(function ($customer) {

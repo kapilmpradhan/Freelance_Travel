@@ -203,7 +203,8 @@ class CartItemService
 
     public static function getItemsInCartOrQuote($userId, $quoteId = null)
     {
-        $cartItems = (is_null($quoteId)
+        $cartItems = (
+            is_null($quoteId)
             ? CartItem::userCartItems($userId)
             : CartItem::userQuoteItems($userId, $quoteId)
         )->get();
@@ -279,6 +280,44 @@ class CartItemService
         return ServiceResponse::success();
     }
 
+    public static function removeQuote($quoteId, $userId)
+    {
+        $quote = Quote::where('id', $quoteId)
+                        ->where('user_id', $userId)
+                        ->first();
+
+        if (!$quote) {
+            return ServiceResponse::notFound(
+                message: 'Quote not found',
+            );
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete all cart items of that quote
+            CartItem::where('quote_id', $quoteId)->delete();
+
+            // Delete cart customer details of that quote
+            CartCustomerDetail::where('quote_id', $quoteId)->delete();
+
+            // Delete quote
+            $quote->delete();
+
+            // Commit the transaction
+            DB::commit();
+
+            return ServiceResponse::success();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Logger::error('Failed to remove quote.', $e);
+            return ServiceResponse::badRequest(
+                message: 'Failed to remove quote.'
+            );
+        }
+    }
+
     /**
      * Set customer details with customer_index validation and synchronization.
      *
@@ -312,7 +351,7 @@ class CartItemService
 
         DB::transaction(function () use ($userId, $data, $quoteId) {
             $existingDetails = CartCustomerDetail::where('user_id', $userId)
-                ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
+                ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
                 ->get()->keyBy('customer_index');
 
             $newIndices = array_column($data, 'customerIndex');
@@ -368,7 +407,7 @@ class CartItemService
     public static function getCustomers(string $userId, string $quoteId = null)
     {
         $customerDetails = CartCustomerDetail::where('user_id', $userId)
-        ->when(!is_null($quoteId), fn($query) => $query->where('quote_id', $quoteId))
+        ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
         ->get();
         return ServiceResponse::success(data: $customerDetails);
     }
