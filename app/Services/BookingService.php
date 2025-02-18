@@ -387,7 +387,7 @@ class BookingService
         $cartItemQ = CartItem::whereIn('id', $userOrder->cart_item_ids);
         $quoteIds = $cartItemQ->select('quote_id')->distinct()->pluck('quote_id');
 
-        DB::transaction(function () use ($userOrder) {
+        DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds) {
             $userOrder->is_paid = true;
             $userOrder->save();
 
