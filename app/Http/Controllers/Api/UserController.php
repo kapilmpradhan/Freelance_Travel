@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Jobs\UserProfileAgentJob;
 use App\Services\ServiceException;
 use App\Services\UserService;
+use App\Logging\Logger;
 
 class UserController extends BaseController
 {
@@ -126,6 +127,8 @@ class UserController extends BaseController
             $user->updatePassword($data['new_password']);
             return $this->sendResponse('Password changed successfully');
         } catch (\Exception $e) {
+            $errorMessage = "Failed to reset password";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Password reset failed');
         }
     }
@@ -191,6 +194,8 @@ class UserController extends BaseController
             $updateUserProfileResponse = UserService::updateUserProfile($user, $validatedData);
             return $this->sendResponseFromService($updateUserProfileResponse);
         } catch (ServiceException $e) {
+            $errorMessage = "Failed to update profile";
+            Logger::error($errorMessage, $e);
             return $this->sendResponseFromService($e->toServiceResponse());
         }
     }

@@ -306,6 +306,8 @@ class CartItemController extends BaseController
             $cartItems = CartItemService::getUserCartItemsWithProductDetails($userId);
             return $this->sendResponse('Cart items', $cartItems);
         } catch (Exception $e) {
+            $errorMessage = "Failed to get cart items";
+            Logger::error($errorMessage, $e);
             return $this->sendError($e->getMessage());
         }
     }
@@ -325,6 +327,8 @@ class CartItemController extends BaseController
                 'id' => $cartItemId
             ]);
         } catch (Exception $e) {
+            $errorMessage = "Failed to remove cart items";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Error occured');
         }
     }
@@ -346,6 +350,8 @@ class CartItemController extends BaseController
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
+            $errorMessage = "Failed to submit order";
+            Logger::error($errorMessage, $e);
             return $this->sendResponseFromService($e->toServiceResponse());
         }
     }
@@ -367,6 +373,8 @@ class CartItemController extends BaseController
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (Exception $e) {
+            $errorMessage = "Failed to submit order";
+            Logger::error($errorMessage, $e);
             return $this->sendError($e->getMessage());
         }
     }
@@ -382,6 +390,8 @@ class CartItemController extends BaseController
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (Exception $e) {
+            $errorMessage = "Failed to submit quote order";
+            Logger::error($errorMessage, $e);
             return $this->sendError($e->getMessage());
         }
     }

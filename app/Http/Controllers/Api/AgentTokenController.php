@@ -43,6 +43,8 @@ class AgentTokenController extends BaseController
             $agentToken = $agentToken->create($agentTokenDetail);
             return $this->sendResponse('Agent token added', $agentToken->toArray(), 201);
         } catch (Exception $e) {
+            $errorMessage = "Failed to add agent token";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Error occured', [
                 "errorCode" => "100005",
                 "errorMessage" => $e->getMessage()
@@ -80,6 +82,8 @@ class AgentTokenController extends BaseController
             }
             return $this->sendResponse('Agent token info', $agentToken->toArray());
         } catch (Exception $e) {
+            $errorMessage = "Failed to get agent token";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Error occured', [
                 "errorCode" => "100005",
                 "errorMessage" => $e->getMessage()
@@ -140,6 +144,8 @@ class AgentTokenController extends BaseController
             $availableToken->update($updatedTokenDetaill);
             return $this->sendResponse('Agent token updated', $availableToken->toArray());
         } catch (Exception $e) {
+            $errorMessage = "Failed to update agent token";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Error occured', [
                 "errorCode" => "100005",
                 "errorMessage" => $e->getMessage()
@@ -162,6 +168,8 @@ class AgentTokenController extends BaseController
             $agentToken->delete();
             return $this->sendResponse('Agent token removed');
         } catch (Exception $e) {
+            $errorMessage = "Failed to remove agent token";
+            Logger::error($errorMessage, $e);
             return $this->sendError('Error occured', [
                 "errorCode" => "100005",
                 "errorMessage" => $e->getMessage()
