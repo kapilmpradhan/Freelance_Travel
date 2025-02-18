@@ -376,7 +376,7 @@ class CartItemController extends BaseController
         try {
             $postOrderResponse = BookingService::postOrderV2(
                 userId: $request->user->uuid,
-                intent: $data['paymentType'],
+                intent: 'pay-now',
                 processAsQuote: true,
                 quoteId: $quoteId,
             );
