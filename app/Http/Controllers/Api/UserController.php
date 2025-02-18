@@ -89,6 +89,8 @@ class UserController extends BaseController
             return $this->sendError('Email signed up user can only change password.');
         } elseif (!Hash::check($data['current_password'], $user->password)) {
             return $this->sendError('Incorrect current password');
+        } elseif (Hash::check($data['new_password'], $user->password)) {
+            return $this->sendError('New and old password cannot be same');
         } else {
             $user->password = Hash::make($data['new_password']);
             $user->save();
