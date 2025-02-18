@@ -352,6 +352,7 @@ class CartItemService
         DB::transaction(function () use ($userId, $data, $quoteId) {
             $existingDetails = CartCustomerDetail::where('user_id', $userId)
                 ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
+                ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
                 ->get()->keyBy('customer_index');
 
             $newIndices = array_column($data, 'customerIndex');
@@ -397,6 +398,8 @@ class CartItemService
             if ($indicesToDelete->isNotEmpty()) {
                 CartCustomerDetail::where('user_id', $userId)
                     ->whereIn('customer_index', $indicesToDelete)
+                    ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
+                    ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
                     ->delete();
             }
         });
@@ -408,6 +411,7 @@ class CartItemService
     {
         $customerDetails = CartCustomerDetail::where('user_id', $userId)
         ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
+        ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
         ->get();
         return ServiceResponse::success(data: $customerDetails);
     }
