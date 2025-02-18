@@ -220,6 +220,18 @@ class CartItemService
     public static function getQuotes($userId, bool $isPaid = false)
     {
         $quotes = Quote::where('user_id', $userId)->where('is_paid', $isPaid)->get();
+        foreach ($quotes as $quote) {
+            $items = CartItem::where('quote_id', $quote->id)->get();
+            $productIds = $items->pluck('tdms_product_id')->unique();
+            $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+            $items->each(function ($item) use ($products) {
+                $item->product = $products->get($item->tdms_product_id);
+            });
+
+            $quote->items = $items;
+        }
+
         return ServiceResponse::success(data: $quotes);
     }
 
