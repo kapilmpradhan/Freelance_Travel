@@ -301,7 +301,7 @@ class CartItemService
 
         $quote = null;
         if (!is_null($quoteId)) {
-            $quote = Quote::where('id', $quoteid)->first();
+            $quote = Quote::where('id', $quoteId)->first();
             if (is_null($quote)) {
                 return ServiceResponse::notFound('Quote not found');
             }
