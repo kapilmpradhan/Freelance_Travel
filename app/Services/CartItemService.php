@@ -390,6 +390,7 @@ class CartItemService
                 }
                 $columnsToMatch = [
                     'user_id' => $userId,
+                    'quote_id' => null,
                     'customer_index' => $detail['customerIndex'],
                 ];
                 if (!is_null($quoteId)) {
