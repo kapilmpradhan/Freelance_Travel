@@ -23,6 +23,7 @@ on:
 env:
   S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
   CLARITY_CODE_BLOCK : ${{ vars.CLARITY_CODE_BLOCK }}
+  HELP_SCOUT_CODE_BLOCK: ${{ vars.HELP_SCOUT_CODE_BLOCK }}
 
 jobs:
   build:
