@@ -31,7 +31,6 @@ class CartItemService
         int $tdmsProductId,
         int $productPricesDetailsId,
         string|null $timeId,
-        string|null $commences,
         array $bookingData,
         string $startDate,
         int $days,
@@ -56,7 +55,6 @@ class CartItemService
             } elseif (!isset($bookingData['timeId'])) {
                 $bookingData['timeId'] = '0';
             }
-            $bookingData['commences'] = $commences;
 
             $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
             $userAgent = $userAgentResponse->data;
@@ -266,11 +264,9 @@ class CartItemService
         }
         $cartItem->booking_quantity = $quantity;
         $currentBookingData = $cartItem->booking_data;
-        $currentBookingData['pickupId'] = $bookingData['pickupId'] ?? null;
-        $currentBookingData['pickupLocation'] = $bookingData['pickupLocation'] ?? null;
-        $currentBookingData['optionalData'] = !empty($bookingData['optionalData'])
-                                              ? $bookingData['optionalData']
-                                              : null;
+        if (isset($bookingData['optionalData'])) {
+            $currentBookingData['optionalData'] = $bookingData['optionalData'];
+        }
         $cartItem->booking_data = $currentBookingData;
 
         $cartItem->save();

@@ -93,6 +93,14 @@ class CartItem extends Model
         'commences' => 'string|nullable',
         'bookingData' => 'array',
         'bookingData.timeId' => 'string',
+        'bookingData.commences' => 'string',
+        'bookingData.datePriceCacheId' => 'string',
+        'bookingData.pickupId' => 'string',
+        'bookingData.pickupLocation' => 'string',
+        'bookingData.dropoffId' => 'string',
+        'bookingData.dropoffLocation' => 'string',
+
+        'bookingData.bookingComment' => 'string',
         // Must be in format 30-Nov-2012
         'startDate' => 'required|date|date_format:d-M-Y',
         // Must be greater than zero
@@ -120,13 +128,6 @@ class CartItem extends Model
         return [
             'quantity' => 'required|integer',
             'bookingData' => 'array',
-            'bookingData.datePriceCacheId' => 'string',
-            'bookingData.pickupId' => 'string',
-            'bookingData.pickupLocation' => 'string',
-            'bookingData.dropoffId' => 'string',
-            'bookingData.dropoffLocation' => 'string',
-            'bookingData.dropoffTime' => 'string',
-            'bookingData.bookingComment' => 'string',
             'bookingData.optionalData' => 'array',
         ];
     }
