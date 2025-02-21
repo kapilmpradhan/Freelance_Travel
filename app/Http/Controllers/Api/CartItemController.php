@@ -372,6 +372,10 @@ class CartItemController extends BaseController
                 processAsQuote: true,
             );
             return $this->sendResponseFromService($postOrderResponse);
+        } catch (ServiceException $e) {
+            $errorMessage = "Failed to submit order";
+            Logger::error($errorMessage, $e);
+            return $this->sendResponseFromService($e->toServiceResponse());
         } catch (Exception $e) {
             $errorMessage = "Failed to submit order";
             Logger::error($errorMessage, $e);
@@ -389,6 +393,10 @@ class CartItemController extends BaseController
                 quoteId: $quoteId,
             );
             return $this->sendResponseFromService($postOrderResponse);
+        } catch (ServiceException $e) {
+            $errorMessage = "Failed to submit quote";
+            Logger::error($errorMessage, $e);
+            return $this->sendResponseFromService($e->toServiceResponse());
         } catch (Exception $e) {
             $errorMessage = "Failed to submit quote order";
             Logger::error($errorMessage, $e);

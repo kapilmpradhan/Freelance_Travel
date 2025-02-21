@@ -258,4 +258,44 @@ class TdmsService
             return ServiceResponse::badRequest(message: 'Internal server error');
         }
     }
+
+    public static function validateOrderData($agentToken, $bookingReference, $orderData)
+    {
+        $url = config('vars.tdms_api_url') . "/validateCart/{$bookingReference}";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$agentToken}"
+        ])
+        ->withBody(json_encode($orderData))
+        ->post($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "bookingReference" => $bookingReference,
+                        "orderData" => $orderData,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
+        }
+    }
 }

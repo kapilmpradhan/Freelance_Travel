@@ -11,6 +11,7 @@
         "fruitcake/laravel-cors": "dev-develop",
         "guzzlehttp/guzzle": "^7.7",
         "laravel/framework": "^10.0",
+        "laravel/pennant": "^1.16",
         "laravel/sanctum": "^3.2",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.8",

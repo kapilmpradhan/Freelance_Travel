@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Services\IEmailService;
 use App\Services\BrevoEmailService;
 use Illuminate\Support\Facades\URL;
+use Laravel\Pennant\Feature;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,5 +33,10 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') !== 'local') {
             URL::forceScheme('https');
         }
+
+        // Define the "order-data-validation-feature"
+        Feature::define('order-data-validation-feature', function () {
+            return true;
+        });
     }
 }

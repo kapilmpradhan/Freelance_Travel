@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
+use App\Features\OrderDataValidationFeature;
 use App\Jobs\CacheProductJob;
 use App\Jobs\SendShareMailJob;
 use App\Logging\Logger;
@@ -213,23 +214,6 @@ class BookingService
             return ServiceResponse::badRequest('No items available in cart');
         }
 
-        $validateProductAvailabilityResponse = CartItemService::validateProductAvailability(
-            agentToken: $agent->access_token,
-            cartItems: $cartItems
-        );
-        if ($validateProductAvailabilityResponse->isError()) {
-            return $validateProductAvailabilityResponse;
-        }
-
-        $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
-            $agent->access_token,
-            $cartItems
-        );
-
-        if ($get_validate_cart_items_response->isError()) {
-            return $get_validate_cart_items_response;
-        };
-
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
         if (is_null($onlinePaymentMethod)) {
             throw new ServiceException('Missing online payment method');
@@ -250,6 +234,50 @@ class BookingService
             cartItems: $cartItems,
             customers: $customers,
         );
+        $feature = OrderDataValidationFeature::isEnabled();
+        if (OrderDataValidationFeature::isEnabled()) {
+            try {
+                $validateOrderDataResponse = TdmsService::validateOrderData(
+                    agentToken: $agent->access_token,
+                    bookingReference: $orderRequestData['bookingReference'],
+                    orderData: $orderRequestData
+                );
+                if ($validateOrderDataResponse->isError()) {
+                    return $validateOrderDataResponse;
+                }
+
+                $validatedItemsData = $validateOrderDataResponse->data;
+                foreach ($validatedItemsData as $item) {
+                    if ($item['status'] === 'Available') {
+                        continue;
+                    } else {
+                        return ServiceResponse::badRequest(
+                            message: 'Invalid order data',
+                            data: $item
+                        );
+                    }
+                }
+            } catch (ServiceException $e) {
+                return $e;
+            }
+        } else {
+            $validateProductAvailabilityResponse = CartItemService::validateProductAvailability(
+                agentToken: $agent->access_token,
+                cartItems: $cartItems
+            );
+            if ($validateProductAvailabilityResponse->isError()) {
+                return $validateProductAvailabilityResponse;
+            }
+
+            $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
+                $agent->access_token,
+                $cartItems
+            );
+
+            if ($get_validate_cart_items_response->isError()) {
+                return $get_validate_cart_items_response;
+            };
+        }
 
         $bookingReference = $orderRequestData['bookingReference'];
         $paymentAmount = $orderRequestData['totalCharged'];
