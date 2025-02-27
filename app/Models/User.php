@@ -58,13 +58,11 @@ class User extends Authenticatable
     {
         return [
             'first_name' => [
-                'required',
                 'string',
                 'max:200',
                 'regex:' . config('vars.only_char_regex')
             ],
             'last_name' => [
-                'required',
                 'string',
                 'max:200',
                 'regex:' . config('vars.only_char_regex')
