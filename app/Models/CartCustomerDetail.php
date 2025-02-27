@@ -53,8 +53,18 @@ class CartCustomerDetail extends Model
             [
             'items' => 'array',
             'items.*.title' => 'in:Mr,Mrs',
-            'items.*.firstName' => 'required|string|max:255',
-            'items.*.lastName' => 'required|string|max:255',
+            'items.*.firstName' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
+            'items.*.lastName' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
             'items.*.dateOfBirth' => 'required|date_format:d-M-Y',
             'items.*.email' => 'required|email|max:255',
             'items.*.phoneNumber' => 'required|string',

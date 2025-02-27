@@ -57,8 +57,18 @@ class User extends Authenticatable
     public function emailSignupRule()
     {
         return [
-            'first_name' => 'string|max:100',
-            'last_name' => 'string|max:100',
+            'first_name' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
             'email' => 'required|email|unique:users,email|max:100',
             'password' => 'required|string|min:8',
             'is_email_verfied' => 'boolean',
@@ -109,8 +119,18 @@ class User extends Authenticatable
     {
         return [
             "title" => "in:Mr,Mrs",
-            "first_name" => "required|string",
-            "last_name" => "required|string",
+            'first_name' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'max:200',
+                'regex:' . config('vars.only_char_regex')
+            ],
             "date_of_birth" => "required|date_format:d-M-Y",
             "phone_number" => "required|string",
             "post_code" => "required|string",

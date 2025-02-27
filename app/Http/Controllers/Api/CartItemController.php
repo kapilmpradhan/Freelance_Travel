@@ -76,6 +76,15 @@ class CartItemController extends BaseController
             return $this->sendError('Validation Error.', $validated->errors());
         }
 
+        $validateQuoteTitle = Validator::make(
+            ['quoteTitle' => $data['quoteTitle']],
+            ['quoteTitle' => 'required|string|max:200']
+        );
+
+        if ($validateQuoteTitle->fails()) {
+            return $this->sendError('Validation Error.', $validateQuoteTitle->errors());
+        }
+
         try {
             $saveItemsResponse = CartItemService::saveItems(
                 userId: $request->user->uuid,
