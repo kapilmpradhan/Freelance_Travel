@@ -14,7 +14,7 @@ class LogController extends Controller
         $mail = $request->mail ?? "Hello World";
         $email = $request->email ?? "support@freelancetravel.com";
 
-        dispatch(new SendLogMail($email, $mail, $title));
+        // dispatch(new SendLogMail($email, $mail, $title));
         return "ok";
     }
 }
