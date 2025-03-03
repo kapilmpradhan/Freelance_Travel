@@ -342,6 +342,7 @@ class BookingService
             responseData: $orderResponseData,
             intent: $intent,
             emailData: $emailData,
+            quoteId: $quoteId,
             paymentGateway: [
                 "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
                 "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']

@@ -25,6 +25,7 @@ class CartCustomerDetail extends Model
         'country_code',
         'phone_number',
         'quote_id',
+        'user_order_id',
     ];
 
     public function user()

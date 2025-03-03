@@ -21,6 +21,7 @@ class OrderPosted
     public $userId;
     public $paymentGateway;
     public $userAgentId;
+    public $quoteId;
 
     /**
      * Create a new event instance.
@@ -34,6 +35,7 @@ class OrderPosted
         $responseData,
         $intent,
         $emailData,
+        $quoteId,
         $paymentGateway
     ) {
         $this->bookingReference = $bookingReference;
@@ -45,5 +47,6 @@ class OrderPosted
         $this->userId = $userId;
         $this->paymentGateway = $paymentGateway;
         $this->userAgentId = $userAgentId;
+        $this->quoteId = $quoteId;
     }
 }

@@ -447,6 +447,7 @@ class CartItemService
     public static function getCustomers(string $userId, string $quoteId = null)
     {
         $customerDetails = CartCustomerDetail::where('user_id', $userId)
+        ->whereNull('user_order_id')
         ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
         ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
         ->get();
@@ -559,7 +560,8 @@ class CartItemService
         $responseData,
         $intent,
         $paymentGateway,
-        $userAgentId
+        $userAgentId,
+        $quoteId = null
     ) {
         DB::transaction(function () use (
             $bookingReference,
@@ -570,6 +572,7 @@ class CartItemService
             $userId,
             $paymentGateway,
             $userAgentId,
+            $quoteId
         ) {
             //TODO: remove customers
             $userOrder = UserOrder::create([
@@ -586,6 +589,10 @@ class CartItemService
 
             if ($intent === 'email-quote') { // emailing quote should remove items from cart
                 CartItem::whereIn('id', $cartItemIds)->update(['user_order_id' => $userOrder->id]);
+                CartCustomerDetail::where('user_id', $userId)
+                                ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
+                                ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
+                                ->update(['user_order_id' => $userOrder->id]);
             }
         });
     }
