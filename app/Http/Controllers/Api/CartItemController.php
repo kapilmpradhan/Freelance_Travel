@@ -134,6 +134,30 @@ class CartItemController extends BaseController
         }
     }
 
+    public function addExistingCartItemsToQuote(Request $request, string $quoteId = null)
+    {
+        if ($quoteId === null) {
+            $data = $request->all();
+            $validated = Validator::make($data, ['quoteTitle' => 'required|string|max:200']);
+            if ($validated->fails()) {
+                return $this->sendError('Validation Error.', $validated->errors());
+            }
+            $addToQuote = AddToQuote::new(title: $data['quoteTitle']);
+        } else {
+            $addToQuote = AddToQuote::existing(quoteId: $quoteId);
+        };
+
+        try {
+            $convertItemsResponse = CartItemService::convertExistingCartItemsToQuote(
+                userId: $request->user->uuid,
+                addToQuote: $addToQuote,
+            );
+            return $this->sendResponseFromService($convertItemsResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+    }
+
     public function setCustomers(Request $request)
     {
         $userId = $request->user->uuid;

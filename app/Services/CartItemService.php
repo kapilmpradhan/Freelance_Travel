@@ -233,6 +233,34 @@ class CartItemService
         return ServiceResponse::success(data: $quotes);
     }
 
+    public static function convertExistingCartItemsToQuote($userId, $addToQuote)
+    {
+        try {
+            $cartItems = CartItem::userCartItems($userId)->get();
+            if ($addToQuote->isNew) {
+                $quote = Quote::create([
+                    'user_id' => $userId,
+                    'title' => $addToQuote->title,
+                ]);
+            } else {
+                $quote = Quote::where('id', $addToQuote->quoteId)->first();
+                if (!$quote) {
+                    return ServiceResponse::notFound('Quote not found');
+                }
+            }
+
+            foreach ($cartItems as $cartItem) {
+                $cartItem->quote_id = $quote->id;
+                $cartItem->save();
+            }
+
+            return ServiceResponse::success();
+        } catch (Exception $e) {
+            Logger::error('Failed to convert cart items to quote', $e);
+            throw new ServiceException(message: 'Failed to convert cart items to quote');
+        }
+    }
+
     public static function getCartItemsByBookingReference($userId, $bookingReference)
     {
         $userOrder = UserOrder::where('booking_reference', $bookingReference)
