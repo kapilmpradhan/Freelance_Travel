@@ -26,6 +26,7 @@ class CartCustomerDetail extends Model
         'phone_number',
         'quote_id',
         'user_order_id',
+        'is_direct_purchase',
     ];
 
     public function user()

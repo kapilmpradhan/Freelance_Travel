@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\DTOs\ItemType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,7 @@ class CartItem extends Model
         'booking_data',
         'user_order_id',
         'quote_id',
+        'is_direct_purchase',
     ];
     protected $casts = [
         'availability' => 'array',
@@ -132,28 +134,54 @@ class CartItem extends Model
         ];
     }
 
+    public static function directPurchaseRule()
+    {
+        $rule = self::$baseSaveItemsRule;
+        $rule['bookingData.optionalData'] = 'array';
+        $rule['redeemers'] = 'array';
+        $rule['redeemers.*.title'] = 'in:Mr,Mrs';
+        $rule['redeemers.*.firstName'] = 'required|string|max:200|regex:' . config('vars.only_char_regex');
+        $rule['redeemers.*.lastName'] = 'required|string|max:200|regex:' . config('vars.only_char_regex');
+        $rule['redeemers.*.dateOfBirth'] = 'required|date_format:d-M-Y';
+        $rule['redeemers.*.email'] = 'required|email|max:255';
+        $rule['redeemers.*.phoneNumber'] = 'required|string';
+        $rule['redeemers.*.postalCode'] = 'required|string|max:20';
+        $rule['redeemers.*.countryCode'] = 'required|string';
+        $rule['redeemers.*.customerIndex'] = 'required|integer|min:0';
+
+        return $rule;
+    }
+
     public function storeCartItem($user, $data)
     {
         return $this->create($data);
     }
 
-    public static function userCartItems($userId)
+    public static function userItems($userId, ItemType $itemType)
     {
         return CartItem::where('user_id', $userId)
-            ->whereNull('quote_id')
+            ->where('is_direct_purchase', $itemType->isDirect)
+            ->when($itemType, fn ($query) => $query->where('quote_id', $itemType->typeId))
+            ->when($itemType, fn ($query) => $query->whereNull('quote_id'))
             // only return items added from new api
             ->whereNotNull('selected_index')
             // filter processed items
-            ->whereNull('user_order_id');
+            ->whereNull('user_order_id')
+            ->get();
+    }
+
+    public static function userCartItems($userId)
+    {
+        return self::userItems($userId, ItemType::cart());
     }
 
     public static function userQuoteItems(string $userId, string $quoteId)
     {
-        return CartItem::where('user_id', $userId)
-            ->where('quote_id', $quoteId)
-            // only return items added from new api
-            ->whereNotNull('selected_index')
-            // filter processed items
-            ->whereNull('user_order_id');
+        return self::userItems($userId, ItemType::quote($quoteId));
+    }
+
+    public static function userDirectPurchaseItems(string $userId)
+    {
+        return self::userItems($userId, ItemType::direct());
     }
 }

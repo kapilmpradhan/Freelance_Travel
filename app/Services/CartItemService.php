@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\DTOs\AddToQuote;
+use App\DTOs\ItemType;
 use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Models\CartItem;
@@ -36,6 +37,7 @@ class CartItemService
         int $days,
         array $selectedAvailableIndices,
         AddToQuote $addToQuote = null,
+        ItemType $itemType,
     ) {
         try {
             // Validate that all indices are natural numbers
@@ -133,6 +135,7 @@ class CartItemService
                 $cartItems,
                 $bookingDetails,
                 $addToQuote,
+                $itemType,
             ) {
                 $existingProductQ = Product::where('tdms_product_id', $tdmsProductId);
                 if ($existingProductQ->exists()) {
@@ -180,7 +183,8 @@ class CartItemService
                         'availability' => $availability,
                         'availability_last_updated_at' => $now,
                         'booking_details' => $bookingDetails,
-                        'booking_data' => $bookingData
+                        'booking_data' => $bookingData,
+                        'is_direct_purchase' => $itemType->isDirect,
                     ];
                     if (!is_null($quote)) {
                         $new_cart_data['quote_id'] = $quote->id;
@@ -205,7 +209,7 @@ class CartItemService
             is_null($quoteId)
             ? CartItem::userCartItems($userId)
             : CartItem::userQuoteItems($userId, $quoteId)
-        )->get();
+        );
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
@@ -360,8 +364,11 @@ class CartItemService
      * @param string $userId
      * @param array $data
      */
-    public static function setCustomers(string $userId, array $data, string $quoteId = null)
-    {
+    public static function setCustomers(
+        string $userId,
+        array $data,
+        ItemType $itemType
+    ) {
         // Validate customer_index sequence
         $indices = array_column($data, 'customerIndex');
         sort($indices);
@@ -375,8 +382,8 @@ class CartItemService
         }
 
         $quote = null;
-        if (!is_null($quoteId)) {
-            $quote = Quote::where('id', $quoteId)->first();
+        if ($itemType->isQuote) {
+            $quote = Quote::where('id', $itemType->typeId)->first();
             if (is_null($quote)) {
                 return ServiceResponse::notFound('Quote not found');
             }
@@ -385,10 +392,11 @@ class CartItemService
             }
         }
 
-        DB::transaction(function () use ($userId, $data, $quoteId) {
+        DB::transaction(function () use ($userId, $data, $itemType) {
             $existingDetails = CartCustomerDetail::where('user_id', $userId)
-                ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
-                ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
+                ->where('is_direct_purchase', $itemType->isDirect)
+                ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->isQuote))
+                ->when($itemType->isCart, fn ($query) => $query->whereNull('user_order_id')->whereNull('quote_id'))
                 ->get()->keyBy('customer_index');
 
             $newIndices = array_column($data, 'customerIndex');
@@ -405,7 +413,8 @@ class CartItemService
                     'country_code' => $detail['countryCode'] ?? "036",
                     'postal_code' => $detail['postalCode'] ?? null,
                     'customer_index' => $detail['customerIndex'],
-                    'phone_number' => $detail['phoneNumber']
+                    'phone_number' => $detail['phoneNumber'],
+                    'is_direct_purchase' => $itemType->isDirect,
                 ];
 
                 // Only add country_code if it exists in $detail
@@ -416,10 +425,12 @@ class CartItemService
                     'user_id' => $userId,
                     'quote_id' => null,
                     'customer_index' => $detail['customerIndex'],
+                    'user_order_id' => null,
+                    'is_direct_purchase' => $itemType->isDirect
                 ];
-                if (!is_null($quoteId)) {
-                    $columnsToMatch['quote_id'] = $quoteId;
-                    $customerData['quote_id'] = $quoteId;
+                if ($itemType->isQuote) {
+                    $columnsToMatch['quote_id'] = $itemType->typeId;
+                    $customerData['quote_id'] = $itemType->typeId;
                 }
 
                 CartCustomerDetail::updateOrCreate(
@@ -434,9 +445,10 @@ class CartItemService
             Logger::debug($indicesToDelete);
             if ($indicesToDelete->isNotEmpty()) {
                 CartCustomerDetail::where('user_id', $userId)
+                    ->where('is_direct_purchase', $itemType->isDirect)
                     ->whereIn('customer_index', $indicesToDelete)
-                    ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
-                    ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
+                    ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
+                    ->when($itemType->isCart, fn ($query) => $query->whereNull('user_order_id'))
                     ->delete();
             }
         });
@@ -444,12 +456,12 @@ class CartItemService
         return ServiceResponse::success();
     }
 
-    public static function getCustomers(string $userId, string $quoteId = null)
+    public static function getCustomers(string $userId, ItemType $itemType)
     {
         $customerDetails = CartCustomerDetail::where('user_id', $userId)
-        ->whereNull('user_order_id')
-        ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
-        ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
+        ->where('is_direct_purchase', $itemType->isDirect)
+        ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
+        ->when($itemType->isCart, fn ($query) => $query->whereNull('user_order_id')->whereNull('quote_id'))
         ->get();
         return ServiceResponse::success(data: $customerDetails);
     }
@@ -700,5 +712,25 @@ class CartItemService
                 return ServiceResponse::success();
             }
         }
+    }
+
+    public static function cleanDirectPurchase($userId)
+    {
+        // Remove items and customers that were addded for direct purchase but are not associated to any order.
+        try {
+            $items = CartItem::userDirectPurchaseItems($userId);
+            $items->each->delete();
+
+            $customers = CartCustomerDetail::where('user_id', $userId)
+                ->where('is_direct_purchase', true)
+                ->whereNull('user_order_id')
+                ->get();
+            $customers->each->delete();
+        } catch (Exception $e) {
+            Logger::error('Failed to clean direct purchase items', $e);
+            throw new ServiceException(message: 'Failed to clean direct purchase items');
+        }
+
+        return ServiceResponse::success();
     }
 }

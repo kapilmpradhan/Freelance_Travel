@@ -196,7 +196,8 @@ class BookingService
         string $intent,
         array $customers,
         string $quoteId = null,
-        bool $processAsQuote = true
+        bool $processAsQuote = true,
+        bool $isDirectPurchase = false
     ) {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         if ($getAgentResponse->isError()) {
@@ -204,14 +205,18 @@ class BookingService
         }
         $agent = $getAgentResponse->data;
 
-        $cartItems = (
-            is_null($quoteId)
-            ? CartItem::userCartItems($userId)
-            : CartItem::userQuoteItems($userId, $quoteId)
-        )->get();
+        if ($isDirectPurchase) {
+            $cartItems = CartItem::userDirectPurchaseItems($userId);
+        } else {
+            $cartItems = (
+                is_null($quoteId)
+                ? CartItem::userCartItems($userId)
+                : CartItem::userQuoteItems($userId, $quoteId)
+            );
+        }
         $cartItemIds = $cartItems->pluck('id')->toArray();
         if (empty($cartItemIds)) {
-            return ServiceResponse::badRequest('No items available in cart');
+            return ServiceResponse::badRequest('No items available');
         }
 
         $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
@@ -234,7 +239,7 @@ class BookingService
             cartItems: $cartItems,
             customers: $customers,
         );
-        $feature = OrderDataValidationFeature::isEnabled();
+
         if (OrderDataValidationFeature::isEnabled()) {
             try {
                 $validateOrderDataResponse = TdmsService::validateOrderData(
@@ -371,7 +376,8 @@ class BookingService
         string $userId,
         string $intent,
         string $quoteId = null,
-        bool $processAsQuote = true
+        bool $processAsQuote = true,
+        bool $isDirectPurchase = false
     ) {
         $user = User::where('uuid', $userId)->first();
         $checkIfUserContainsLeadCustomerDetailResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
@@ -392,6 +398,7 @@ class BookingService
 
         // Lead customer is indexed 0 so others customers index are incremented by 1 in memory.
         $customers = CartCustomerDetail::where('user_id', $userId)
+                            ->where('is_direct_purchase', $isDirectPurchase)
                             ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
                             ->orderBy('customer_index', 'desc')
                             ->get()
@@ -401,7 +408,14 @@ class BookingService
                             })
                             ->toArray();
         $customers = array_merge([$leadCustomer], $customers);
-        $basePostOrderResponse = self::basePostOrder($userId, $intent, $customers, $quoteId, $processAsQuote);
+        $basePostOrderResponse = self::basePostOrder(
+            userId: $userId,
+            intent: $intent,
+            customers: $customers,
+            quoteId: $quoteId,
+            processAsQuote: $processAsQuote,
+            isDirectPurchase: $isDirectPurchase
+        );
 
         return $basePostOrderResponse;
     }
