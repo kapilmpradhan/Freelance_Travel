@@ -286,7 +286,11 @@ class CartItemController extends BaseController
 
     public function getQuoteDetails(Request $request, string $quoteId)
     {
-        $userId = $request->user->uuid;
+        $data = ['quoteId' => $quoteId];
+        $validator = Validator::make($data, ['quoteId' => 'integer|required']);
+        if ($validator->fails()) {
+            return $this->sendError('Invalid quoteId');
+        }
         try {
             $getQuotesResponse = CartItemService::getQuoteDetails(quoteId: $quoteId);
             return $this->sendResponseFromService($getQuotesResponse);

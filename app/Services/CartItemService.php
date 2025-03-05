@@ -236,6 +236,9 @@ class CartItemService
     public static function getQuoteDetails($quoteId)
     {
         $quote = Quote::where('id', $quoteId)->first();
+        if (!$quote) {
+            return ServiceResponse::notFound();
+        }
 
         $items = CartItem::where('quote_id', $quoteId)->get();
         $productIds = $items->pluck('tdms_product_id')->unique();
