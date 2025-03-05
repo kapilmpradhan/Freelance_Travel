@@ -259,7 +259,7 @@ class CartItemController extends BaseController
     {
         $userId = $request->user->uuid;
         try {
-            $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId);
+            $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, itemType: ItemType::cart());
             return $this->sendResponseFromService($getCartItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get items in cart';
@@ -272,10 +272,26 @@ class CartItemController extends BaseController
     {
         $userId = $request->user->uuid;
         try {
-            $getQuoteItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, quoteId: $quoteId);
+            $getQuoteItemsResponse = CartItemService::getItemsInCartOrQuote(
+                userId: $userId,
+                itemType: ItemType::quote($quoteId)
+            );
             return $this->sendResponseFromService($getQuoteItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get items in quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getQuoteDetails(Request $request, string $quoteId)
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getQuotesResponse = CartItemService::getQuoteDetails(quoteId: $quoteId);
+            return $this->sendResponseFromService($getQuotesResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get quotes';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }

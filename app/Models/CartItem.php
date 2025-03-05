@@ -161,8 +161,8 @@ class CartItem extends Model
     {
         return CartItem::where('user_id', $userId)
             ->where('is_direct_purchase', $itemType->isDirect)
-            ->when($itemType, fn ($query) => $query->where('quote_id', $itemType->typeId))
-            ->when($itemType, fn ($query) => $query->whereNull('quote_id'))
+            ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
+            ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
             // only return items added from new api
             ->whereNotNull('selected_index')
             // filter processed items

@@ -203,13 +203,9 @@ class CartItemService
         }
     }
 
-    public static function getItemsInCartOrQuote($userId, $quoteId = null)
+    public static function getItemsInCartOrQuote($userId, ItemType $itemType)
     {
-        $cartItems = (
-            is_null($quoteId)
-            ? CartItem::userCartItems($userId)
-            : CartItem::userQuoteItems($userId, $quoteId)
-        );
+        $cartItems = CartItem::userItems($userId, $itemType);
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
@@ -235,6 +231,23 @@ class CartItemService
         }
 
         return ServiceResponse::success(data: $quotes);
+    }
+
+    public static function getQuoteDetails($quoteId)
+    {
+        $quote = Quote::where('id', $quoteId)->first();
+
+        $items = CartItem::where('quote_id', $quoteId)->get();
+        $productIds = $items->pluck('tdms_product_id')->unique();
+        $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+        $items->each(function ($item) use ($products) {
+            $item->product = $products->get($item->tdms_product_id);
+        });
+
+        $quote->items = $items;
+
+        return ServiceResponse::success(data: $quote);
     }
 
     public static function convertExistingCartItemsToQuote($userId, $addToQuote)

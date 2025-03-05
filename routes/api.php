@@ -70,6 +70,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {
     Route::post('new', [CartItemController::class, 'addItemsInNewQuote']);
+    Route::get('{quoteId}', [CartItemController::class, 'getQuoteDetails']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add', [CartItemController::class, 'addItemsInExistingQuote']);
     Route::delete('{quoteId}', [CartItemController::class, 'removeQuote']);
