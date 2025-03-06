@@ -19,7 +19,7 @@ class UserService
             return ServiceResponse::success($responseData);
         } catch (Exception $e) {
             $errorMessage = "User profile update failed";
-            Logger::error(message: $errorMessage, exception: $e);
+            Logger::error(message: $errorMessage, exception: $e, extra: ['data' => $data]);
             throw new ServiceException($errorMessage);
         }
     }

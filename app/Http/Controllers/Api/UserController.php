@@ -195,8 +195,6 @@ class UserController extends BaseController
             $updateUserProfileResponse = UserService::updateUserProfile($user, $validatedData);
             return $this->sendResponseFromService($updateUserProfileResponse);
         } catch (ServiceException $e) {
-            $errorMessage = "Failed to update profile";
-            Logger::error($errorMessage, $e);
             return $this->sendResponseFromService($e->toServiceResponse());
         }
     }
