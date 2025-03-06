@@ -256,7 +256,7 @@ class CartItemService
     public static function convertExistingCartItemsToQuote($userId, $addToQuote)
     {
         try {
-            $cartItems = CartItem::userCartItems($userId)->get();
+            $cartItems = CartItem::userCartItems($userId);
             if ($addToQuote->isNew) {
                 $quote = Quote::create([
                     'user_id' => $userId,
