@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\UserResource;
 use App\Logging\Logger;
+use App\Models\FirebaseFcmToken;
 use App\Models\User;
 use Exception;
 
@@ -37,5 +38,38 @@ class UserService
         }
 
         return ServiceResponse::notFound();
+    }
+
+    public static function checkIfFcmTokenExistsForUser($user, $token)
+    {
+        $fcmTokenExist = FirebaseFcmToken::where('user_id', $user->uuid)
+                                    ->where('token', $token)
+                                    ->exists();
+        if ($fcmTokenExist) {
+            return ServiceResponse::success();
+        }
+
+        return ServiceResponse::notFound();
+    }
+
+    public static function addFcmToken(User $user, string $token, string|null $clientUserAgent = null)
+    {
+        FirebaseFcmToken::create([
+            'user_id' => $user->uuid,
+            'token' => $token,
+            'client_user_agent' => $clientUserAgent
+        ]);
+
+        return ServiceResponse::success();
+    }
+
+    public static function removeFcmToken($user, $token)
+    {
+        $token = FirebaseFcmToken::where('user_id', $user->uuid)
+                                ->where('token', $token)
+                                ->first();
+
+        $token->delete();
+        return ServiceResponse::success();
     }
 }

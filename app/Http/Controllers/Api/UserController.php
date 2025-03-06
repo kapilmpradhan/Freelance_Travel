@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Jobs\UserProfileAgentJob;
 use App\Services\ServiceException;
 use App\Services\UserService;
 use App\Logging\Logger;
@@ -200,5 +199,49 @@ class UserController extends BaseController
             Logger::error($errorMessage, $e);
             return $this->sendResponseFromService($e->toServiceResponse());
         }
+    }
+
+    public function addFcmToken(Request $request)
+    {
+        $data = $request->all();
+        $data['userAgentInfo'] = $request->header('User-Agent', null);
+        $user = $request->user;
+
+        $validator = Validator::make(
+            $data,
+            [
+                'fcmToken' => 'string|required',
+                'userAgentInfo' => 'string|nullable'
+            ]
+        );
+        if ($validator->fails()) {
+            return $this->sendError('Add FCM token failed', $validator->errors());
+        }
+        $validatedData = $validator->validate();
+
+        $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $validatedData['fcmToken']);
+        if ($checkFcmResponse->isSuccess()) {
+            return $this->sendResponseFromService($checkFcmResponse);
+        }
+
+        $addFcmToken = UserService::addFcmToken(
+            user: $user,
+            token: $validatedData['fcmToken'],
+            clientUserAgent: $validatedData['userAgentInfo']
+        );
+        return $this->sendResponseFromService($addFcmToken);
+    }
+
+    public function removeFcmToken(Request $request, $fcmToken)
+    {
+        $user = $request->user;
+
+        $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $fcmToken);
+        if ($checkFcmResponse->isError()) {
+            return $this->sendResponseFromService($checkFcmResponse);
+        }
+
+        $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
+        return $this->sendResponseFromService($removeFcmToken);
     }
 }
