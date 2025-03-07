@@ -130,7 +130,7 @@ class CartItemService
         Carbon $availabilityLastUpdatedAt,
         ItemType $itemType,
         array $productBookingDetails,
-        Quote $quote,
+        ?Quote $quote,
     ): array {
         $cartItemsData = [];
         foreach ($selectedAvailableIndices as $selectedIndex) {
