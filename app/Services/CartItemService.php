@@ -28,7 +28,7 @@ class CartItemService
         string $startDate,
         int $days,
         array $selectedAvailableIndices,
-    ): OrderItemRequestData {
+    ): ServiceResponse {
 
         // Validate that all indices are natural numbers
         foreach ($selectedAvailableIndices as $selectedIndex) {
