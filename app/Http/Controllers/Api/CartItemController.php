@@ -51,6 +51,8 @@ class CartItemController extends BaseController
         }
 
         try {
+            $isDryRun = $request->query('dry') == 1;
+
             $saveItemsResponse = CartItemService::saveItems(
                 userId: $request->user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
@@ -61,7 +63,8 @@ class CartItemController extends BaseController
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
                 bookingData: $data['bookingData'] ?? [],
                 addToQuote: null,
-                itemType: ItemType::cart()
+                itemType: ItemType::cart(),
+                isDryRun: $isDryRun,
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {

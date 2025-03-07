@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
+use App\DTOs\OrderItemRequestData;
 use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Models\CartItem;
@@ -18,6 +19,144 @@ use Exception;
 
 class CartItemService
 {
+    public static function buildOrderItemRequestData(
+        string $userId,
+        int $tdmsProductId,
+        int $productPricesDetailsId,
+        string|null $timeId,
+        array $bookingData,
+        string $startDate,
+        int $days,
+        array $selectedAvailableIndices,
+    ): OrderItemRequestData {
+
+        // Validate that all indices are natural numbers
+        foreach ($selectedAvailableIndices as $selectedIndex) {
+            if (!is_int($selectedIndex) || $selectedIndex < 0) {
+                return ServiceResponse::badRequest(
+                    message: 'Selected availability indices must be natural numbers',
+                );
+            }
+        }
+
+        // If timeId is present use that, else use timeId from bookingData.
+        // If both not available set to 0.
+        // In future will only use timeId available in bookingData.
+        if ($timeId) {
+            $bookingData['timeId'] = $timeId;
+        } elseif (!isset($bookingData['timeId'])) {
+            $bookingData['timeId'] = '0';
+        }
+
+        $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
+        $userAgent = $userAgentResponse->data;
+        $defaultAgentAccessToken = $userAgent->access_token;
+
+        $now = Carbon::now();
+        $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
+        if (!$productDetailsResponse) {
+            return ServiceResponse::notFound(
+                message: 'Product not found',
+            );
+        }
+        $product = $productDetailsResponse['results'][0];
+        $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+            $defaultAgentAccessToken,
+            $productPricesDetailsId,
+            $bookingData['timeId'],
+            $startDate,
+            $days,
+        );
+
+        if (empty($productAvailabilities)) {
+            return ServiceResponse::notFound(
+                message: 'Product availability not found',
+            );
+        }
+
+        $maxIndex = max($selectedAvailableIndices);
+        if ($maxIndex >= count($productAvailabilities)) {
+            return ServiceResponse::badRequest(
+                message: 'Selected availability selectedIndex is out of bounds',
+            );
+        }
+
+        $bookingDetailsResponse = ProductService::getBookingDetails(
+            agentToken: $defaultAgentAccessToken,
+            productPricesDetailsId: $productPricesDetailsId,
+        );
+
+        if ($bookingDetailsResponse->isError()) {
+            if ($bookingDetailsResponse->statusCode != 404) {
+                return ServiceResponse::notFound('Booking details not found');
+            }
+
+            $errorMessage = 'Failed to load booking details';
+            Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
+            throw new ServiceException(message: $errorMessage);
+        }
+        $bookingDetails = $bookingDetailsResponse->data;
+
+        $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
+            $defaultAgentAccessToken,
+            [$tdmsProductId],
+        );
+        if (!$productLastUpdate) {
+            throw new ServiceException(
+                message: 'Product last update not found',
+            );
+        }
+
+        $productLastUpdate = $productLastUpdate[$tdmsProductId];
+
+        return ServiceResponse::success(data: new OrderItemRequestData(
+            product: $product,
+            productLastUpdate: $productLastUpdate,
+            productBookingDetails: $bookingDetails,
+            productAvailabilities: $productAvailabilities,
+            bookingData: $bookingData,
+        ));
+    }
+
+    public static function buildCartItemsData(
+        string $userId,
+        int $tdmsProductId,
+        int $productPricesDetailsId,
+        array $bookingData,
+        string $startDate,
+        int $days,
+        array $selectedAvailableIndices,
+        array $productAvailabilities,
+        Carbon $availabilityLastUpdatedAt,
+        ItemType $itemType,
+        array $productBookingDetails,
+        Quote $quote,
+    ): array {
+        $cartItemsData = [];
+        foreach ($selectedAvailableIndices as $selectedIndex) {
+            $availability = $productAvailabilities[$selectedIndex];
+            $newCartData = [
+                'user_id' => $userId,
+                'tdms_product_id' => $tdmsProductId,
+                'product_price_details_id' => $productPricesDetailsId,
+                'booking_date' => BaseService::stringToDate($availability['BookingDate']),
+                'start_date' => BaseService::stringToDate($startDate),
+                'days' => $days,
+                'selected_index' => $selectedIndex,
+                'availability' => $availability,
+                'availability_last_updated_at' => $availabilityLastUpdatedAt,
+                'booking_details' => $productBookingDetails,
+                'booking_data' => $bookingData,
+                'is_direct_purchase' => $itemType->isDirect,
+            ];
+            if (!is_null($quote)) {
+                $newCartData['quote_id'] = $quote->id;
+            }
+            array_push($cartItemsData, $newCartData);
+        }
+        return $cartItemsData;
+    }
+
     /**
      * @param string $userId
      * @param int $tdmsProductId
@@ -36,90 +175,56 @@ class CartItemService
         string $startDate,
         int $days,
         array $selectedAvailableIndices,
-        AddToQuote $addToQuote = null,
         ItemType $itemType,
+        AddToQuote $addToQuote = null,
+        bool $isDryRun = false,
     ) {
         try {
-            // Validate that all indices are natural numbers
-            foreach ($selectedAvailableIndices as $selectedIndex) {
-                if (!is_int($selectedIndex) || $selectedIndex < 0) {
-                    return ServiceResponse::badRequest(
-                        message: 'Selected availability indices must be natural numbers',
-                    );
-                }
-            }
-
-            // If timeId is present use that, else use timeId from bookingData.
-            // If both not available set to 0.
-            // In future will only use timeId available in bookingData.
-            if ($timeId) {
-                $bookingData['timeId'] = $timeId;
-            } elseif (!isset($bookingData['timeId'])) {
-                $bookingData['timeId'] = '0';
-            }
-
-            $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
-            $userAgent = $userAgentResponse->data;
-            $defaultAgentAccessToken = $userAgent->access_token;
-
-            $now = Carbon::now();
-            $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-            if (!$productDetailsResponse) {
-                return ServiceResponse::notFound(
-                    message: 'Product not found',
-                );
-            }
-            $product = $productDetailsResponse['results'][0];
-            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
-                $defaultAgentAccessToken,
-                $productPricesDetailsId,
-                $bookingData['timeId'],
-                $startDate,
-                $days,
-            );
-
-            if (empty($productAvailabilities)) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found',
-                );
-            }
-
-            $maxIndex = max($selectedAvailableIndices);
-            if ($maxIndex >= count($productAvailabilities)) {
-                return ServiceResponse::badRequest(
-                    message: 'Selected availability selectedIndex is out of bounds',
-                );
-            }
-
-            $bookingDetailsResponse = ProductService::getBookingDetails(
-                agentToken: $defaultAgentAccessToken,
+            $buildRequestDataResponse = self::buildOrderItemRequestData(
+                userId: $userId,
+                tdmsProductId: $tdmsProductId,
                 productPricesDetailsId: $productPricesDetailsId,
+                timeId: $timeId,
+                bookingData: $bookingData,
+                startDate: $startDate,
+                days: $days,
+                selectedAvailableIndices: $selectedAvailableIndices,
             );
+            if (!$buildRequestDataResponse->isSuccess()) {
+                return $buildRequestDataResponse;
+            }
+            $requestData = $buildRequestDataResponse->data;
+            $product = $requestData->product;
+            $productLastUpdate = $requestData->productLastUpdate;
+            $productBookingDetails = $requestData->productBookingDetails;
+            $productAvailabilities = $requestData->productAvailabilities;
+            $bookingData = $requestData->bookingData;
 
-            if ($bookingDetailsResponse->isError()) {
-                if ($bookingDetailsResponse->statusCode != 404) {
-                    return ServiceResponse::notFound('Booking details not found');
+            if ($isDryRun) {
+                $cartItemsData = self::buildCartItemsData(
+                    userId: $userId,
+                    tdmsProductId: $tdmsProductId,
+                    productPricesDetailsId: $productPricesDetailsId,
+                    bookingData: $bookingData,
+                    startDate: $startDate,
+                    days: $days,
+                    selectedAvailableIndices: $selectedAvailableIndices,
+                    productAvailabilities: $productAvailabilities,
+                    availabilityLastUpdatedAt: $now,
+                    itemType: $itemType,
+                    productBookingDetails: $productBookingDetails,
+                    quote: null,
+                );
+
+                foreach ($cartItemsData as $cartItemData) {
+                    $cartItemData->product = $product; // necessary for apps
                 }
 
-                $errorMessage = 'Failed to load booking details';
-                Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
-                throw new ServiceException(message: $errorMessage);
+                return ServiceResponse::success(data: $cartItemsData);
             }
-            $bookingDetails = $bookingDetailsResponse->data;
-
-            $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
-                $defaultAgentAccessToken,
-                [$tdmsProductId],
-            );
-            if (!$productLastUpdate) {
-                throw new ServiceException(
-                    message: 'Product last update not found',
-                );
-            }
-
-            $productLastUpdate = $productLastUpdate[$tdmsProductId];
 
             $cartItems = [];
+            $now = Carbon::now();
             $cartItems = DB::transaction(function () use (
                 $tdmsProductId,
                 $product,
@@ -133,7 +238,7 @@ class CartItemService
                 $days,
                 $selectedAvailableIndices,
                 $cartItems,
-                $bookingDetails,
+                $productBookingDetails,
                 $addToQuote,
                 $itemType,
             ) {
@@ -170,27 +275,24 @@ class CartItemService
                     }
                 }
 
-                foreach ($selectedAvailableIndices as $selectedIndex) {
-                    $availability = $productAvailabilities[$selectedIndex];
-                    $new_cart_data = [
-                        'user_id' => $userId,
-                        'tdms_product_id' => $tdmsProductId,
-                        'product_price_details_id' => $productPricesDetailsId,
-                        'booking_date' => BaseService::stringToDate($availability['BookingDate']),
-                        'start_date' => BaseService::stringToDate($startDate),
-                        'days' => $days,
-                        'selected_index' => $selectedIndex,
-                        'availability' => $availability,
-                        'availability_last_updated_at' => $now,
-                        'booking_details' => $bookingDetails,
-                        'booking_data' => $bookingData,
-                        'is_direct_purchase' => $itemType->isDirect,
-                    ];
-                    if (!is_null($quote)) {
-                        $new_cart_data['quote_id'] = $quote->id;
-                    }
-                    $new_cart_item = CartItem::create($new_cart_data);
-                    array_push($cartItems, $new_cart_item);
+                $cartItemsData = self::buildCartItemsData(
+                    userId: $userId,
+                    tdmsProductId: $tdmsProductId,
+                    productPricesDetailsId: $productPricesDetailsId,
+                    bookingData: $bookingData,
+                    startDate: $startDate,
+                    days: $days,
+                    selectedAvailableIndices: $selectedAvailableIndices,
+                    productAvailabilities: $productAvailabilities,
+                    availabilityLastUpdatedAt: $now,
+                    itemType: $itemType,
+                    productBookingDetails: $productBookingDetails,
+                    quote: $quote,
+                );
+
+                foreach ($cartItemsData as $cartItemData) {
+                    $newCartItem = CartItem::create($cartItemData);
+                    array_push($cartItems, $newCartItem);
                 }
 
                 return $cartItems;
