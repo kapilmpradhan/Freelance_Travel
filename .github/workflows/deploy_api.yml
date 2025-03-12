@@ -38,6 +38,9 @@ env:
       DB_USERNAME: ${{ vars.DB_USERNAME }}
       DB_PASSWORD: ${{ vars.DB_PASSWORD }}
       DB_PASSWORD_ROOT: ${{ vars.DB_PASSWORD_ROOT }}
+      REDIS_IP_ADDRESS: ${{ vars.REDIS_IP_ADDRESS }}
+      REDIS_PORT: ${{ vars.REDIS_PORT }}
+      REDIS_PASSWORD: ${{ vars.REDIS_PASSWORD }}
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       SSO_TYPE_GOOGLE: ${{ vars.SSO_TYPE_GOOGLE }}
       SSO_TYPE_APPLE: ${{ vars.SSO_TYPE_APPLE }}
