@@ -4,7 +4,11 @@ FROM php:8.2-fpm
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
-    && docker-php-ext-install zip pdo_mysql
+    cron \
+    redis-tools \
+    && docker-php-ext-install zip pdo_mysql \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Install Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer

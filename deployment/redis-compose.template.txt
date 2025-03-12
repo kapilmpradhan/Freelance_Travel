@@ -1,0 +1,16 @@
+services:
+  redis:
+    image: redis:7.0.12
+    container_name: freelance-travel-redis
+    platform: linux/amd64
+    volumes:
+      - ./redis_data:/data
+    networks:
+      $NETWORK_NAME:
+        ipv4_address: $REDIS_IP_ADDRESS
+    expose:
+      - "$REDIS_PORT"
+
+networks:
+  $NETWORK_NAME:
+    external: true

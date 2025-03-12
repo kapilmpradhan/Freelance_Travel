@@ -19,3 +19,4 @@ composer.lock
 *.pem
 .DS_Store
 *credentials.json
+docker-compose.yml
