@@ -33,6 +33,10 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Copy and run cron setup script
+COPY cron-setup.sh /usr/local/bin/cron-setup.sh
+RUN chmod +x /usr/local/bin/cron-setup.sh
+
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
@@ -42,5 +46,4 @@ CMD php artisan config:clear && \
     php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache && \
-    php artisan queue:work & \
     php-fpm

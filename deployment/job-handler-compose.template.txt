@@ -1,0 +1,13 @@
+services:
+  job-handler:
+    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    container_name: freelance-travel-migrator
+    platform: linux/amd64
+    entrypoint: ./cron-setup.sh
+    restart: always
+    networks:
+      - $NETWORK_NAME
+
+networks:
+  $NETWORK_NAME:
+    external: true

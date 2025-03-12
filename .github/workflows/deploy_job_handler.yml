@@ -1,0 +1,68 @@
+name: Freelance travel job handler deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: 'Docker image name'
+        required: false
+        default: 'truenarydev/ft-api'
+      image_tag:
+        description: 'Docker image tag'
+        required: false
+        default: 'latest'
+      docker_hub_username:
+        description: 'Username of Docker hub'
+        required: true
+      docker_hub_password:
+        description: 'Password of Docker hub'
+        required: true
+      environment:
+        description: 'Environment to deploy to (staging or production)'
+        required: true
+        default: 'staging'
+
+env:
+      NETWORK_NAME: ${{vars.NETWORK_NAME}}
+      APP_DOCKER_IMAGE_NAME: ${{ github.event.inputs.image_name }}
+      APP_DOCKER_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      
+    - name: Deploy job handler to EC2 instance
+      run: |
+        # Write the RSA private key to a temporary file
+        echo "$SSH_PRIVATE_KEY" > ec2_key.pem
+        # Set the appropriate permissions for the private key
+        chmod 400 ec2_key.pem
+
+        # Create the .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
+
+        # Add EC2's IP address to known hosts to avoid host key verification issues
+        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+        # Create and copy docker compose file to EC2 instance
+        envsubst < deployment/job-handler-compose.template.txt > job-handler-compose.yml
+        scp -i ec2_key.pem job-handler-compose.yml $EC2_USER@$EC2_HOST:~/deploy/job-handler/job-handler-compose.yml
+
+        # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
+        echo 'Getting into EC2 server'
+        ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          cd ~/deploy/job-handler
+          docker-compose -f job-handler-compose.yml down
+          echo "removing previous images"
+          docker rmi -f $(docker images truenarydev/ft-api --format "{{.ID}}")
+          docker-compose -f job-handler-compose.yml up -d
+
+        EOF
