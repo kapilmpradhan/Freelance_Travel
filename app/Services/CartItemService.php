@@ -200,6 +200,7 @@ class CartItemService
             $productAvailabilities = $requestData->productAvailabilities;
             $bookingData = $requestData->bookingData;
 
+            $now = Carbon::now();
             if ($isDryRun) {
                 $cartItemsData = self::buildCartItemsData(
                     userId: $userId,
@@ -224,7 +225,6 @@ class CartItemService
             }
 
             $cartItems = [];
-            $now = Carbon::now();
             $cartItems = DB::transaction(function () use (
                 $tdmsProductId,
                 $product,
