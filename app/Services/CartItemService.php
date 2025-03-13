@@ -19,6 +19,32 @@ use Exception;
 
 class CartItemService
 {
+    public static function cacheProduct(
+        array $product,
+        Carbon $checkTime,
+    ) {
+        $existingProductQ = Product::where('tdms_product_id', $product['productId']);
+        if ($existingProductQ->exists()) {
+            $existingProduct = $existingProductQ->first();
+            $should_update = empty($existingProduct->tdms_productLastUpdate_date) ||
+            $checkTime->isAfter($existingProduct->tdms_productLastUpdate_date);
+
+            if ($should_update) {
+                // TODO: move existing productDetailsResponse to a product_history table
+                $existingProduct->update([
+                    'json' => $product,
+                    'tdms_product_last_update_date' => $checkTime,
+                ]);
+            }
+        } else {
+            Product::create([
+                'tdms_product_id' => $tdmsProductId,
+                'json' => $product,
+                'tdms_product_last_update_date' => $checkTime,
+            ]);
+        }
+    }
+
     public static function buildOrderItemRequestData(
         string $userId,
         int $tdmsProductId,
@@ -202,6 +228,10 @@ class CartItemService
 
             $now = Carbon::now();
             if ($isDryRun) {
+                self::cacheProduct(
+                    product: $product,
+                    checkTime: $now,
+                );
                 $cartItemsData = self::buildCartItemsData(
                     userId: $userId,
                     tdmsProductId: $tdmsProductId,
@@ -216,10 +246,14 @@ class CartItemService
                     productBookingDetails: $productBookingDetails,
                     quote: null,
                 );
+                $cachedProduct = Product::where('tdms_product_id', $productId)
+                                ->orderBy('version', 'desc')
+                                ->first();
 
-                foreach ($cartItemsData as $cartItemData) {
-                    $cartItemData['product'] = $product; // necessary for apps
-                }
+                $cartItemsData = array_map(
+                    fn($cartItemData) => array_merge($cartItemData, ['product' => $cachedProduct]),
+                    $cartItemsData,
+                );
 
                 return ServiceResponse::success(data: $cartItemsData);
             }
@@ -242,26 +276,10 @@ class CartItemService
                 $addToQuote,
                 $itemType,
             ) {
-                $existingProductQ = Product::where('tdms_product_id', $tdmsProductId);
-                if ($existingProductQ->exists()) {
-                    $existingProduct = $existingProductQ->first();
-                    $should_update = empty($existingProduct->tdms_productLastUpdate_date) ||
-                        $now->isAfter($existingProduct->tdms_productLastUpdate_date);
-
-                    if ($should_update) {
-                        // TODO: move existing productDetailsResponse to a product_history table
-                        $existingProduct->update([
-                            'json' => $product,
-                            'tdms_product_last_update_date' => $now,
-                        ]);
-                    }
-                } else {
-                    Product::create([
-                        'tdms_product_id' => $tdmsProductId,
-                        'json' => $product,
-                        'tdms_product_last_update_date' => $now,
-                    ]);
-                }
+                self::cacheProduct(
+                    product: $product,
+                    checkTime: $now,
+                );
 
                 $quote = null;
                 if (!is_null($addToQuote)) {
