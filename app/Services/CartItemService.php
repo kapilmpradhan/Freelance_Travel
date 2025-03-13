@@ -246,7 +246,7 @@ class CartItemService
                     productBookingDetails: $productBookingDetails,
                     quote: null,
                 );
-                $cachedProduct = Product::where('tdms_product_id', $productId)
+                $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
                                 ->orderBy('version', 'desc')
                                 ->first();
 
