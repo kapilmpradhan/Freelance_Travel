@@ -218,7 +218,7 @@ class CartItemService
                 );
 
                 foreach ($cartItemsData as $cartItemData) {
-                    $cartItemData->product = $product; // necessary for apps
+                    $cartItemData['product'] = $product; // necessary for apps
                 }
 
                 return ServiceResponse::success(data: $cartItemsData);
