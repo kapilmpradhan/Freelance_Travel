@@ -43,22 +43,24 @@ class ProductCategoryService
                 $parts = explode(':', $key);
                 $label = end($parts);
                 $members = Redis::smembers($key);
-                $result = [];
 
-                $productsByCategories = ProductCategory::all()
+                $productsByCategories = ProductCategory::where('label', $label)
+                            ->get()
                             ->groupBy('label')
                             ->map(function ($groups) use ($label, $members) {
-                                $products = Product::whereIn(
-                                    'tdms_product_id',
-                                    $members
-                                )->take(10)->get();
+                                foreach ($groups as $group) {
+                                    $products = Product::whereIn(
+                                        'tdms_product_id',
+                                        $members
+                                    )->take(10)->get();
 
-                                $categories = ProductCategory::where('label', $label)->pluck('category');
+                                    $categories = ProductCategory::where('label', $label)->pluck('category');
 
-                                return [
-                                        "labels" => $categories,
-                                        "products" => $products
-                                    ];
+                                    return [
+                                            "labels" => $categories,
+                                            "products" => $products
+                                        ];
+                                }
                             });
                 $result[] = $productsByCategories;
             }

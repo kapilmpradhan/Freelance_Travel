@@ -83,13 +83,20 @@ class HomeFeedProductByCategories implements ShouldQueue
                     }
 
                     foreach ($products as $product) {
-                        Product::updateOrCreate(
-                            [
-                            "tdms_product_id" => $product['productId'],
-                            "tdms_product_last_update_date" => $getProductAvailabilities[$product['productId']]
-                            ],
-                            ["json" => $product]
-                        );
+                        try {
+                            Product::updateOrCreate(
+                                [
+                                    "tdms_product_id" => $product['productId'],
+                                ],
+                                [
+                                "json" => $product,
+                                "tdms_product_last_update_date" => $getProductAvailabilities[$product['productId']]
+                                    ]
+                            );
+                        } catch (Exception $e) {
+                            Logger::error("Failed to cache productId: {$product['productId']}");
+                            continue;
+                        }
 
                         // Cache product-to-label mapping
                         $categoryKey = "home_feed_product_label:{$tempCategory->label}";

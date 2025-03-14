@@ -251,7 +251,7 @@ class CartItemService
                                 ->first();
 
                 $cartItemsData = array_map(
-                    fn($cartItemData) => array_merge($cartItemData, ['product' => $cachedProduct]),
+                    fn ($cartItemData) => array_merge($cartItemData, ['product' => $cachedProduct]),
                     $cartItemsData,
                 );
 
