@@ -11,12 +11,10 @@ use App\Http\Controllers\Api\QuotetController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
-use App\Http\Controllers\Api\AgentTokenController;
-use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\OtpController;
-use App\Http\Controllers\Api\ProfileAgentController;
 use App\Http\Controllers\Api\UserAgentController;
+use App\Http\Controllers\Api\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +38,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
     Route::post('callback/apple/', [AppleLoginController::class, 'appleAuthCallback']);
     Route::post('login/google/', [GoogleLoginController::class, 'userLoginGoogle']);
     Route::post('token/access/', [UserController::class, 'accessTokenRegenerate']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'products',], function () {
+    Route::get('home', [ProductController::class, 'homeFeedProducts']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {

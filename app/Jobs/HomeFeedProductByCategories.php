@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Logging\Logger;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Services\ProductService;
+use App\Services\ServiceException;
+use App\Services\TdmsService;
+use App\Services\UserAgentService;
+use Exception;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Redis;
+
+class HomeFeedProductByCategories implements ShouldQueue
+{
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        Logger::info('Starting HomeFeedProductByCategories job');
+
+        $agentResponse = UserAgentService::getDefaultAgentToken();
+        if ($agentResponse->isError()) {
+            Logger::error('Unable to retrieve default agent');
+            return;
+        }
+        $agentToken = $agentResponse->data['access_token'];
+
+        $categoryTypes = ['accommodation', 'transport', 'activities'];
+
+        $tempCategories = ProductCategory::all();
+        foreach ($categoryTypes as $type) {
+            Logger::info('Caching for ' . $type);
+            try {
+                $categoriesResponse = TdmsService::getCategoriesByType(type: $type, agentToken: $agentToken);
+                if ($categoriesResponse->isError()) {
+                    return;
+                }
+                $categories = $categoriesResponse->data;
+                foreach ($categories as $category) {
+                    $tempCategory = $tempCategories->where('category', $category['text'])->first();
+
+                    if (!$tempCategory) {
+                        continue;
+                    }
+
+                    Logger::info("-----{$tempCategory->category}-----");
+
+                    $getProductsResponse = TdmsService::getProductsByCategory($type, $category['id'], $agentToken);
+                    if ($getProductsResponse->isError()) {
+                        return;
+                    }
+
+                    $products = $getProductsResponse->data;
+                    if (!$products) {
+                        continue;
+                    }
+                    $productIds = array_column($products, 'productId');
+                    $getProductAvailabilities = ProductService::getProductsLastUpdateFromApi($agentToken, $productIds);
+                    if (!$getProductAvailabilities) {
+                        Logger::error('Unable to fetch product last update');
+                        continue;
+                    }
+
+                    foreach ($products as $product) {
+                        Product::updateOrCreate(
+                            [
+                            "tdms_product_id" => $product['productId'],
+                            "tdms_product_last_update_date" => $getProductAvailabilities[$product['productId']]
+                            ],
+                            ["json" => $product]
+                        );
+
+                        // Cache product-to-label mapping
+                        $categoryKey = "home_feed_product_label:{$tempCategory->label}";
+                        Redis::sadd($categoryKey, $product['productId']);
+                    }
+                }
+            } catch (ServiceException $e) {
+                Logger::error('Failed to cache some products of ' . $type, $e);
+                continue;
+            } catch (Exception $e) {
+                Logger::error('Failed to cache some products of ' . $type, $e);
+                continue;
+            }
+            Logger::info('Caching complete for ' . $type);
+        }
+        Logger::info('HomeFeedProductByCategories job complete');
+        return;
+    }
+}

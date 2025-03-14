@@ -298,4 +298,78 @@ class TdmsService
             }
         }
     }
+
+    public static function getCategoriesByType($type, $agentToken)
+    {
+        $url = config('vars.tdms_api_url') . "/categories/{$type}?countries=20";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "type" => $type,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
+        }
+    }
+
+    public static function getProductsByCategory($type, $typeId, $agentToken)
+    {
+        $url = config('vars.tdms_api_url') . "/products?{$type}={$typeId}&countries=20";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "type" => $type,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
+        }
+    }
 }
