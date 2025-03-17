@@ -562,6 +562,9 @@ class CartItemController extends BaseController
         $validated = $validate->validated();
 
         $completeBookingResponse = CartItemService::completeBooking($validated['bookingReference']);
+        if ($completeBookingResponse->isError()) {
+            return $this->sendResponseFromService($completeBookingResponse);
+        }
 
         return $this->sendResponseFromService($completeBookingResponse);
     }

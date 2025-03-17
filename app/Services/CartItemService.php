@@ -38,7 +38,7 @@ class CartItemService
             }
         } else {
             Product::create([
-                'tdms_product_id' => $tdmsProductId,
+                'tdms_product_id' => $product['productId'],
                 'json' => $product,
                 'tdms_product_last_update_date' => $checkTime,
             ]);
@@ -770,6 +770,9 @@ class CartItemService
     public static function completeBooking($bookingReference)
     {
         $userOrder = UserOrder::where('booking_reference', $bookingReference)->first();
+        if (!$userOrder) {
+            return ServiceResponse::notFound('User order not found');
+        }
 
         $getAgentResponse = UserAgentService::getUserAgentById($userOrder->user_agent_id);
         if ($getAgentResponse->isError()) {
@@ -803,7 +806,7 @@ class CartItemService
             BookingService::completeOrder(
                 bookingReference: $bookingReference,
             );
-            return ServiceResponse::success();
+            return ServiceResponse::success(data: $userOrder);
         } catch (Exception $e) {
             Logger::error(message: 'Order completion failed', exception: $e);
             return ServiceResponse::badRequest(message: 'Order completion failed');

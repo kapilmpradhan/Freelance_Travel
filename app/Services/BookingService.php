@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
+use App\Events\CompleteOrderEvent;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
-use App\Features\OrderDataValidationFeature;
 use App\Jobs\CacheProductJob;
-use App\Jobs\SendShareMailJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
@@ -440,6 +439,8 @@ class BookingService
                 'user_order_id' => $userOrder->id
             ]);
         });
+
+        event(new CompleteOrderEvent($userOrder->id));
         return ServiceResponse::success();
     }
 }
