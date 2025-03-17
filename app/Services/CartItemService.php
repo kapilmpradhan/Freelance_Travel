@@ -431,11 +431,7 @@ class CartItemService
             return ServiceResponse::notFound(message: 'Cart item not found');
         }
         $cartItem->booking_quantity = $quantity;
-        $currentBookingData = $cartItem->booking_data;
-        if (isset($bookingData['optionalData'])) {
-            $currentBookingData['optionalData'] = $bookingData['optionalData'];
-        }
-        $cartItem->booking_data = $currentBookingData;
+        $cartItem->booking_data = $bookingData;
 
         $cartItem->save();
         return ServiceResponse::success('Cart item updated successfully');

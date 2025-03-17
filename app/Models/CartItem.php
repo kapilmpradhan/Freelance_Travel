@@ -131,6 +131,10 @@ class CartItem extends Model
             'quantity' => 'required|integer',
             'bookingData' => 'array',
             'bookingData.optionalData' => 'array',
+            'bookingData.pickupId' => 'string',
+            'bookingData.pickupLocation' => 'string',
+            'bookingData.dropoffId' => 'string',
+            'bookingData.dropoffLocation' => 'string'
         ];
     }
 
