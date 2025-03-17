@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\CompleteOrderEvent;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
+use App\Features\OrderDataValidationFeature;
 use App\Jobs\CacheProductJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
