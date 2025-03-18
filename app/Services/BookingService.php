@@ -25,7 +25,11 @@ class BookingService
         $totalAmount = 0;
 
         foreach ($cartItems as $cartItem) {
-            $totalAmount += $cartItem->availability['productPricingData']['RRP'] * $cartItem->booking_quantity;
+            if (isset($cartItem->availability['productPricingData']['RRP'])) {
+                $totalAmount += $cartItem->availability['productPricingData']['RRP'] * $cartItem->booking_quantity;
+            } else {
+                $totalAmount += $cartItem->availability['FarePrice']['RRP'] * $cartItem->booking_quantity;
+            }
         }
 
         return $totalAmount;

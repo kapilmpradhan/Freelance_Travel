@@ -86,13 +86,42 @@ class CartItemService
             );
         }
         $product = $productDetailsResponse['results'][0];
-        $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
-            $defaultAgentAccessToken,
-            $productPricesDetailsId,
-            $bookingData['timeId'],
-            $startDate,
-            $days,
-        );
+
+        if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
+            $farePrices = $product['faresprices'];
+
+            // Find fareTypeId for the given productPricesDetailsId
+            $fareTypeId = null;
+            foreach ($farePrices as $fare) {
+                if ($fare["productPricesDetailsId"] === $productPricesDetailsId) {
+                    $fareTypeId = $fare["fareTypeId"];
+                    break;
+                }
+            }
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
+                agentToken: $defaultAgentAccessToken,
+                fareTypeId: $fareTypeId,
+                productId: $tdmsProductId,
+                startDate: $startDate,
+                endDate: Carbon::parse($startDate)->addDays($days)->toDateString()
+            );
+
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
+        } else {
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                $defaultAgentAccessToken,
+                $productPricesDetailsId,
+                $bookingData['timeId'],
+                $startDate,
+                $days,
+            );
+        }
 
         if (empty($productAvailabilities)) {
             return ServiceResponse::notFound(

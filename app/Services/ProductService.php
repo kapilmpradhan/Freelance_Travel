@@ -104,4 +104,35 @@ class ProductService
         $response = json_decode($response, true);
         return $response;
     }
+
+    public static function getProductAvailabilitiesByProductAndRange(
+        $agentToken,
+        $productId,
+        $fareTypeId,
+        $startDate,
+        $endDate,
+    ) {
+        $requestUrl = config('vars.tdms_api_url')
+                    . "/checkAvailabilityByProductAndRange/{$productId}/{$fareTypeId}/{$startDate}/{$endDate}";
+
+        $response = Http::withToken($agentToken)
+            ->withHeaders([
+                "Authorization: Bearer {$agentToken}",
+                'Content-Type' => 'application/json',
+            ])
+            ->post($requestUrl);
+
+        if ($response->successful()) {
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status(),
+            );
+        } else {
+            return HttpResponse::failed(
+                message: 'Failed to retrieve availability',
+                responseCode: $response->status(),
+                data: $response->status(),
+            );
+        }
+    }
 }
