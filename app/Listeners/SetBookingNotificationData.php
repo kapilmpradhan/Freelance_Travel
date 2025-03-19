@@ -5,8 +5,9 @@ namespace App\Listeners;
 use App\Events\CompleteOrderEvent;
 use App\Logging\Logger;
 use App\Services\BookingNotificationService;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SetBookingNotificationData
+class SetBookingNotificationData implements ShouldQueue
 {
     /**
      * Create the event listener.

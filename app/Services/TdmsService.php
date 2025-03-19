@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Logging\Logger;
 
@@ -203,11 +204,19 @@ class TdmsService
     {
         $url = config('vars.tdms_api_url') . "/order/{$bookingReference}/convertQuote";
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$agentToken}"
-        ])
-        ->post($url);
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$agentToken}"
+            ])
+            ->post($url);
+        } catch (Exception $e) {
+            Logger::error(
+                message: 'Server error while converting quote to order',
+                extra: ['bookingReference' => $bookingReference, 'exception' => $e]
+            );
+            throw new ServiceException('Server error while converting quote to order');
+        }
 
         // Check if the request was successful
         $data = $response->json();
@@ -232,17 +241,25 @@ class TdmsService
 
     public static function checkIfCustomerOrderStatusIsOrder($agentToken, $orderId)
     {
-        $url = config('vars.tdms_api_url') . "/customerOrderDetail";
+        try {
+            $url = config('vars.tdms_api_url') . "/customerOrderDetail";
 
-        $response = Http::withQueryParameters([
-            "searchOnlyStatus" => "Order",
-            "orderId" => $orderId
-        ])
-        ->withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$agentToken}"
-        ])
-        ->get($url);
+            $response = Http::withQueryParameters([
+                "searchOnlyStatus" => "Order",
+                "orderId" => $orderId
+            ])
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$agentToken}"
+            ])
+            ->get($url);
+        } catch (Exception $e) {
+            Logger::error(
+                message: "Error while fetching customer order detail",
+                extra: ["orderId" => $orderId, "exception" => $e]
+            );
+            throw new ServiceException(message: 'Server error while fetching customer order detail');
+        }
 
         $responseStatus = $response->status();
 
@@ -253,7 +270,7 @@ class TdmsService
         } else {
             Logger::error(
                 message: "Error while fetching customer order detail",
-                extra: ["orderId" => $orderId]
+                extra: ["orderId" => $orderId, "response" => $response->json()]
             );
             return ServiceResponse::badRequest(message: 'Internal server error');
         }

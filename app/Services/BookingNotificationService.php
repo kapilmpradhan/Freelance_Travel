@@ -17,10 +17,9 @@ class BookingNotificationService
             $userId = $cartItem->user_id;
             $user = User::find($userId);
 
+            $bookingDate = Carbon::parse($cartItem->booking_date)->format('Y-m-d');
             try {
-                $bookingDate = Carbon::parse($cartItem->booking_data['booking_date'] ?? null)->format('Y-m-d');
-
-                $rawBookingTime = $cartItem->booking_data['booking_time'] ?? null;
+                $rawBookingTime = $cartItem->booking_data['commences'] ?? null;
 
                 if ($rawBookingTime) {
                     // Try parsing the time in both formats
@@ -80,7 +79,7 @@ class BookingNotificationService
                 'user_order_id' => $bookingNotification->user_order_id,
                 'cart_item_id' => $bookingNotification->cart_item_id,
                 'booking_date' => $bookingNotification->booking_date,
-                'booking_time' =>  Carbon::parse($bookingNotification->booking_time)->format('H:i:s'),
+                'booking_time' =>  Carbon::parse($bookingNotification->booking_time ?? '7:00')->format('H:i:s'),
                 'notify_to_email' => $bookingNotification->notify_to_email,
                 'is_notified' => false
             ]);
