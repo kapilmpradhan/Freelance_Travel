@@ -62,6 +62,7 @@ class BookingService
     {
         $bookingData = $cartItem->booking_data;
         $bookingData['travelDate'] = $cartItem->booking_date;
+        $bookingData['datePriceCacheId'] = $cartItem->availability['datePriceCacheId'];
         unset($bookingData['optionalData']);
         return $bookingData;
     }
@@ -118,6 +119,7 @@ class BookingService
             $products[] = [
                 "productPricesDetailsId" => strVal($cartItem->product_price_details_id),
                 "qty" => $cartItem->booking_quantity,
+                "datePriceCacheId" => $cartItem->availability['datePriceCacheId']
             ];
         }
 
