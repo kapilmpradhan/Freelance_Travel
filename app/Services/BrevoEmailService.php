@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Logging\Logger;
 use Illuminate\Support\Facades\Http;
 
 class BrevoEmailService implements IEmailService
@@ -18,12 +19,14 @@ class BrevoEmailService implements IEmailService
             ->post('https://api.brevo.com/v3/smtp/email', $data);
 
             if ($response->getStatusCode() == 201) {
-                return 'Email sent successfully to: ' . $data['to'][0]['email'];
+                return 'Email sent successfully';
             } else {
-                return 'Failed to send email. Error: ' . json_decode($response->getBody());
+                Logger::error('Failed to send email.', extra: ['data' => $data, 'response' => $response->json()]);
+                return 'Failed to send email. Error: ' . $response->json();
             }
         } catch (\Exception $e) {
-            return 'Failed to send email. Error: ' . $e->getMessage();
+            Logger::error('Failed to send email. Error: ', $e);
+            throw new ServiceException('Failed to send email.');
         }
     }
 }

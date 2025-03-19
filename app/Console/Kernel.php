@@ -6,6 +6,8 @@ use App\Jobs\HomeFeedProductByCategories;
 use App\Jobs\UpdateFavoriteNightly;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Jobs\QUpcomingBookingNotification;
+use App\Jobs\SendBookingNotification;
 
 class Kernel extends ConsoleKernel
 {
@@ -28,6 +30,10 @@ class Kernel extends ConsoleKernel
     {
         $schedule->job(new UpdateFavoriteNightly())->twiceDaily();
         $schedule->job(new HomeFeedProductByCategories())->dailyAt('00:00');
+
+        $schedule->job(new QUpcomingBookingNotification())->dailyAt("00:00");
+
+        $schedule->job(new SendBookingNotification())->hourlyAt(10);
     }
 
     /**

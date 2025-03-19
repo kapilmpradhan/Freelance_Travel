@@ -25,7 +25,7 @@ class EmailCompleteOrder
         $className = get_class($this);
         Logger::debug("[{$className}] Received order created event");
 
-        $userOrderId = $event->userOrderId;
+        $userOrderId = $event->userOrder->id;
         $userOrder = UserOrder::where('id', $userOrderId)->first()->request_data;
 
         SendOrderCompleteEmail::dispatch($userOrder);

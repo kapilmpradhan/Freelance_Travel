@@ -30,27 +30,21 @@ class SendOrderCompleteEmail implements ShouldQueue
      */
     public function handle(IEmailService $emailService)
     {
-        try {
-            $customerData = [
-                'sender' => [
-                    'email' => config('vars.mail_from_address')
-                ],
-                'to' => [
-                    [
-                        'email' => $this->data['redeemers'][0]['emailAddress']
-                    ]
-                ],
-                'subject' => "Order complete.",
-                'htmlContent' => view('email.emailOrderComplete', $this->data)->render(),
-            ];
+        $customerData = [
+            'sender' => [
+                'email' => config('vars.mail_from_address')
+            ],
+            'to' => [
+                [
+                    'email' => $this->data['redeemers'][0]['emailAddress']
+                ]
+            ],
+            'subject' => "Order complete.",
+            'htmlContent' => view('email.emailOrderComplete', $this->data)->render(),
+        ];
 
-            $emailService->sendMail($customerData);
+        $emailService->sendMail($customerData);
 
-
-            Logger::info('Order complete email sent.');
-        } catch (Exception $e) {
-            Logger::error('Failed to send email.', $e);
-            throw $e;
-        }
+        Logger::info('Order complete email sent.');
     }
 }

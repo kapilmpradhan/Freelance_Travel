@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\CompleteOrderEvent;
+use App\Events\OrderComplete;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
@@ -430,9 +431,10 @@ class BookingService
         if (is_null($userOrder)) {
             return ServiceResponse::notFound(message: 'Booking reference not found');
         }
+        $cartItemIds = $userOrder->cart_item_ids;
 
-        $cartItemQ = CartItem::whereIn('id', $userOrder->cart_item_ids);
-        $quoteIds = $cartItemQ->select('quote_id')->distinct()->pluck('quote_id');
+        $cartItemQ = CartItem::whereIn('id', $cartItemIds);
+        $quoteIds = (clone $cartItemQ)->select('quote_id')->distinct()->pluck('quote_id');
 
         DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds) {
             $userOrder->is_paid = true;
@@ -443,9 +445,13 @@ class BookingService
                 'is_paid' => true,
                 'user_order_id' => $userOrder->id
             ]);
+
+            event(new CompleteOrderEvent(
+                cartItems: $cartItemQ->get(),
+                userOrder: $userOrder
+            ));
         });
 
-        event(new CompleteOrderEvent($userOrder->id));
         return ServiceResponse::success();
     }
 }

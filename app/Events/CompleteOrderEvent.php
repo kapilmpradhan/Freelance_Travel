@@ -12,13 +12,15 @@ class CompleteOrderEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    public $userOrderId;
+    public $userOrder;
+    public $cartItems;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($userOrderId)
+    public function __construct($userOrder, $cartItems)
     {
-        $this->userOrderId = $userOrderId;
+        $this->userOrder = $userOrder;
+        $this->cartItems = $cartItems;
     }
 }
