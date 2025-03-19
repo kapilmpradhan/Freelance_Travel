@@ -72,7 +72,7 @@ class BookingService
         $redeemers = [];
         foreach ($customers as $customer) {
             $redeemer = [
-                "title" => $customer['title'] ?? null,
+                "title" => $customer['title'] ?? 'Mr',
                 "emailAddress" => $customer['email'],
                 "firstName" => $customer['first_name'],
                 "lastName" => $customer['last_name'],
