@@ -60,9 +60,13 @@ class BookingService
 
     public static function buildRedeemerProductBookingData($cartItem)
     {
+        $datePriceCacheId = isset($cartItem->availability['datePriceCacheId'])
+                            ? $cartItem->availability['datePriceCacheId']
+                            : null;
+
         $bookingData = $cartItem->booking_data;
         $bookingData['travelDate'] = $cartItem->booking_date;
-        $bookingData['datePriceCacheId'] = $cartItem->availability['datePriceCacheId'];
+        $bookingData['datePriceCacheId'] = $datePriceCacheId;
         unset($bookingData['optionalData']);
         return $bookingData;
     }
@@ -116,10 +120,14 @@ class BookingService
     {
         $products = [];
         foreach ($cartItems as $cartItem) {
+            $datePriceCacheId = isset($cartItem->availability['datePriceCacheId'])
+                            ? $cartItem->availability['datePriceCacheId']
+                            : null;
+
             $products[] = [
                 "productPricesDetailsId" => strVal($cartItem->product_price_details_id),
                 "qty" => $cartItem->booking_quantity,
-                "datePriceCacheId" => $cartItem->availability['datePriceCacheId']
+                "datePriceCacheId" => $datePriceCacheId,
             ];
         }
 
