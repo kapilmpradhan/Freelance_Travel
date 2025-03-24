@@ -16,6 +16,7 @@ class CartItem extends Model
     protected $fillable = [
         'user_id',
         'tdms_product_id',
+        'product_version',
         'product_price_details_id',
         'time_id',
         'booking_date',

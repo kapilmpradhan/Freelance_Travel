@@ -7,11 +7,11 @@ use Carbon\Carbon;
 use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
 use App\DTOs\OrderItemRequestData;
-use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
 use App\Models\Product;
+use App\Models\ProductHistory;
 use App\Models\ProductPriceAvailability;
 use App\Models\Quote;
 use App\Models\UserOrder;
@@ -21,19 +21,27 @@ class CartItemService
 {
     public static function cacheProduct(
         array $product,
-        Carbon $checkTime,
+        $checkTime,
     ) {
         $existingProductQ = Product::where('tdms_product_id', $product['productId']);
         if ($existingProductQ->exists()) {
             $existingProduct = $existingProductQ->first();
-            $should_update = empty($existingProduct->tdms_productLastUpdate_date) ||
-            $checkTime->isAfter($existingProduct->tdms_productLastUpdate_date);
+            $cachedProductLastUpdateDate = Carbon::parse($existingProduct->tdms_product_last_update_date);
+            $should_update = empty($cachedProductLastUpdateDate) ||
+                            Carbon::parse($checkTime)->isAfter($cachedProductLastUpdateDate);
 
             if ($should_update) {
-                // TODO: move existing productDetailsResponse to a product_history table
+                ProductHistory::create([
+                    'tdms_product_id' => $product['productId'],
+                    'version' => $existingProduct->version,
+                    'tdms_product_last_update_date' => $cachedProductLastUpdateDate,
+                    'json' => $existingProduct->json,
+                ]);
+
                 $existingProduct->update([
                     'json' => $product,
                     'tdms_product_last_update_date' => $checkTime,
+                    'version' => $existingProduct->version + 1,
                 ]);
             }
         } else {
@@ -78,7 +86,6 @@ class CartItemService
         $userAgent = $userAgentResponse->data;
         $defaultAgentAccessToken = $userAgent->access_token;
 
-        $now = Carbon::now();
         $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
         if (!$productDetailsResponse) {
             return ServiceResponse::notFound(
@@ -176,6 +183,7 @@ class CartItemService
     public static function buildCartItemsData(
         string $userId,
         int $tdmsProductId,
+        int|null $productVersion,
         int $productPricesDetailsId,
         array $bookingData,
         string $startDate,
@@ -193,6 +201,7 @@ class CartItemService
             $newCartData = [
                 'user_id' => $userId,
                 'tdms_product_id' => $tdmsProductId,
+                'product_version' => $productVersion,
                 'product_price_details_id' => $productPricesDetailsId,
                 'booking_date' => BaseService::stringToDate($availability['BookingDate']),
                 'start_date' => BaseService::stringToDate($startDate),
@@ -259,11 +268,12 @@ class CartItemService
             if ($isDryRun) {
                 self::cacheProduct(
                     product: $product,
-                    checkTime: $now,
+                    checkTime: $productLastUpdate,
                 );
                 $cartItemsData = self::buildCartItemsData(
                     userId: $userId,
                     tdmsProductId: $tdmsProductId,
+                    productVersion: null,
                     productPricesDetailsId: $productPricesDetailsId,
                     bookingData: $bookingData,
                     startDate: $startDate,
@@ -307,7 +317,7 @@ class CartItemService
             ) {
                 self::cacheProduct(
                     product: $product,
-                    checkTime: $now,
+                    checkTime: $productLastUpdate,
                 );
 
                 $quote = null;
@@ -322,9 +332,15 @@ class CartItemService
                     }
                 }
 
+                $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
+                                ->orderBy('version', 'desc')
+                                ->first();
+                $productVersion = $cachedProduct->version;
+
                 $cartItemsData = self::buildCartItemsData(
                     userId: $userId,
                     tdmsProductId: $tdmsProductId,
+                    productVersion: $productVersion,
                     productPricesDetailsId: $productPricesDetailsId,
                     bookingData: $bookingData,
                     startDate: $startDate,
@@ -356,10 +372,19 @@ class CartItemService
     {
         $cartItems = CartItem::userItems($userId, $itemType);
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
-        $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+        $products = Product::whereIn('tdms_product_id', $productIds);
+        $productHistories = ProductHistory::whereIn('tdms_product_id', $productIds);
 
-        $cartItems->each(function ($cartItem) use ($products) {
-            $cartItem->product = $products->get($cartItem->tdms_product_id);
+        $cartItems->each(function ($cartItem) use ($products, $productHistories) {
+            $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
+                                        ->where('version', $cartItem->product_version)
+                                        ->first();
+            if (!$product) {
+                $product = $productHistories->where('tdms_product_id', $cartItem->tdms_product_id)
+                                        ->where('version', $cartItem->product_version)
+                                        ->first();
+            }
+            $cartItem->product = $product;
         });
         return ServiceResponse::success(data: $cartItems);
     }
