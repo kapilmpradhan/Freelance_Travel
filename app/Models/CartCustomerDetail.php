@@ -76,4 +76,20 @@ class CartCustomerDetail extends Model
             ]
         );
     }
+
+    public static function addNewRedeemerRule()
+    {
+        $onlyCharRegex = config('vars.only_char_regex');
+
+        return [
+            "title" => "required|in:Mr,Mrs",
+            "firstName" => "required|string|max:200|regex:{$onlyCharRegex}",
+            "lastName" => "required|string|max:200|regex:{$onlyCharRegex}",
+            "dateOfBirth" => "required|date_format:d-M-Y",
+            "email" => "required|email|max:255",
+            "phoneNumber" => "required|string",
+            "postalCode" => "required|string|max:20",
+            "countryCode" => "required|string"
+        ];
+    }
 }

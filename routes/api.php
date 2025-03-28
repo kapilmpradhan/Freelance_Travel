@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\RedeemerController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\BaseController;
@@ -61,6 +62,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
     Route::put('customers', [CartItemController::class, 'setCustomers']);
     Route::get('customers', [CartItemController::class, 'getCustomers']);
+    Route::get('redeemers', [RedeemerController::class, 'listRedeemers']);
+    Route::post('redeemers', [RedeemerController::class, 'addRedeemer']);
+    Route::delete('redeemers/{redeemerId}', [RedeemerController::class, 'removeRedeemer']);
     Route::post('add', [CartItemController::class, 'addItemToCart']);
     Route::get('list', [CartItemController::class, 'getCartItems']);
     Route::post('order', [CartItemController::class, 'submitOrder']);
