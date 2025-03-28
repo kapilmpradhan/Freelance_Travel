@@ -295,4 +295,25 @@ class CartItemServiceV2
             return $e->toServiceResponse();
         }
     }
+
+    public static function updateItemBookingData($data)
+    {
+        $cartItemIds = array_map(function ($item) {
+            return $item['cartItemId'];
+        }, $data);
+
+        $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
+
+        DB::beginTransaction();
+        foreach ($data as $item) {
+            $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+            $cartItem->update([
+                "quantity" => $item['quantity'],
+                "booking_data" => $item['bookingData']
+            ]);
+        };
+        DB::commit();
+
+        return ServiceResponse::success('Cart items updated successfully');
+    }
 }

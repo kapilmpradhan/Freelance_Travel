@@ -166,6 +166,22 @@ class CartItem extends Model
         ];
     }
 
+    public static function updateItemBookingDataV2Rule()
+    {
+        return [
+            '*.cartItemId' => 'required|integer',
+            '*.quantity' => 'required|integer',
+            '*.bookingData' => 'required|array',
+            '*.bookingData.*.quantityIndex' => 'required|integer',
+            '*.bookingData.*.timeId' => 'required|string',
+            '*.bookingData.*.commences' => 'nullable|string',
+            '*.bookingData.*.pickupId' => 'nullable|string',
+            '*.bookingData.*.pickupLocation' => 'nullable|string',
+            '*.bookingData.*.dropoffId' => 'nullable|string',
+            '*.bookingData.*.dropoffLocation' => 'nullable|string'
+        ];
+    }
+
     public static function directPurchaseRule()
     {
         $rule = self::$baseSaveItemsRule;

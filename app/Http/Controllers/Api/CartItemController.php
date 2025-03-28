@@ -399,6 +399,67 @@ class CartItemController extends BaseController
         }
     }
 
+    public function setBookingDataV2(Request $request)
+    {
+        $userId = $request->user->uuid;
+        $data = json_decode($request->getContent(), true);
+        $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
+
+        $validator->after(function ($validator) use ($data, $userId) {
+            $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+            foreach ($data as $item) {
+                // Check if cartItemId provided exists in user cart
+                if (!in_array($item['cartItemId'], $userCartItems)) {
+                    $validator->errors()->add(
+                        $item['cartItemId'],
+                        'Cart item not found'
+                    );
+                    continue;
+                };
+
+                // Check if quantityIndex in order
+                $quantityIndices = array_column($item['bookingData'], 'quantityIndex');
+                $expectedIndices = range(1, count($quantityIndices));
+                if ($quantityIndices !== $expectedIndices) {
+                    $validator->errors()->add(
+                        $item['cartItemId'] . '.bookingData',
+                        'quantityIndex values must be sequential starting from 1.'
+                    );
+                }
+
+                // Check if number of bookingData provided is same as quantity
+                if (
+                    isset($item['quantity']) && isset($item['bookingData'])
+                    && $item['quantity'] !== count($item['bookingData'])
+                ) {
+                    $validator->errors()->add(
+                        $item['cartItemId'] . '.bookingData',
+                        'bookingData items count should be same as quantity'
+                    );
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $cartItemIds = array_map(function ($item) {
+            return $item['cartItemId'];
+        }, $data);
+
+        try {
+            $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingData(
+                data: $data
+            );
+            return $this->sendResponseFromService($updateItemBookingDataResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to set booking data';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function removeItemFromCart(Request $request, int $cartItemId)
     {
         $userId = $request->user->uuid;
