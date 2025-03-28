@@ -16,9 +16,11 @@ class CartItem extends Model
     protected $fillable = [
         'user_id',
         'tdms_product_id',
+        'group_id',
         'product_version',
         'product_price_details_id',
         'time_id',
+        'commences',
         'booking_date',
         'start_date',
         'days',
@@ -119,9 +121,34 @@ class CartItem extends Model
         return self::$baseSaveItemsRule;
     }
 
+    public static function saveItemsV2Rule()
+    {
+        return [
+            "tdmsProductId" => 'required|integer',
+            "productPricesDetails" => 'required|array|min:1',
+            "productPricesDetails.*.quantityDetails" => 'required|array|min:1',
+            "productPricesDetails.*.quantityDetails.*.quantity" => 'required|integer|min:1',
+            "productPricesDetails.*.quantityDetails.*.bookingDate" => 'required|date_format:d-M-Y',
+            "productPricesDetails.*.quantityDetails.*.timeId" => 'required|string',
+            "productPricesDetails.*.quantityDetails.*.commences" => 'nullable|string',
+            "productPricesDetails.*.quantityDetails.*.bookingData" => 'nullable|array',
+            'startDate' => 'required|date|date_format:d-M-Y',
+            'days' => 'required|integer|min:1',
+            'selectedAvailableIndices' => 'required|array|min:1',
+            'selectedAvailableIndices.*' => 'integer|min:0',
+        ];
+    }
+
     public static function saveItemsInNewQuote()
     {
         return array_merge(self::$baseSaveItemsRule, [
+            'quoteTitle' => 'required|string',
+        ]);
+    }
+
+    public static function saveItemsInNewQuoteV2()
+    {
+        return array_merge(self::saveItemsV2Rule(), [
             'quoteTitle' => 'required|string',
         ]);
     }
@@ -168,9 +195,6 @@ class CartItem extends Model
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
-            // only return items added from new api
-            ->whereNotNull('selected_index')
-            // filter processed items
             ->whereNull('user_order_id')
             ->get();
     }

@@ -13,6 +13,7 @@ use App\DTOs\AddToQuote;
 use App\Jobs\CacheProductJob;
 use App\Services\BookingService;
 use App\Services\CartItemService;
+use App\Services\CartItemServiceV2;
 use App\Services\ProductCategoryService;
 use App\Services\ServiceException;
 use App\Services\TdmsService;
@@ -74,6 +75,36 @@ class CartItemController extends BaseController
         }
     }
 
+    public function addItemsToCartV2(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, CartItem::saveItemsV2Rule());
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+        try {
+            $isDryRun = $request->query('dry') == 1;
+
+            $saveItemsResponse = CartItemServiceV2::saveItems(
+                userId: $request->user->uuid,
+                tdmsProductId: $data['tdmsProductId'],
+                productPricesDetails: $data['productPricesDetails'],
+                startDate: $data['startDate'],
+                days: $data['days'],
+                selectedAvailableIndices: $data['selectedAvailableIndices'],
+                addToQuote: null,
+                itemType: ItemType::cart(),
+                isDryRun: $isDryRun,
+            );
+            return $this->sendResponseFromService($saveItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to add items to cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function addItemsInNewQuote(Request $request)
     {
         $data = $request->all();
@@ -105,6 +136,45 @@ class CartItemController extends BaseController
                 bookingData: $data['bookingData'] ?? [],
                 addToQuote: $addToQuote,
                 itemType: ItemType::quote($addToQuote->quoteId)
+            );
+            return $this->sendResponseFromService($saveItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to create new quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function addItemsInNewQuoteV2(Request $request)
+    {
+        $data = $request->all();
+        $validated = Validator::make($data, CartItem::saveItemsInNewQuote());
+
+        if ($validated->fails()) {
+            return $this->sendError('Validation Error.', $validated->errors());
+        }
+
+        $validateQuoteTitle = Validator::make(
+            ['quoteTitle' => $data['quoteTitle']],
+            ['quoteTitle' => 'required|string|max:200']
+        );
+
+        if ($validateQuoteTitle->fails()) {
+            return $this->sendError('Validation Error.', $validateQuoteTitle->errors());
+        }
+
+        $addToQuote = AddToQuote::new(title: $data['quoteTitle']);
+        try {
+            $saveItemsResponse = CartItemServiceV2::saveItems(
+                userId: $request->user->uuid,
+                tdmsProductId: $data['tdmsProductId'],
+                productPricesDetailsId: $data['productPricesDetailsId'],
+                startDate: $data['startDate'],
+                days: $data['days'],
+                selectedAvailableIndices: $data['selectedAvailableIndices'],
+                addToQuote: $addToQuote,
+                itemType: ItemType::quote($addToQuote->quoteId),
+                quantityDetails: $data['quantityDetails']
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {

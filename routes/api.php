@@ -57,6 +57,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::post('items', [CartItemController::class, 'addItemsToCart']);
+    Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
     Route::get('items', [CartItemController::class, 'getItemsInCart']);
     Route::put('items/{cartItemId}', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
@@ -78,6 +79,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {
     Route::post('new', [CartItemController::class, 'addItemsInNewQuote']);
+    Route::post('new/v2', [CartItemController::class, 'addItemsInNewQuoteV2']);
     Route::get('{quoteId}', [CartItemController::class, 'getQuoteDetails']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add', [CartItemController::class, 'addItemsInExistingQuote']);
