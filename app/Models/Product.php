@@ -11,7 +11,14 @@ class Product extends Model
     use HasFactory;
 
     protected $table = 'products';
-    protected $fillable = ['tdms_product_id', 'version', 'counter', 'tdms_product_last_update_date', 'json'];
+    protected $fillable = [
+        'tdms_product_id',
+        'version',
+        'schema_version',
+        'counter',
+        'tdms_product_last_update_date',
+        'json'
+    ];
     protected $casts = [
         'json' => 'array',
     ];

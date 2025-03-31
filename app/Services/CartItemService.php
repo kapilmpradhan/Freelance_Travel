@@ -373,17 +373,11 @@ class CartItemService
         $cartItems = CartItem::userItems($userId, $itemType);
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds);
-        $productHistories = ProductHistory::whereIn('tdms_product_id', $productIds);
 
-        $cartItems->each(function ($cartItem) use ($products, $productHistories) {
+        $cartItems->each(function ($cartItem) use ($products) {
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
-                                        ->where('version', $cartItem->product_version)
+                                        ->orderByDesc('version')
                                         ->first();
-            if (!$product) {
-                $product = $productHistories->where('tdms_product_id', $cartItem->tdms_product_id)
-                                        ->where('version', $cartItem->product_version)
-                                        ->first();
-            }
             $cartItem->product = $product;
         });
         return ServiceResponse::success(data: $cartItems);

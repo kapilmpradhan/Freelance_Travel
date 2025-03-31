@@ -56,6 +56,27 @@ class ProductService
         return $response;
     }
 
+    public static function getMultipleProductDetails($agentToken, array $productIds)
+    {
+        $productIdsToString = implode(",", $productIds);
+        $requestUrl = config('vars.tdms_api_url');
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/{$productIdsToString}");
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            "Authorization: Bearer {$agentToken}",
+            "Content-Type: application/json",
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        $response = curl_exec($curl);
+        $response = json_decode($response, true);
+
+        if (!isset($response['results'])) {
+            return null;
+        }
+        return $response;
+    }
+
     public static function getBookingDetails($agentToken, $productPricesDetailsId)
     {
         $requestUrl = config('vars.tdms_api_url') . "/bookingdetails/{$productPricesDetailsId}";
