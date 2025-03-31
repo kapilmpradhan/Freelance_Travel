@@ -22,9 +22,11 @@ class RedeemerService
         return ServiceResponse::success($redeemer);
     }
 
-    public static function listRedeemers($userId)
+    public static function listActiveRedeemers($userId)
     {
-        $redeemers = CartCustomerDetail::where('user_id', $userId)->get();
+        $redeemers = CartCustomerDetail::where('user_id', $userId)
+                        ->where('is_deleted', false)
+                        ->get();
 
         return ServiceResponse::success($redeemers);
     }
@@ -38,7 +40,8 @@ class RedeemerService
             return ServiceResponse::notFound(message: 'Redeemer not found');
         };
 
-        $redeemer->delete();
+        $redeemer->is_deleted = true;
+        $redeemer->save();
         return ServiceResponse::success();
     }
 }

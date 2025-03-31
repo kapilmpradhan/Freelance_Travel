@@ -32,7 +32,7 @@ class RedeemerController extends BaseController
     public function listRedeemers(Request $request)
     {
         $userId = $request->user->uuid;
-        $listRedeemersResponse = RedeemerService::listRedeemers($userId);
+        $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId);
 
         return $this->sendResponseFromService($listRedeemersResponse);
     }

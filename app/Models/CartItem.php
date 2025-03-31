@@ -178,7 +178,9 @@ class CartItem extends Model
             '*.bookingData.*.pickupId' => 'nullable|string',
             '*.bookingData.*.pickupLocation' => 'nullable|string',
             '*.bookingData.*.dropoffId' => 'nullable|string',
-            '*.bookingData.*.dropoffLocation' => 'nullable|string'
+            '*.bookingData.*.dropoffLocation' => 'nullable|string',
+            '*.bookingData.*.redeemers' => 'array',
+            '*.bookingData.*.redeemers.*' => 'integer|min:1'
         ];
     }
 

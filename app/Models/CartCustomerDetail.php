@@ -27,6 +27,7 @@ class CartCustomerDetail extends Model
         'quote_id',
         'user_order_id',
         'is_direct_purchase',
+        'is_deleted'
     ];
 
     public function user()

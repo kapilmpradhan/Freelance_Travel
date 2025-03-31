@@ -15,6 +15,7 @@ use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Services\CartItemServiceV2;
 use App\Services\ProductCategoryService;
+use App\Services\RedeemerService;
 use App\Services\ServiceException;
 use App\Services\TdmsService;
 use Illuminate\Support\Facades\DB;
@@ -407,6 +408,9 @@ class CartItemController extends BaseController
 
         $validator->after(function ($validator) use ($data, $userId) {
             $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId);
+            $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
+
             foreach ($data as $item) {
                 // Check if cartItemId provided exists in user cart
                 if (!in_array($item['cartItemId'], $userCartItems)) {
@@ -436,6 +440,18 @@ class CartItemController extends BaseController
                         $item['cartItemId'] . '.bookingData',
                         'bookingData items count should be same as quantity'
                     );
+                }
+
+                // Check if redeemers with provided id are available
+                foreach ($item['bookingData'] as $bookingData) {
+                    $notAvailableRedeemers = array_diff($bookingData['redeemers'], $userRedeemerIds);
+                    if (!empty($notAvailableRedeemers)) {
+                        $bookingDataIndex = array_search($bookingData, $item['bookingData']);
+                        $validator->errors()->add(
+                            $item['cartItemId'] . '.bookingData.redeemers.' . $bookingDataIndex,
+                            "redeemer id" . json_encode($notAvailableRedeemers) . " not available"
+                        );
+                    }
                 }
             }
         });
