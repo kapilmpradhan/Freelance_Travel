@@ -156,12 +156,21 @@ class CartItemServiceV2
         array $orderItemsData
     ): array {
         $cartItemsData = [];
-        $groupId = Str::uuid();
 
+        $groupId = Str::uuid();
+        $selectedItemIndex = 0;
         foreach ($orderItemsData as $orderItemData) {
             $availability = $orderItemData->productAvailabilities;
             $bookingData = $orderItemData->bookingData;
             $bookingDetails = $orderItemData->productBookingDetails;
+
+            // Consecutive days are grouped into same group_id
+            if ($selectedItemIndex !== $selectedAvailableIndices[0]) {
+                $groupId = Str::uuid();
+                $selectedItemIndex = $selectedAvailableIndices[0];
+            } else {
+                $selectedItemIndex++;
+            }
 
             $newCartData = [
                 'user_id' => $userId,
