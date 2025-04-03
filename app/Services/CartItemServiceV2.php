@@ -168,9 +168,8 @@ class CartItemServiceV2
             if ($selectedItemIndex !== $selectedAvailableIndices[0]) {
                 $groupId = Str::uuid();
                 $selectedItemIndex = $selectedAvailableIndices[0];
-            } else {
-                $selectedItemIndex++;
             }
+            $selectedItemIndex++;
 
             $newCartData = [
                 'user_id' => $userId,
