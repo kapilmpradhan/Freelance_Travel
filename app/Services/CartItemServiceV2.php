@@ -317,7 +317,7 @@ class CartItemServiceV2
         foreach ($data as $item) {
             $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
             $cartItem->update([
-                "quantity" => $item['quantity'],
+                "booking_quantity" => $item['quantity'],
                 "booking_data" => $item['bookingData']
             ]);
         };
