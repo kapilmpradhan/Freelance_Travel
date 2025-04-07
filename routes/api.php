@@ -72,6 +72,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::post('order', [CartItemController::class, 'submitOrder']);
     Route::post('order/v2', [CartItemController::class, 'submitOrderV2']);
     Route::post('order/v2/direct-purchase', [CartItemController::class, 'directPurchase']);
+    Route::post('order/v2/direct-purchase/v2', [CartItemController::class, 'directPurchaseV2']);
     Route::get('bookings', [CartItemController::class, 'getBookings']);
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
     Route::post('items/to-quote', [CartItemController::class, 'addExistingCartItemsToQuote']);
@@ -84,6 +85,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::get('{quoteId}', [CartItemController::class, 'getQuoteDetails']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add', [CartItemController::class, 'addItemsInExistingQuote']);
+    Route::put('{quoteId}/items/add/v2', [CartItemController::class, 'addItemsInExistingQuoteV2']);
     Route::delete('{quoteId}', [CartItemController::class, 'removeQuote']);
     Route::put('items/{cartItemId}', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);

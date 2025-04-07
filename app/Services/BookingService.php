@@ -496,12 +496,17 @@ class BookingService
         return ServiceResponse::success(data: ['bookingReference' => $bookingReference]);
     }
 
-    public static function postOrder(string $userId, string $intent, bool $processAsQuote = true)
-    {
+    public static function postOrder(
+        string $userId,
+        string $intent,
+        bool $processAsQuote = true,
+        bool $isDirectPurchase = false
+    ) {
         $basePostOrderResponse = self::basePostOrder(
             userId: $userId,
             intent: $intent,
-            processAsQuote: $processAsQuote
+            processAsQuote: $processAsQuote,
+            isDirectPurchase: $isDirectPurchase
         );
 
         return $basePostOrderResponse;

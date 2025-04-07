@@ -202,6 +202,26 @@ class CartItem extends Model
         return $rule;
     }
 
+    public static function directPurchaseRuleV2()
+    {
+        $rule = self::saveItemsV2Rule();
+        unset(
+            $rule['productPricesDetails.*.quantityDetails.*.timeId'],
+            $rule['productPricesDetails.*.quantityDetails.*.commences']
+        );
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData'] = 'required|array';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.quantityIndex'] = 'required|integer';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.timeId'] = 'required|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.commences'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.pickupId'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.pickupLocation'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.dropoffId'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.dropoffLocation'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.redeemers'] = 'required|array|min:1';
+
+        return $rule;
+    }
+
     public function storeCartItem($user, $data)
     {
         return $this->create($data);
