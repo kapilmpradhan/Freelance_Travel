@@ -430,11 +430,20 @@ class CartItemController extends BaseController
     public function setBookingDataV2(Request $request)
     {
         $userId = $request->user->uuid;
+        $quoteId = $request->query('quoteId');
         $data = json_decode($request->getContent(), true);
         $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
 
-        $validator->after(function ($validator) use ($data, $userId) {
-            $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+        $validator->after(function ($validator) use ($data, $userId, $quoteId) {
+            if ($quoteId) {
+                $userCartItems = CartItem::userQuoteItems($userId, $quoteId)->pluck('id')->toArray();
+            } else {
+                $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+            }
+            if (empty($userCartItems)) {
+                $validator->errors()->add('cartItems', 'No cart items found');
+                return;
+            }
             $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
