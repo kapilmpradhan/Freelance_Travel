@@ -22,6 +22,23 @@ class RedeemerService
         return ServiceResponse::success($redeemer);
     }
 
+    public static function addOrUpdatePrimaryRedeemer($user)
+    {
+        $primaryRedeemer = CartCustomerDetail::updateOrCreate([
+            'user_id' => $user->uuid,
+            'is_primary' => true,
+        ], [
+            'title' => $user->title,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'date_of_birth' => $user->date_of_birth,
+            'email' => $user->email,
+            'postal_code' => $user->postal_code,
+            'phone_number' => $user->phone_number
+        ]);
+        return ServiceResponse::success($primaryRedeemer);
+    }
+
     public static function listActiveRedeemers($userId)
     {
         $redeemers = CartCustomerDetail::where('user_id', $userId)

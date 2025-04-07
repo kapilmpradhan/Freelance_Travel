@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Services\ServiceException;
 use App\Services\UserService;
 use App\Logging\Logger;
+use App\Services\RedeemerService;
 
 class UserController extends BaseController
 {
@@ -193,6 +194,7 @@ class UserController extends BaseController
 
         try {
             $updateUserProfileResponse = UserService::updateUserProfile($user, $validatedData);
+            RedeemerService::addOrUpdatePrimaryRedeemer($user);
             return $this->sendResponseFromService($updateUserProfileResponse);
         } catch (ServiceException $e) {
             return $this->sendResponseFromService($e->toServiceResponse());
