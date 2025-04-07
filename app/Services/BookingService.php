@@ -159,6 +159,7 @@ class BookingService
                                     : null;
 
                 $booking = new RedeemerBookingsOrderData(
+                    cartItemId: $cartItem->id,
                     bookingComment: $bookingComment,
                     bookingDetailsComment: $bookingDetailsComment,
                     travelDate: $cartItem->booking_date,
@@ -190,29 +191,35 @@ class BookingService
                     );
 
                     $product = new RedeemerProductsOrderData(
+                        cartItemId: $cartItem->id,
                         productPricesDetailsId: $cartItem->product_price_details_id,
                         redeemerQuantity: 1
                     );
-
                     $product->bookings[] = $booking;
                     $newRedeemer->products[] = $product;
                     $redeemers[] = $newRedeemer;
                 } else {
                     foreach ($redeemers as &$redeemer) {
                         if ($redeemer->redeemerId == $redeemerId) {
-                            $products = $redeemer->products;
-                            foreach ($products as &$product) {
-                                if ($product->productPricesDetailsId == $cartItem->product_price_details_id) {
+                            $productExists = false;
+                            foreach ($redeemer->products as &$product) {
+                                if ($product->cartItemId == $booking->cartItemId) {
                                     $product->redeemerQuantity += 1;
-                                } else {
-                                    $product = new RedeemerProductsOrderData(
-                                        productPricesDetailsId: $cartItem->product_price_details_id,
-                                        redeemerQuantity: 1
-                                    );
-                                    $redeemer->products[] = $product;
+                                    $productExists = true;
+                                    break;
                                 }
+                            }
 
-                                $product->bookings[] = $booking;
+                            if (!$productExists) {
+                                $newProduct = new RedeemerProductsOrderData(
+                                    cartItemId: $cartItem->id,
+                                    productPricesDetailsId: $cartItem->product_price_details_id,
+                                    redeemerQuantity: 1
+                                );
+
+                                $newProduct->bookings[] = $booking;
+                                $redeemer->products[] = $newProduct;
+                                break;
                             }
                         }
                     }

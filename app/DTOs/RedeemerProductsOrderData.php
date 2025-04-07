@@ -4,15 +4,18 @@ namespace App\DTOs;
 
 class RedeemerProductsOrderData
 {
+    public $cartItemId;
     public $productPricesDetailsId;
     public $redeemerQuantity;
     public array $bookings;
 
     public function __construct(
+        $cartItemId,
         $productPricesDetailsId,
         $redeemerQuantity,
         $bookings = [],
     ) {
+        $this->cartItemId = $cartItemId;
         $this->productPricesDetailsId = $productPricesDetailsId;
         $this->redeemerQuantity = $redeemerQuantity;
         $this->bookings = $bookings;

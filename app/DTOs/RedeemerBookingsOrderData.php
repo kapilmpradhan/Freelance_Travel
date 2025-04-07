@@ -4,6 +4,7 @@ namespace App\DTOs;
 
 class RedeemerBookingsOrderData
 {
+    public $cartItemId;
     public $bookingComment;
     public $bookingDetailsComment;
     public $travelDate;
@@ -16,6 +17,7 @@ class RedeemerBookingsOrderData
     public $datePriceCacheId;
 
     public function __construct(
+        $cartItemId,
         $travelDate,
         $timeId,
         $commences,
@@ -27,6 +29,7 @@ class RedeemerBookingsOrderData
         $bookingComment = null,
         $bookingDetailsComment = null,
     ) {
+        $this->cartItemId = $cartItemId;
         $this->bookingComment = $bookingComment;
         $this->bookingDetailsComment = $bookingDetailsComment;
         $this->travelDate = $travelDate;
