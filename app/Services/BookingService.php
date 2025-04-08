@@ -506,12 +506,14 @@ class BookingService
     public static function postOrder(
         string $userId,
         string $intent,
+        int $quoteId = null,
         bool $processAsQuote = true,
         bool $isDirectPurchase = false
     ) {
         $basePostOrderResponse = self::basePostOrder(
             userId: $userId,
             intent: $intent,
+            quoteId: $quoteId,
             processAsQuote: $processAsQuote,
             isDirectPurchase: $isDirectPurchase
         );
@@ -576,12 +578,29 @@ class BookingService
         $cartItemIds = $userOrder->cart_item_ids;
 
         $cartItemQ = CartItem::whereIn('id', $cartItemIds);
-        $quoteIds = (clone $cartItemQ)->select('quote_id')->distinct()->pluck('quote_id');
+        $quoteIds = (clone $cartItemQ)->select('quote_id')->distinct()->pluck('quote_id')->filter()->toArray();
 
         DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds) {
             $userOrder->is_paid = true;
             $userOrder->save();
 
+            $isDrirectPurchase = $cartItemQ->first()->is_direct_purchase;
+            $cartCustomersQuery = CartCustomerDetail::where('user_id', $userOrder->user_id)
+                                                    ->where('is_primary', false)
+                                                    ->where('user_order_id', null);
+            if ($isDrirectPurchase) {
+                $cartCustomersQuery->where('is_direct_purchase', true)->update([
+                    'user_order_id' => $userOrder->id,
+                ]);
+            } elseif (!empty($quoteIds)) {
+                $cartCustomersQuery->whereIn('quote_id', $quoteIds)->update([
+                    'user_order_id' => $userOrder->id,
+                ]);
+            } else {
+                $cartCustomersQuery->where('is_direct_purchase', false)->update([
+                    'user_order_id' => $userOrder->id,
+                ]);
+            }
             $cartItemQ->update(['user_order_id' => $userOrder->id]);
             Quote::whereIn('id', $quoteIds)->update([
                 'is_paid' => true,

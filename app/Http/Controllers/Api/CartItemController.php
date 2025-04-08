@@ -437,14 +437,16 @@ class CartItemController extends BaseController
         $validator->after(function ($validator) use ($data, $userId, $quoteId) {
             if ($quoteId) {
                 $userCartItems = CartItem::userQuoteItems($userId, $quoteId)->pluck('id')->toArray();
+                $itemType = ItemType::quote($quoteId);
             } else {
                 $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+                $itemType = ItemType::cart();
             }
             if (empty($userCartItems)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
                 return;
             }
-            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId);
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
             foreach ($data as $item) {
@@ -633,7 +635,7 @@ class CartItemController extends BaseController
     public function submitQuoteOrder(Request $request, string $quoteId)
     {
         try {
-            $postOrderResponse = BookingService::postOrderV2(
+            $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: 'pay-now',
                 processAsQuote: true,

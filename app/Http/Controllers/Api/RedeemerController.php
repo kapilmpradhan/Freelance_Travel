@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\ItemType;
 use App\Http\Controllers\Api\BaseController;
 use App\Models\CartCustomerDetail;
 use App\Services\RedeemerService;
@@ -14,6 +15,8 @@ class RedeemerController extends BaseController
     {
         $data = $request->all();
         $userId = $request->user->uuid;
+        $quoteId = $request->get('quoteId');
+        $isDirectPurchase = $request->get('isDirectPurchase', false);
 
         $validator = Validator::make($data, CartCustomerDetail::addNewRedeemerRule());
 
@@ -21,9 +24,18 @@ class RedeemerController extends BaseController
             return $this->sendResponse('Redeemer validation error', $validator->errors());
         }
 
+        if ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+        } elseif ($isDirectPurchase) {
+            $itemType = ItemType::direct();
+        } else {
+            $itemType = ItemType::cart();
+        }
+
         $addRedeemerResponse = RedeemerService::addNewRedeemer(
             userId: $userId,
-            redeemerData: $data
+            redeemerData: $data,
+            itemType: $itemType,
         );
 
         return $this->sendResponseFromService($addRedeemerResponse);
@@ -31,8 +43,19 @@ class RedeemerController extends BaseController
 
     public function listRedeemers(Request $request)
     {
+        $quoteId = $request->get('quoteId');
+        $isDirectPurchase = $request->get('isDirectPurchase', false);
+
+        if ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+        } elseif ((int) $isDirectPurchase == 1) {
+            $itemType = ItemType::direct();
+        } else {
+            $itemType = ItemType::cart();
+        }
+
         $userId = $request->user->uuid;
-        $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId);
+        $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
 
         return $this->sendResponseFromService($listRedeemersResponse);
     }

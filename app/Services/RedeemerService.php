@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
+use App\DTOs\ItemType;
 use App\Models\CartCustomerDetail;
 
 class RedeemerService
 {
-    public static function addNewRedeemer($userId, $redeemerData)
+    public static function addNewRedeemer($userId, $redeemerData, ItemType $itemType)
     {
         $redeemer = CartCustomerDetail::create([
             'user_id' => $userId,
@@ -16,7 +17,9 @@ class RedeemerService
             'date_of_birth' => $redeemerData['dateOfBirth'],
             'email' => $redeemerData['email'],
             'postal_code' => $redeemerData['postalCode'],
-            'phone_number' => $redeemerData['phoneNumber']
+            'phone_number' => $redeemerData['phoneNumber'],
+            'quote_id' => $itemType->isQuote ? $itemType->typeId : null,
+            'is_direct_purchase' => $itemType->isDirect,
         ]);
 
         return ServiceResponse::success($redeemer);
@@ -39,11 +42,27 @@ class RedeemerService
         return ServiceResponse::success($primaryRedeemer);
     }
 
-    public static function listActiveRedeemers($userId)
+    public static function listActiveRedeemers($userId, ItemType $itemType)
     {
-        $redeemers = CartCustomerDetail::where('user_id', $userId)
-                        ->where('is_deleted', false)
-                        ->get();
+        $query = CartCustomerDetail::where('user_id', $userId)
+            ->where('user_order_id', null)
+            ->where('is_deleted', false);
+
+        $primaryRedeemer = (clone $query)->where('is_primary', true)->first();
+
+        if ($itemType->isQuote) {
+            $query->where('quote_id', $itemType->typeId);
+        } elseif ($itemType->isDirect) {
+            $query->where('is_direct_purchase', true);
+        } else {
+            $query->where('quote_id', null)
+                ->where('is_direct_purchase', false);
+        }
+
+        $redeemers = $query->where('is_primary', false)->get();
+        if ($primaryRedeemer) {
+            $redeemers->prepend($primaryRedeemer);
+        }
 
         return ServiceResponse::success($redeemers);
     }
