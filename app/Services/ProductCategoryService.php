@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redis;
 
 class ProductCategoryService
 {
-    public $experienceOrder = [
+    public static $experienceOrder = [
         'Tours',
         'Adventures',
         'Hiking',
