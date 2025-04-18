@@ -318,7 +318,7 @@ class TdmsService
 
     public static function getCategoriesByType($type, $agentToken)
     {
-        $url = config('vars.tdms_api_url') . "/categories/{$type}?countries=20";
+        $url = config('vars.tdms_api_url') . "/categories/{$type}";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -353,9 +353,9 @@ class TdmsService
         }
     }
 
-    public static function getProductsByCategory($type, $typeId, $agentToken)
+    public static function getProductsByCategory($type, $typeId, $agentToken, $countryId = 20)
     {
-        $url = config('vars.tdms_api_url') . "/products?{$type}={$typeId}&countries=20";
+        $url = config('vars.tdms_api_url') . "/products?{$type}={$typeId}&countries={$countryId}";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',

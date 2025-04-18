@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\Redis;
 
 class ProductCategoryService
 {
+    public $experienceOrder = [
+        'Tours',
+        'Adventures',
+        'Hiking',
+        'Nature',
+        'Indigenous Culture',
+        'Adrenaline Sports',
+        'Sport Related',
+        'Water Sports',
+        'Health & Wellness',
+        'Ice / Snow Activity',
+        'Food / Drink Related',
+        'Flights',
+        'Hire Options',
+    ];
+
     public static function getCategories()
     {
         // Fetch all categories that have a non-null category value
@@ -70,5 +86,102 @@ class ProductCategoryService
         }
 
         return ServiceResponse::success(data: $result);
+    }
+
+    public static function getProductSchemaByCategoriesWithLabel()
+    {
+        $resultOrder = [
+            'Experience',
+            'Destination',
+            'Accommodation',
+            'Transport'
+        ];
+
+        try {
+            $key = Redis::keys('home_feed_product_schema');
+            if (empty($key)) {
+                $productCategories = ProductCategory::all()
+                    ->groupBy('type')
+                    ->map(function ($groups, $type) {
+                        return [
+                            'type' => $type,
+                            'labels' => $groups->whereNotNull('category_id')
+                                ->groupBy('label')
+                                ->map(function ($groupedItems, $label) {
+                                    return [
+                                        'label' => $label,
+                                        'categories' => $groupedItems->map(function ($item) {
+                                            return [
+                                                'category_id' => $item->category_id,
+                                                'category_type' => $item->category_type,
+                                                'category' => $item->category,
+                                            ];
+                                        })->values()->toArray(),
+                                    ];
+                                })->values()->toArray(),
+                        ];
+                    })->values();
+
+                // Add missing types with empty labels
+                // TODO: Update this to use a more efficient method
+                foreach ($resultOrder as $type) {
+                    if (!$productCategories->contains('type', $type)) {
+                        $productCategories->push([
+                            'type' => $type,
+                            'labels' => [] // Empty array for missing types
+                        ]);
+                    }
+                }
+
+                // Sort the product categories based on the specified order
+                $productCategories = $productCategories->values()
+                        ->sortBy(function ($type) use ($resultOrder) {
+                            return array_search($type['type'], $resultOrder);
+                        })->values();
+
+                // Sort the labels for 'Experience' type
+                $productCategories = $productCategories->map(function ($category) {
+                    if ($category['type'] === 'Experience') {
+                        $sortedLabels = [];
+
+                        foreach (self::$experienceOrder as $experience) {
+                            foreach ($category['labels'] as $label) {
+                                if ($experience === $label['label']) {
+                                    $sortedLabels[] = $label;
+                                    break;
+                                }
+                            }
+                        }
+
+                        $category['labels'] = $sortedLabels;
+                    }
+
+                    return $category;
+                });
+
+                Redis::set('home_feed_product_schema', json_encode($productCategories));
+
+                return ServiceResponse::success(
+                    message: 'Product categories',
+                    data: $productCategories ?? []
+                );
+            }
+
+            $cachedSchema = Redis::get('home_feed_product_schema');
+            if ($cachedSchema) {
+                $productCategories = json_decode($cachedSchema, true);
+                return ServiceResponse::success(
+                    message: 'Product categories',
+                    data: $productCategories
+                );
+            } else {
+                return ServiceResponse::notFound(
+                    message: 'Product categories not found in cache'
+                );
+            }
+        } catch (Exception $e) {
+            Logger::error('Unable to get product by categories', $e);
+            throw new ServiceException('Unable to get product by categories');
+        }
     }
 }

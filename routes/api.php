@@ -106,6 +106,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], fu
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'product'], function () {
     Route::get('feed/categories', [CartItemController::class, 'categories']);
+    Route::get('feed/schema', [ProductController::class, 'homeFeedSchema']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {

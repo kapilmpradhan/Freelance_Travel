@@ -17,4 +17,14 @@ class ProductController extends BaseController
             return $this->sendResponseFromService($e->toServiceResponse());
         }
     }
+
+    public function homeFeedSchema(Request $request)
+    {
+        try {
+            $productResponse = ProductCategoryService::getProductSchemaByCategoriesWithLabel();
+            return $this->sendResponseFromService($productResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+    }
 }
