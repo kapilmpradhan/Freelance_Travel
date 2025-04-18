@@ -320,7 +320,7 @@ class CartItemServiceV2
 
             $bookingDatas = [];
             foreach ($item['bookingData'] as $bookingData) {
-                $bookingDatas[] = array_merge($bookingData, ["optionalData" => $item['optionalData']]);
+                $bookingDatas[] = array_merge($bookingData, ["optionalData" => $item['optionalData'] ?? []]);
             }
             $cartItem->update([
                 "booking_quantity" => $item['quantity'],
