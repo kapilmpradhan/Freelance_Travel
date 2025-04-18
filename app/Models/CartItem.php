@@ -131,6 +131,7 @@ class CartItem extends Model
             "productPricesDetails.*.quantityDetails.*.bookingDate" => 'required|date_format:d-M-Y',
             "productPricesDetails.*.quantityDetails.*.timeId" => 'required|string',
             "productPricesDetails.*.quantityDetails.*.commences" => 'nullable|string',
+            "productPricesDetails.*.quantityDetails.*.optionalData" => 'nullable|array',
             "productPricesDetails.*.quantityDetails.*.bookingData" => 'nullable|array',
             'startDate' => 'required|date|date_format:d-M-Y',
             'days' => 'required|integer|min:1',
@@ -171,6 +172,7 @@ class CartItem extends Model
         return [
             '*.cartItemId' => 'required|integer',
             '*.quantity' => 'required|integer',
+            '*.optionalData' => 'nullable|array',
             '*.bookingData' => 'required|array',
             '*.bookingData.*.quantityIndex' => 'required|integer',
             '*.bookingData.*.timeId' => 'required|string',
@@ -209,6 +211,7 @@ class CartItem extends Model
             $rule['productPricesDetails.*.quantityDetails.*.timeId'],
             $rule['productPricesDetails.*.quantityDetails.*.commences']
         );
+        $rule['productPricesDetails.*.quantityDetails.*.optionalData'] = 'nullable|array';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData'] = 'required|array';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.quantityIndex'] = 'required|integer';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.timeId'] = 'required|string';

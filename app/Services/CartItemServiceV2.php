@@ -74,6 +74,7 @@ class CartItemServiceV2
                 $quantity = $details['quantity'];
                 $timeId = $details['timeId'] ?? '0';
                 $commences = $details['commences'] ?? null;
+                $optionalData = $details['optionalData'] ?? [];
                 $bookingData = $details['bookingData'] ?? [];
 
                 if (empty($bookingData)) {
@@ -82,6 +83,7 @@ class CartItemServiceV2
                             "quantityIndex" => $i,
                             "timeId" => $timeId,
                             "commences" => $commences,
+                            "optionalData" => $optionalData,
                         ];
                     }
                 }
@@ -315,9 +317,14 @@ class CartItemServiceV2
         DB::beginTransaction();
         foreach ($data as $item) {
             $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+
+            $bookingDatas = [];
+            foreach ($item['bookingData'] as $bookingData) {
+                $bookingDatas[] = array_merge($bookingData, ["optionalData" => $item['optionalData']]);
+            }
             $cartItem->update([
                 "booking_quantity" => $item['quantity'],
-                "booking_data" => $item['bookingData']
+                "booking_data" => $bookingDatas,
             ]);
         };
         DB::commit();
