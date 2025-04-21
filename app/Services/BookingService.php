@@ -172,7 +172,13 @@ class BookingService
                     datePriceCacheId: $datePriceCacheId
                 );
 
-                $redeemerIds = $bookingData['redeemers'];
+                $redeemerIds = $bookingData['redeemers'] ?? [];
+                if (empty($redeemerIds)) {
+                    throw new ServiceException('Redeemer not found', data: [
+                        'cartItemId' => $cartItem->id,
+                        'bookingData' => $bookingData
+                    ], code: 400);
+                }
                 foreach ($redeemerIds as $redeemerId) {
                     if (!in_array($redeemerId, $includedRedeemers)) {
                         $includedRedeemers[] = $redeemerId;
