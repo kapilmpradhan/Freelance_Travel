@@ -32,7 +32,6 @@ class CartItemServiceV2
         }
         $productDetails = $productDetailsResponse['results'][0];
 
-
         $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
             $defaultAgentAccessToken,
             [$tdmsProductId],
@@ -60,7 +59,7 @@ class CartItemServiceV2
             );
 
             if ($bookingDetailsResponse->isError()) {
-                if ($bookingDetailsResponse->statusCode != 404) {
+                if ($bookingDetailsResponse->responseCode == 404) {
                     return ServiceResponse::notFound('Booking details not found');
                 }
 
@@ -317,9 +316,29 @@ class CartItemServiceV2
         DB::beginTransaction();
         foreach ($data as $item) {
             $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+            $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)
+                ->where('version', $cartItem->product_version)
+                ->first();
+
+            $farePrice = array_filter($product->json['faresprices'], function ($farePrice) use ($cartItem) {
+                return $farePrice['productPricesDetailsId'] == $cartItem->product_price_details_id;
+            })[0];
+            $numpax = $farePrice['numPax'];
 
             $bookingDatas = [];
             foreach ($item['bookingData'] as $bookingData) {
+                if (count($bookingData['redeemers']) < $numpax) {
+                    // Number of redeemers less than numPax
+                    // Fill with first redeemer
+                    $bookingData['redeemers'] = array_merge(
+                        $bookingData['redeemers'],
+                        array_fill(0, $numpax - count($bookingData['redeemers']), $bookingData['redeemers'][0])
+                    );
+                } elseif (count($bookingData['redeemers']) > $numpax) {
+                    // Number of redeemers more than numPax
+                    // Remove from last
+                    $bookingData['redeemers'] = array_slice($bookingData['redeemers'], 0, $numpax);
+                }
                 $bookingDatas[] = array_merge($bookingData, ["optionalData" => $item['optionalData'] ?? []]);
             }
             $cartItem->update([

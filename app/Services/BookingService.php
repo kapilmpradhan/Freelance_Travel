@@ -173,65 +173,65 @@ class BookingService
                 );
 
                 $redeemerIds = $bookingData['redeemers'];
-                $redeemerId = $redeemerIds[0];
+                foreach ($redeemerIds as $redeemerId) {
+                    if (!in_array($redeemerId, $includedRedeemers)) {
+                        $includedRedeemers[] = $redeemerId;
+                        $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
+                        $newRedeemer = new RedeemerOrderData(
+                            redeemerId: $userRedeemer->id,
+                            title: $userRedeemer->title,
+                            email: $userRedeemer->email,
+                            firstName: $userRedeemer->first_name,
+                            lastName: $userRedeemer->last_name,
+                            phoneNumber: $userRedeemer->phone_number,
+                            countryCode: $userRedeemer->country_code,
+                            dateOfBirth: $userRedeemer->date_of_birth,
+                            postalCode: $userRedeemer->post_code,
+                        );
 
-                if (!in_array($redeemerId, $includedRedeemers)) {
-                    $includedRedeemers[] = $redeemerId;
-                    $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
-                    $newRedeemer = new RedeemerOrderData(
-                        redeemerId: $userRedeemer->id,
-                        title: $userRedeemer->title,
-                        email: $userRedeemer->email,
-                        firstName: $userRedeemer->first_name,
-                        lastName: $userRedeemer->last_name,
-                        phoneNumber: $userRedeemer->phone_number,
-                        countryCode: $userRedeemer->country_code,
-                        dateOfBirth: $userRedeemer->date_of_birth,
-                        postalCode: $userRedeemer->post_code,
-                    );
+                        $product = new RedeemerProductsOrderData(
+                            cartItemId: $cartItem->id,
+                            productPricesDetailsId: $cartItem->product_price_details_id,
+                            redeemerQuantity: 1
+                        );
+                        $product->bookings[] = $booking;
+                        $newRedeemer->products[] = $product;
+                        $redeemers[] = $newRedeemer;
+                    } else {
+                        foreach ($redeemers as &$redeemer) {
+                            if ($redeemer->redeemerId == $redeemerId) {
+                                $productExists = false;
+                                foreach ($redeemer->products as &$product) {
+                                    if ($product->cartItemId == $booking->cartItemId) {
+                                        $product->redeemerQuantity += 1;
+                                        $product->bookings[] = $booking;
+                                        $productExists = true;
+                                        break;
+                                    }
+                                }
 
-                    $product = new RedeemerProductsOrderData(
-                        cartItemId: $cartItem->id,
-                        productPricesDetailsId: $cartItem->product_price_details_id,
-                        redeemerQuantity: 1
-                    );
-                    $product->bookings[] = $booking;
-                    $newRedeemer->products[] = $product;
-                    $redeemers[] = $newRedeemer;
-                } else {
-                    foreach ($redeemers as &$redeemer) {
-                        if ($redeemer->redeemerId == $redeemerId) {
-                            $productExists = false;
-                            foreach ($redeemer->products as &$product) {
-                                if ($product->cartItemId == $booking->cartItemId) {
-                                    $product->redeemerQuantity += 1;
-                                    $productExists = true;
+                                if (!$productExists) {
+                                    $newProduct = new RedeemerProductsOrderData(
+                                        cartItemId: $cartItem->id,
+                                        productPricesDetailsId: $cartItem->product_price_details_id,
+                                        redeemerQuantity: 1
+                                    );
+
+                                    $newProduct->bookings[] = $booking;
+                                    $redeemer->products[] = $newProduct;
                                     break;
                                 }
-                            }
-
-                            if (!$productExists) {
-                                $newProduct = new RedeemerProductsOrderData(
-                                    cartItemId: $cartItem->id,
-                                    productPricesDetailsId: $cartItem->product_price_details_id,
-                                    redeemerQuantity: 1
-                                );
-
-                                $newProduct->bookings[] = $booking;
-                                $redeemer->products[] = $newProduct;
-                                break;
                             }
                         }
                     }
                 }
             }
-        }
 
-        $redeemerData = [];
-        foreach ($redeemers as &$redeemer) {
-            $redeemerData[] = $redeemer->toArray();
+            $redeemerData = [];
+            foreach ($redeemers as &$redeemer) {
+                $redeemerData[] = $redeemer->toArray();
+            }
         }
-
         return $redeemerData;
     }
 
@@ -243,9 +243,19 @@ class BookingService
                             ? $cartItem->availability['datePriceCacheId']
                             : null;
 
+            $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)
+                            ->where('version', $cartItem->product_version)
+                            ->first();
+
+            $farePrice = array_filter($product->json['faresprices'], function ($farePrice) use ($cartItem) {
+                return $farePrice['productPricesDetailsId'] == $cartItem->product_price_details_id;
+            })[0];
+
+            $numpax = $farePrice['numPax'];
+
             $products[] = [
                 "productPricesDetailsId" => strVal($cartItem->product_price_details_id),
-                "qty" => $cartItem->booking_quantity,
+                "qty" => $cartItem->booking_quantity * $numpax,
                 "datePriceCacheId" => $datePriceCacheId,
             ];
         }

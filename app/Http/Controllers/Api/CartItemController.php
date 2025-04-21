@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\DTOs\AddToQuote;
 use App\Jobs\CacheProductJob;
+use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Services\CartItemServiceV2;
@@ -458,6 +459,26 @@ class CartItemController extends BaseController
                     );
                     continue;
                 };
+
+                # Check for numpax
+                $cartItem = CartItem::where('id', $item['cartItemId'])
+                                    ->first();
+                $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)
+                                    ->where('version', $cartItem->product_version)
+                                    ->first();
+                $farePrices = $product->json['faresprices'] ?? [];
+                $cartItemFarePrice = array_filter($farePrices, function ($farePrice) use ($cartItem) {
+                    return $farePrice['productPricesDetailsId'] == $cartItem['product_price_details_id'];
+                })[0];
+
+                $numpax = (int) $cartItemFarePrice['numPax'];
+                if ((int) $item['quantity'] != $numpax) {
+                    $validator->errors()->add(
+                        $item['cartItemId'] . '.quantity',
+                        "Quantity must be multiple of $numpax"
+                    );
+                    continue;
+                }
 
                 // Check if quantityIndex in order
                 $quantityIndices = array_column($item['bookingData'], 'quantityIndex');
