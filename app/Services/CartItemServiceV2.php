@@ -322,8 +322,8 @@ class CartItemServiceV2
 
             $farePrice = array_filter($product->json['faresprices'], function ($farePrice) use ($cartItem) {
                 return $farePrice['productPricesDetailsId'] == $cartItem->product_price_details_id;
-            })[0];
-            $numpax = $farePrice['numPax'];
+            });
+            $numpax = array_values($farePrice)[0]['numPax'];
 
             $bookingDatas = [];
             foreach ($item['bookingData'] as $bookingData) {
