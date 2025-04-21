@@ -327,14 +327,15 @@ class CartItemServiceV2
 
             $bookingDatas = [];
             foreach ($item['bookingData'] as $bookingData) {
-                if (count($bookingData['redeemers']) < $numpax) {
+                $redeemers = $bookingData['redeemers'] ?? [];
+                if (count($redeemers) < $numpax && count($redeemers) > 0) {
                     // Number of redeemers less than numPax
                     // Fill with first redeemer
                     $bookingData['redeemers'] = array_merge(
                         $bookingData['redeemers'],
                         array_fill(0, $numpax - count($bookingData['redeemers']), $bookingData['redeemers'][0])
                     );
-                } elseif (count($bookingData['redeemers']) > $numpax) {
+                } elseif (count($redeemers) > $numpax) {
                     // Number of redeemers more than numPax
                     // Remove from last
                     $bookingData['redeemers'] = array_slice($bookingData['redeemers'], 0, $numpax);

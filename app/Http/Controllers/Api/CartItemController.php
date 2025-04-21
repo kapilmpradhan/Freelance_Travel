@@ -490,7 +490,7 @@ class CartItemController extends BaseController
 
                 // Check if redeemers with provided id are available
                 foreach ($item['bookingData'] as $bookingData) {
-                    $notAvailableRedeemers = array_diff($bookingData['redeemers'], $userRedeemerIds);
+                    $notAvailableRedeemers = array_diff($bookingData['redeemers'] ?? [], $userRedeemerIds);
                     if (!empty($notAvailableRedeemers)) {
                         $bookingDataIndex = array_search($bookingData, $item['bookingData']);
                         $validator->errors()->add(
