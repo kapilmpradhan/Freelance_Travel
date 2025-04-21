@@ -466,19 +466,6 @@ class CartItemController extends BaseController
                 $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)
                                     ->where('version', $cartItem->product_version)
                                     ->first();
-                $farePrices = $product->json['faresprices'] ?? [];
-                $cartItemFarePrice = array_filter($farePrices, function ($farePrice) use ($cartItem) {
-                    return $farePrice['productPricesDetailsId'] == $cartItem['product_price_details_id'];
-                })[0];
-
-                $numpax = (int) $cartItemFarePrice['numPax'];
-                if ((int) $item['quantity'] != $numpax) {
-                    $validator->errors()->add(
-                        $item['cartItemId'] . '.quantity',
-                        "Quantity must be multiple of $numpax"
-                    );
-                    continue;
-                }
 
                 // Check if quantityIndex in order
                 $quantityIndices = array_column($item['bookingData'], 'quantityIndex');
