@@ -13,7 +13,7 @@ class RedeemerProductsOrderData
         $cartItemId,
         $productPricesDetailsId,
         $redeemerQuantity,
-        $bookings = [],
+        $bookings = []
     ) {
         $this->cartItemId = $cartItemId;
         $this->productPricesDetailsId = $productPricesDetailsId;
@@ -28,10 +28,11 @@ class RedeemerProductsOrderData
             $bookingData[] = $booking->toArray();
         }
 
+
         return [
             "productPricesDetailsId" => $this->productPricesDetailsId,
             "redeemerQty" => $this->redeemerQuantity,
-            "bookings" => $bookingData
+            "bookings" => $bookingData,
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\ItemType;
 use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
@@ -108,8 +109,8 @@ class BookingService
                         'redeemerQty' => $cartItem->booking_quantity,
                         'bookings' => [
                             self::buildRedeemerProductBookingData($cartItem),
+                            'optionalFields' => $optionalFields,
                         ],
-                        'optionalFields' => $optionalFields,
                     ];
                 }
             }
@@ -157,6 +158,9 @@ class BookingService
                 $dropoffLocation = isset($bookingData['dropoffLocation'])
                                     ? $bookingData['dropoffLocatoin']
                                     : null;
+                $optionalData = isset($bookingData['optionalData'])
+                                    ? $bookingData['optionalData']
+                                    : null;
 
                 $booking = new RedeemerBookingsOrderData(
                     cartItemId: $cartItem->id,
@@ -169,7 +173,8 @@ class BookingService
                     pickupLocation: $pickupLocation,
                     dropoffId: $dropoffId,
                     dropoffLocation: $dropoffLocation,
-                    datePriceCacheId: $datePriceCacheId
+                    datePriceCacheId: $datePriceCacheId,
+                    optionalData: $optionalData
                 );
 
                 $redeemerIds = $bookingData['redeemers'] ?? [];
@@ -301,7 +306,6 @@ class BookingService
         // maintain alphabetical order
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
-
         return $orderData;
     }
 
@@ -366,7 +370,7 @@ class BookingService
             $cartItems = (
                 is_null($quoteId)
                 ? CartItem::userCartItems($userId)
-                : CartItem::userQuoteItems($userId, $quoteId)
+                : CartItem::userQuoteItems($userId, ItemType::quote($quoteId))
             );
         }
         $cartItemIds = $cartItems->pluck('id')->toArray();

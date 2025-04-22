@@ -959,12 +959,6 @@ class CartItemService
         try {
             $items = CartItem::userDirectPurchaseItems($userId);
             $items->each->delete();
-
-            $customers = CartCustomerDetail::where('user_id', $userId)
-                ->where('is_direct_purchase', true)
-                ->whereNull('user_order_id')
-                ->get();
-            $customers->each->delete();
         } catch (Exception $e) {
             Logger::error('Failed to clean direct purchase items', $e);
             throw new ServiceException(message: 'Failed to clean direct purchase items');

@@ -73,7 +73,7 @@ class CartItemServiceV2
                 $quantity = $details['quantity'];
                 $timeId = $details['timeId'] ?? '0';
                 $commences = $details['commences'] ?? null;
-                $optionalData = $details['optionalData'] ?? [];
+                $optionalData = $details['bookingData']['optionalData'] ?? [];
                 $bookingData = $details['bookingData'] ?? [];
 
                 if (empty($bookingData)) {
@@ -82,7 +82,7 @@ class CartItemServiceV2
                             "quantityIndex" => $i,
                             "timeId" => $timeId,
                             "commences" => $commences,
-                            "optionalData" => $optionalData,
+                            "optionalData" => $optionalData
                         ];
                     }
                 }
@@ -136,7 +136,7 @@ class CartItemServiceV2
                     bookingData: $bookingData,
                     quantity: $quantity,
                     timeId: $timeId,
-                    commences: $commences,
+                    commences: $commences
                 );
             }
         }
@@ -340,11 +340,12 @@ class CartItemServiceV2
                     // Remove from last
                     $bookingData['redeemers'] = array_slice($bookingData['redeemers'], 0, $numpax);
                 }
-                $bookingDatas[] = array_merge($bookingData, ["optionalData" => $item['optionalData'] ?? []]);
+                $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                $bookingDatas[] = $bookingData;
             }
             $cartItem->update([
                 "booking_quantity" => $item['quantity'],
-                "booking_data" => $bookingDatas,
+                "booking_data" => $bookingDatas
             ]);
         };
         DB::commit();

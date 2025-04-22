@@ -15,6 +15,7 @@ class RedeemerBookingsOrderData
     public $dropoffId;
     public $dropoffLocation;
     public $datePriceCacheId;
+    public $optionalData;
 
     public function __construct(
         $cartItemId,
@@ -28,6 +29,7 @@ class RedeemerBookingsOrderData
         $datePriceCacheId,
         $bookingComment = null,
         $bookingDetailsComment = null,
+        $optionalData = []
     ) {
         $this->cartItemId = $cartItemId;
         $this->bookingComment = $bookingComment;
@@ -40,10 +42,18 @@ class RedeemerBookingsOrderData
         $this->dropoffId = $dropoffId;
         $this->dropoffLocation = $dropoffLocation;
         $this->datePriceCacheId = $datePriceCacheId;
+        $this->optionalData = $optionalData;
     }
 
     public function toArray(): array
     {
+        $optionalFields = [];
+        foreach ($this->optionalData ?? [] as $key => $value) {
+            $optionalFields[] = [
+                "optionalFieldId" => $key,
+                "optionalFieldValue" => $value,
+            ];
+        }
         return [
             "bookingComment" => $this->bookingComment,
             "bookingDetailsComment" => $this->bookingDetailsComment,
@@ -55,6 +65,7 @@ class RedeemerBookingsOrderData
             "dropoffId" => $this->dropoffId,
             "dropoffLocation" => $this->dropoffLocation,
             "datePriceCacheId" => $this->datePriceCacheId,
+            "optionalFields" => $optionalFields,
         ];
     }
 }

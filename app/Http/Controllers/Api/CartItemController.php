@@ -437,11 +437,11 @@ class CartItemController extends BaseController
 
         $validator->after(function ($validator) use ($data, $userId, $quoteId) {
             if ($quoteId) {
-                $userCartItems = CartItem::userQuoteItems($userId, $quoteId)->pluck('id')->toArray();
                 $itemType = ItemType::quote($quoteId);
+                $userCartItems = CartItem::userQuoteItems($userId, $itemType)->pluck('id')->toArray();
             } else {
-                $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
                 $itemType = ItemType::cart();
+                $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
             }
             if (empty($userCartItems)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
@@ -459,13 +459,6 @@ class CartItemController extends BaseController
                     );
                     continue;
                 };
-
-                # Check for numpax
-                $cartItem = CartItem::where('id', $item['cartItemId'])
-                                    ->first();
-                $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)
-                                    ->where('version', $cartItem->product_version)
-                                    ->first();
 
                 // Check if quantityIndex in order
                 $quantityIndices = array_column($item['bookingData'], 'quantityIndex');
