@@ -236,6 +236,8 @@ class CartItem extends Model
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
+            ->when($itemType->isCartItem, fn ($query) => $query->where('id', $itemType->typeId))
+            ->when($itemType->isGroup, fn ($query) => $query->where('group_id', $itemType->typeId))
             ->whereNull('user_order_id')
             ->get();
     }
@@ -243,6 +245,16 @@ class CartItem extends Model
     public static function userCartItems($userId)
     {
         return self::userItems($userId, ItemType::cart());
+    }
+
+    public static function userCartItem($userId, string $cartItemId)
+    {
+        return self::userItems($userId, ItemType::cartItem($cartItemId));
+    }
+
+    public static function userGroupItems($userId, string $groupId)
+    {
+        return self::userItems($userId, ItemType::group($groupId));
     }
 
     public static function userQuoteItems(string $userId, string $quoteId)

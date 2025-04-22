@@ -7,10 +7,12 @@ class ItemType
     public $type;
     public $typeId;
     public $isCart = false;
+    public $isCartItem = false;
+    public $isGroup = false;
     public $isQuote = false;
     public $isDirect = false;
 
-    public function __construct(string $type, null|int $typeId = null)
+    public function __construct(string $type, null|int|string $typeId = null)
     {
         $this->type = $type;
         $this->typeId = $typeId;
@@ -21,6 +23,20 @@ class ItemType
         $cart = new ItemType('cart');
         $cart->isCart = true;
         return $cart;
+    }
+
+    public static function cartItem(string|null $typeId)
+    {
+        $cartItem = new ItemType('cartItem', $typeId);
+        $cartItem->isCartItem = true;
+        return $cartItem;
+    }
+
+    public static function group(string|null $typeId)
+    {
+        $group = new ItemType('group', $typeId);
+        $group->isGroup = true;
+        return $group;
     }
 
     public static function quote(string|null $typeId)

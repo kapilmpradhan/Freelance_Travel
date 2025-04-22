@@ -500,6 +500,32 @@ class CartItemService
         return ServiceResponse::success();
     }
 
+    public static function removeItemsFromCart($userId, ItemType $type)
+    {
+        if ($type->isCart) {
+            $cartItems = CartItem::userCartItems($userId);
+        } elseif ($type->isGroup) {
+            $cartItems = CartItem::userGroupItems($userId, $type->typeId);
+        } elseif ($type->isCartItem) {
+            $cartItems = CartItem::userCartItem($userId, $type->typeId);
+        } else {
+            return ServiceResponse::badRequest(
+                message: 'Invalid type',
+            );
+        }
+
+        if (empty($cartItems)) {
+            return ServiceResponse::notFound(
+                message: 'Cart items not found',
+            );
+        }
+
+        foreach ($cartItems as $cartItem) {
+            $cartItem->delete();
+        }
+        return ServiceResponse::success();
+    }
+
     public static function removeQuote($quoteId, $userId)
     {
         $quote = Quote::where('id', $quoteId)
