@@ -11,6 +11,7 @@ class ItemType
     public $isGroup = false;
     public $isQuote = false;
     public $isDirect = false;
+    public $isProduct = false;
 
     public function __construct(string $type, null|int|string $typeId = null)
     {
@@ -36,6 +37,13 @@ class ItemType
     {
         $group = new ItemType('group', $typeId);
         $group->isGroup = true;
+        return $group;
+    }
+
+    public static function product(string|null $typeId)
+    {
+        $group = new ItemType('product', $typeId);
+        $group->isProduct = true;
         return $group;
     }
 

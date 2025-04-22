@@ -543,15 +543,18 @@ class CartItemController extends BaseController
     {
         $userId = $request->user->uuid;
         $isCart = $request->query('isCart') == 1;
-        $isCartItem = $request->query('cartItemId');
+        $cartItemId = $request->query('cartItemId');
         $groupId = $request->query('groupId');
+        $productId = $request->query('productId');
 
         if ($isCart) {
             $type = ItemType::cart();
         } elseif ($groupId) {
             $type = ItemType::group($groupId);
-        } elseif ($isCartItem) {
-            $type = ItemType::cartItem($request->query('cartItemId'));
+        } elseif ($cartItemId) {
+            $type = ItemType::cartItem($cartItemId);
+        } elseif ($productId) {
+            $type = ItemType::product($productId);
         } else {
             return $this->sendError('Invalid request');
         }

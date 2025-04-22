@@ -508,13 +508,15 @@ class CartItemService
             $cartItems = CartItem::userGroupItems($userId, $type->typeId);
         } elseif ($type->isCartItem) {
             $cartItems = CartItem::userCartItem($userId, $type->typeId);
+        } elseif ($type->isProduct) {
+            $cartItems = CartItem::userCartItemsByProduct($userId, $type->typeId);
         } else {
             return ServiceResponse::badRequest(
                 message: 'Invalid type',
             );
         }
 
-        if (empty($cartItems)) {
+        if (count($cartItems) === 0) {
             return ServiceResponse::notFound(
                 message: 'Cart items not found',
             );
