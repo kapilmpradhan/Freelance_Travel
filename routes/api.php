@@ -90,6 +90,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::delete('{quoteId}', [CartItemController::class, 'removeQuote']);
     Route::put('items/{cartItemId}', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
+    Route::delete('remove/items', [CartItemController::class, 'removeItemsFromQuote']);
     Route::put('{quoteId}/customers', [CartItemController::class, 'setQuoteCustomers']);
     Route::get('{quoteId}/customers', [CartItemController::class, 'getQuoteCustomers']);
     Route::post('{quoteId}/order', [CartItemController::class, 'submitQuoteOrder']);

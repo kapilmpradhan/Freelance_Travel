@@ -588,6 +588,43 @@ class CartItemController extends BaseController
         }
     }
 
+    public function removeItemsFromQuote(Request $request)
+    {
+        $userId = $request->user->uuid;
+        $quoteId = $request->query('quoteId');
+        $quoteItemId = $request->query('quoteItemId');
+        $groupId = $request->query('groupId');
+        $productId = $request->query('productId');
+
+        if (!$quoteId) {
+            return $this->sendError('Quote id is required');
+        } elseif ($quoteId) {
+            $type = ItemType::quote($quoteId);
+        }
+
+        if ($quoteItemId) {
+            $type = ItemType::quoteItem($quoteId, $quoteItemId);
+        } elseif ($groupId) {
+            $type = ItemType::group($quoteId, $groupId);
+        } elseif ($quoteItemId) {
+            $type = ItemType::quoteItem($quoteId, $quoteItemId);
+        } elseif ($productId) {
+            $type = ItemType::product($quoteId, $productId);
+        }
+
+        try {
+            $removeResponse = CartItemService::removeItemsFromQuote(
+                userId: $userId,
+                type: $type,
+            );
+            return $this->sendResponseFromService($removeResponse);
+        } catch (Exception $e) {
+            $errorMessage = "Failed to remove item from " . ($request->is('quotes/*') ? "quote" : "cart");
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function getCartItems(Request $request)
     {
         $userId = $request->user->uuid;

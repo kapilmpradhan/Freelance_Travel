@@ -505,7 +505,7 @@ class CartItemService
         if ($type->isCart) {
             $cartItems = CartItem::userCartItems($userId);
         } elseif ($type->isGroup) {
-            $cartItems = CartItem::userGroupItems($userId, $type->typeId);
+            $cartItems = CartItem::userGroupItems($userId, $type);
         } elseif ($type->isCartItem) {
             $cartItems = CartItem::userCartItem($userId, $type->typeId);
         } elseif ($type->isProduct) {
@@ -564,6 +564,34 @@ class CartItemService
                 message: 'Failed to remove quote.'
             );
         }
+    }
+
+    public static function removeItemsFromQuote($userId, ItemType $type)
+    {
+        if ($type->isQuote) {
+            $quoteItems = CartItem::userQuoteItems($userId, $type);
+        } elseif ($type->isGroup) {
+            $quoteItems = CartItem::userGroupItems($userId, $type);
+        } elseif ($type->isQuoteItem) {
+            $quoteItems = CartItem::userQuoteItem($userId, $type);
+        } elseif ($type->isProduct) {
+            $quoteItems = CartItem::userQuoteItemsByProduct($userId, $type);
+        } else {
+            return ServiceResponse::badRequest(
+                message: 'Invalid type',
+            );
+        }
+
+        if (count($quoteItems) === 0) {
+            return ServiceResponse::notFound(
+                message: 'Quote items not found',
+            );
+        }
+
+        foreach ($quoteItems as $quoteItem) {
+            $quoteItem->delete();
+        }
+        return ServiceResponse::success();
     }
 
     /**

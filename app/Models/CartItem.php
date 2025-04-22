@@ -238,7 +238,19 @@ class CartItem extends Model
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
             ->when($itemType->isCartItem, fn ($query) => $query->where('id', $itemType->typeId))
             ->when($itemType->isGroup, fn ($query) => $query->where('group_id', $itemType->typeId))
-            ->when($itemType->isProduct, fn ($query) => $query->where('tdms_product_id', $itemType->typeId))
+            ->when($itemType->isProduct, function ($query) use ($itemType) {
+                if (is_null($itemType->subTypeId)) {
+                    $query->where('tdms_product_id', $itemType->typeId);
+                } else {
+                    $query->where('quote_id', $itemType->typeId)
+                          ->where('tdms_product_id', $itemType->subTypeId);
+                }
+            })
+            ->when(
+                $itemType->isQuoteItem,
+                fn ($query) => $query->where('quote_id', $itemType->typeId)
+                    ->where('id', $itemType->subTypeId)
+            )
             ->whereNull('user_order_id')
             ->get();
     }
@@ -258,14 +270,24 @@ class CartItem extends Model
         return self::userItems($userId, ItemType::cartItem($cartItemId));
     }
 
-    public static function userGroupItems($userId, string $groupId)
+    public static function userGroupItems($userId, ItemType $type)
     {
-        return self::userItems($userId, ItemType::group($groupId));
+        return self::userItems($userId, $type);
     }
 
-    public static function userQuoteItems(string $userId, string $quoteId)
+    public static function userQuoteItems(string $userId, ItemType $type)
     {
-        return self::userItems($userId, ItemType::quote($quoteId));
+        return self::userItems($userId, $type);
+    }
+
+    public static function userQuoteItemsByProduct($userId, ItemType $type)
+    {
+        return self::userItems($userId, $type);
+    }
+
+    public static function userQuoteItem(string $userId, ItemType $type)
+    {
+        return self::userItems($userId, $type);
     }
 
     public static function userDirectPurchaseItems(string $userId)
