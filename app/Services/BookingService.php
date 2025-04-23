@@ -306,6 +306,7 @@ class BookingService
         // maintain alphabetical order
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
+        Logger::debug('Order request data', $orderData);
         return $orderData;
     }
 

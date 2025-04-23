@@ -11,9 +11,13 @@ class Logger
         Log::stack(['console', 'single'])->info($message);
     }
 
-    public static function debug($message)
+    public static function debug($message, $data = null)
     {
-        Log::stack(['console', 'single'])->debug($message);
+        $data = [
+            "message" => $message,
+            "data" => $data,
+        ];
+        Log::stack(['console', 'single'])->debug(json_encode($data));
     }
 
     public static function error($message, $exception = null, $extra = null)
