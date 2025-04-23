@@ -200,13 +200,13 @@ class BookingService
                             postalCode: $userRedeemer->post_code,
                         );
 
-                        $product = new RedeemerProductsOrderData(
+                        $newProduct = new RedeemerProductsOrderData(
                             cartItemId: $cartItem->id,
                             productPricesDetailsId: $cartItem->product_price_details_id,
                             redeemerQuantity: 1
                         );
-                        $product->bookings[] = $booking;
-                        $newRedeemer->products[] = $product;
+                        $newProduct->bookings[] = $booking;
+                        $newRedeemer->products[] = $newProduct;
                         $redeemers[] = $newRedeemer;
                     } else {
                         foreach ($redeemers as &$redeemer) {
