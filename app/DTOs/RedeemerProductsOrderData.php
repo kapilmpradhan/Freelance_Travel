@@ -4,20 +4,23 @@ namespace App\DTOs;
 
 class RedeemerProductsOrderData
 {
-    public $cartItemId;
+    public $redeemerId;
     public $productPricesDetailsId;
     public $redeemerQuantity;
+    public $datePriceCacheId;
     public array $bookings;
 
     public function __construct(
-        $cartItemId,
+        $redeemerId,
         $productPricesDetailsId,
         $redeemerQuantity,
+        $datePriceCacheId,
         $bookings = []
     ) {
-        $this->cartItemId = $cartItemId;
+        $this->redeemerId = $redeemerId;
         $this->productPricesDetailsId = $productPricesDetailsId;
         $this->redeemerQuantity = $redeemerQuantity;
+        $this->datePriceCacheId = $datePriceCacheId;
         $this->bookings = $bookings;
     }
 
