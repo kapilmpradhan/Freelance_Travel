@@ -73,9 +73,15 @@ class SendBookingNotification implements ShouldQueue
     public function handle(IEmailService $emailService, FcmService $fcmService)
     {
         $timeNow = now()->format('H:i:s');
-        $twoHoursLater = now()->addHours(2)->format('H:i:s');
-        $dailyBookingNotification = BookingNotificationDaily::where('is_notified', false)
-                                                            ->whereBetween('booking_time', [$timeNow, $twoHoursLater]);
+        if (config('vars.test_mode')) {
+            $twoMinutesLater = now()->addMinutes(2)->format('H:i:s');
+            $dailyBookingNotification = BookingNotificationDaily::where('is_notified', false)
+                                        ->whereBetween('booking_time', [$timeNow, $twoMinutesLater]);
+        } else {
+            $twoHoursLater = now()->addHours(2)->format('H:i:s');
+            $dailyBookingNotification = BookingNotificationDaily::where('is_notified', false)
+                                        ->whereBetween('booking_time', [$timeNow, $twoHoursLater]);
+        }
 
         $notificationIds = (clone $dailyBookingNotification)
                             ->select('booking_notification_id')

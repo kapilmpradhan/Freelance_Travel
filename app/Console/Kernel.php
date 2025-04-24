@@ -33,7 +33,13 @@ class Kernel extends ConsoleKernel
 
         $schedule->job(new QUpcomingBookingNotification())->dailyAt("00:00");
 
-        $schedule->job(new SendBookingNotification())->hourlyAt(10);
+        $schedule->job(new SendBookingNotification())->hourlyAt(10)->when(function () {
+            return config('vars.test_mode') == false;
+        });
+
+        $schedule->job(new SendBookingNotification())->everyTwoMinutes()->when(function () {
+            return config('vars.test_mode') == true;
+        });
 
         $schedule->job(new ScheduledProductCacheJob())->dailyAt("00:00");
     }

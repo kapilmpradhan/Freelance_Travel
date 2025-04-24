@@ -39,21 +39,42 @@ class BookingNotificationService
                 $bookingTime = null;
             }
 
-            $bookingNotification = BookingNotification::create([
-                'user_order_id' => $userOrder->id,
-                'cart_item_id' => $cartItem->id,
-                'booking_date' => $bookingDate,
-                'booking_time' => $bookingTime,
-                'notify_to_email' => $user->email,
-                'is_completed' => false
-            ]);
+            if (config('vars.test_mode')) {
+                // Compare booking date with today's date and booking_time is difference of two dates in minutes
+                $dateDifferenceFromToday = Carbon::now()->diffInDays(Carbon::parse($cartItem->booking_date));
+                $bookingTime = Carbon::now()->addMinutes($dateDifferenceFromToday)->format('H:i:s');
 
-            $isNotifyToday = self::checkIfBookingNotificationToBeSentToday($cartItem);
-            if ($isNotifyToday) {
+                $bookingNotification = BookingNotification::create([
+                    'user_order_id' => $userOrder->id,
+                    'cart_item_id' => $cartItem->id,
+                    'booking_date' => $bookingDate,
+                    'booking_time' => $bookingTime,
+                    'notify_to_email' => $user->email,
+                    'is_completed' => false
+                ]);
+
                 try {
                     self::setBookingNotificationDaily($bookingNotification);
                 } catch (ServiceException $e) {
                     throw $e;
+                }
+            } else {
+                $bookingNotification = BookingNotification::create([
+                    'user_order_id' => $userOrder->id,
+                    'cart_item_id' => $cartItem->id,
+                    'booking_date' => $bookingDate,
+                    'booking_time' => $bookingTime,
+                    'notify_to_email' => $user->email,
+                    'is_completed' => false
+                ]);
+
+                $isNotifyToday = self::checkIfBookingNotificationToBeSentToday($cartItem);
+                if ($isNotifyToday) {
+                    try {
+                        self::setBookingNotificationDaily($bookingNotification);
+                    } catch (ServiceException $e) {
+                        throw $e;
+                    }
                 }
             }
         }
