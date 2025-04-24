@@ -9,6 +9,7 @@
         "doctrine/dbal": "^3.9",
         "firebase/php-jwt": "^6.10",
         "fruitcake/laravel-cors": "dev-develop",
+        "google/apiclient": "^2.18",
         "guzzlehttp/guzzle": "^7.7",
         "kreait/firebase-php": "^7.16",
         "laravel/framework": "^10.0",

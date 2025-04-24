@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Logging\Logger;
 use Exception;
 use Illuminate\Support\Facades\Http;
-use Google_Client as GoogleClient;
+use Google\Client as GoogleClient;
 
 class FcmService
 {
