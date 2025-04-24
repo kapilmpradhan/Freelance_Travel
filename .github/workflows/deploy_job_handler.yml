@@ -11,12 +11,6 @@ on:
         description: 'Docker image tag'
         required: false
         default: 'latest'
-      docker_hub_username:
-        description: 'Username of Docker hub'
-        required: true
-      docker_hub_password:
-        description: 'Password of Docker hub'
-        required: true
       environment:
         description: 'Environment to deploy to (staging or production)'
         required: true
