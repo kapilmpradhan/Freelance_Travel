@@ -55,14 +55,19 @@ class SendProfileEmailOtp implements ShouldQueue
                         'email' => $email
                     ]
                 ],
-                'subject' => 'Verify email',
-                'htmlContent' => view('email.verifyEmailOTP', ['otp' => $otp['otpDetails']->otp])->render(),
+                'templateId' => (int) config('vars.verify_email_template_id'),
+                'params' => [
+                    'firstName' => $user->first_name,
+                    'otp' => $otp['otpDetails']->otp,
+                    'year' => date('Y'),
+                ]
             ];
 
             $response = $emailService->sendMail($data);
+            $response = json_decode($response, true);
 
             Logger::info('Profile setup email verification sent to ' . $email);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error('Failed to send email to user with id:' . $this->userId, $e);
             throw $e;
         }

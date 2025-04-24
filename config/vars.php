@@ -5,6 +5,10 @@ return [
 
     'brevo_mail_api_key' => env('BREVO_MAIL_API_KEY'),
     'mail_from_address' => env('MAIL_FROM_ADDRESS'),
+    'verify_email_template_id' => env('BREVO_VERIFY_EMAIL_TEMPLATE_ID'),
+    'forgot_password_template_id' => env('BREVO_FORGOT_PASSWORD_TEMPLATE_ID'),
+    'booking_notification_template_id' => env('BREVO_BOOKING_NOTIFICATION_TEMPLATE_ID'),
+    'order_complete_template_id' => env('BREVO_ORDER_COMPLETE_TEMPLATE_ID'),
 
     'sso_type_email' => env('SSO_TYPE_EMAIL'),
     'sso_type_google' => env('SSO_TYPE_GOOGLE'),

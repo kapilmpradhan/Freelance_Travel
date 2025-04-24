@@ -16,12 +16,12 @@ class SendForgotPasswordOtp implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected $email;
+    protected $user;
     protected $otp;
 
-    public function __construct($email, $otp)
+    public function __construct($user, $otp)
     {
-        $this->email = $email;
+        $this->user = $user;
         $this->otp = $otp;
     }
 
@@ -38,11 +38,14 @@ class SendForgotPasswordOtp implements ShouldQueue
                 ],
                 'to' => [
                     [
-                        'email' => $this->email
+                        'email' => $this->user->email,
                     ]
                 ],
-                'subject' => 'Forgot password OTP',
-                'htmlContent' => view('email.forgotPasswordOTP', ['otp' => $this->otp])->render(),
+                'templateId' => (int) config('vars.forgot_password_template_id'),
+                'params' => [
+                    'firstName' => $this->user->first_name,
+                    'otp' => $this->otp,
+                ],
             ];
 
             $response = $emailService->sendMail($data);

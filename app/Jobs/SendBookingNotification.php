@@ -106,9 +106,7 @@ class SendBookingNotification implements ShouldQueue
                 'sender' => [
                     'email' => config('vars.mail_from_address')
                 ],
-                'subject' => 'Upcoming Booking Notification',
-                'textContent' => "You have an upcoming booking."
-                                . " Please check freelance travel.</p></body></html>"
+                'templateId' => (int) config('vars.booking_notification_template_id'),
             ];
 
             foreach ($notificationsInBatch as $notification) {
@@ -122,12 +120,6 @@ class SendBookingNotification implements ShouldQueue
                                 ->where('id', $notification->booking_notification_id)
                                 ->first();
 
-                    $bookingData = [
-                        'product_name' => $product->json['name'],
-                        'booking_date' => $booking->booking_date,
-                        'booking_time' => $notification->booking_time,
-                    ];
-
                     $userOrder = UserOrder::where('id', $notification->user_order_id)->first();
                     $bookingReference = $userOrder->booking_reference;
 
@@ -137,8 +129,12 @@ class SendBookingNotification implements ShouldQueue
                                     'email' => $notification->notify_to_email,
                                 ],
                             ],
-                            'subject' => 'Upcoming Booking Notification',
-                            'htmlContent' => view('email.bookingNotification', $bookingData)->render(),
+                            'templateId' => (int) config('vars.booking_notification_template_id'),
+                            'params' => [
+                                'productName' => $product->json['name'],
+                                'bookingDate' => $booking->booking_date,
+                                'bookingTime' => $notification->booking_time,
+                            ]
                         ];
 
                     $fcmNotificationData[] = $this->getFcmNotificationData($item, $bookingReference);

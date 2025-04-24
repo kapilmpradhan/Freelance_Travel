@@ -36,7 +36,7 @@ class OtpController extends BaseController
         $otpDetails = $generatedOtp['otpDetails'];
 
         // Dispatch the job to send the email
-        SendForgotPasswordOtp::dispatch($user->email, $otpDetails->otp);
+        SendForgotPasswordOtp::dispatch($user, $otpDetails->otp);
 
         return $this->sendResponse('OTP sent to your email');
     }

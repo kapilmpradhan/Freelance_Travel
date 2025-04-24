@@ -39,8 +39,8 @@ class SendOrderCompleteEmail implements ShouldQueue
                     'email' => $this->data['redeemers'][0]['emailAddress']
                 ]
             ],
-            'subject' => "Order complete.",
-            'htmlContent' => view('email.emailOrderComplete', $this->data)->render(),
+            'templateId' => (int) config('vars.order_complete_template_id'),
+            'params' => $this->data
         ];
 
         $emailService->sendMail($customerData);
