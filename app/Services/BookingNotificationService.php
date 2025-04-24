@@ -74,15 +74,19 @@ class BookingNotificationService
     public static function setBookingNotificationDaily($bookingNotification)
     {
         try {
-            $bookingNotificationDaily = BookingNotificationDaily::create([
-                'booking_notification_id' => $bookingNotification->id,
-                'user_order_id' => $bookingNotification->user_order_id,
-                'cart_item_id' => $bookingNotification->cart_item_id,
-                'booking_date' => $bookingNotification->booking_date,
-                'booking_time' =>  Carbon::parse($bookingNotification->booking_time ?? '7:00')->format('H:i:s'),
-                'notify_to_email' => $bookingNotification->notify_to_email,
-                'is_notified' => false
-            ]);
+            $bookingNotificationDaily = BookingNotificationDaily::updateOrCreate(
+                [
+                    'cart_item_id' => $bookingNotification->cart_item_id
+                ],
+                [
+                    'booking_notification_id' => $bookingNotification->id,
+                    'user_order_id' => $bookingNotification->user_order_id,
+                    'booking_date' => $bookingNotification->booking_date,
+                    'booking_time' =>  Carbon::parse($bookingNotification->booking_time ?? '7:00')->format('H:i:s'),
+                    'notify_to_email' => $bookingNotification->notify_to_email,
+                    'is_notified' => false
+                ]
+            );
 
             $diffInDays = Carbon::parse($bookingNotification->booking_date)->diffInDays(Carbon::now());
             if ($diffInDays == 0) {

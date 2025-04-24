@@ -160,4 +160,9 @@ class User extends Authenticatable
                     ->where('sso_type', 'email')
                     ->first();
     }
+
+    public function fcmTokens()
+    {
+        return $this->hasMany(FirebaseFcmToken::class, 'user_id', 'uuid')->pluck('token')->toArray();
+    }
 }

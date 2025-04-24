@@ -14,6 +14,9 @@ use App\Services\IEmailService;
 use App\Logging\Logger;
 use App\Models\BookingNotificationDaily;
 use App\Models\CartItem;
+use App\Models\User;
+use App\Models\UserOrder;
+use App\Services\FcmService;
 use App\Services\ServiceException;
 
 class SendBookingNotification implements ShouldQueue
@@ -30,10 +33,44 @@ class SendBookingNotification implements ShouldQueue
         //
     }
 
+    public function getFcmNotificationData($item, $bookingReference)
+    {
+        $user = User::find($item->user_id);
+        $tokens = $user->fcmTokens();
+
+        $data = ['path' => "booking/{$bookingReference}/{$item->tdms_product_id}"];
+
+        $notification = [
+            'title' => 'Upcoming Booking Notification',
+            'body' => "You have an upcoming booking."
+        ];
+
+        $fcmNotificationData = [
+            "notification" => $notification,
+            "data" => $data
+        ];
+
+        if (count($tokens) > 1) {
+            $fcmService = new FcmService();
+            $fcmService->subscribeTokensToTopic(
+                topic: $user->uuid,
+                tokens: $tokens
+            );
+
+            $fcmNotificationData['token'] = null;
+            $fcmNotificationData['topic'] = $user->uuid;
+        } else {
+            $fcmNotificationData['token'] = $tokens[0];
+            $fcmNotificationData['topic'] = null;
+        }
+
+        return $fcmNotificationData;
+    }
+
     /**
      * Execute the job.
      */
-    public function handle(IEmailService $emailService)
+    public function handle(IEmailService $emailService, FcmService $fcmService)
     {
         $timeNow = now()->format('H:i:s');
         $twoHoursLater = now()->addHours(2)->format('H:i:s');
@@ -57,6 +94,8 @@ class SendBookingNotification implements ShouldQueue
 
         while ($notificationsInBatch->count() > 0) {
             $messageVersions = [];
+            $fcmNotificationData = [];
+
             $emailData = [
                 'sender' => [
                     'email' => config('vars.mail_from_address')
@@ -73,13 +112,18 @@ class SendBookingNotification implements ShouldQueue
                     $productId = $item->tdms_product_id;
                     $product = Product::where('tdms_product_id', $productId)->first();
 
-                    $booking = $bookingNotifications->where('id', $notification->booking_notification_id)->first();
+                    $booking = (clone $bookingNotifications)
+                                ->where('id', $notification->booking_notification_id)
+                                ->first();
 
                     $bookingData = [
                         'product_name' => $product->json['name'],
                         'booking_date' => $booking->booking_date,
                         'booking_time' => $notification->booking_time,
                     ];
+
+                    $userOrder = UserOrder::where('id', $notification->user_order_id)->first();
+                    $bookingReference = $userOrder->booking_reference;
 
                     $messageVersion = [
                             'to' => [
@@ -91,6 +135,8 @@ class SendBookingNotification implements ShouldQueue
                             'htmlContent' => view('email.bookingNotification', $bookingData)->render(),
                         ];
 
+                    $fcmNotificationData[] = $this->getFcmNotificationData($item, $bookingReference);
+
                     $messageVersions[] = $messageVersion;
                 } catch (Exception $e) {
                     Logger::error('Failed to send booking notification email to' . $notification->notify_to_email, $e);
@@ -100,6 +146,14 @@ class SendBookingNotification implements ShouldQueue
             try {
                 $emailData['messageVersions'] = $messageVersions;
                 $emailService->sendMail($emailData);
+                foreach ($fcmNotificationData as $data) {
+                    $fcmService->sendNotification(
+                        token: $data['token'],
+                        notification: $data['notification'],
+                        data: $data['data'],
+                        topic: $data['topic']
+                    );
+                }
 
                 $notificationIds = $notificationsInBatch->pluck('id');
                 $dailyBookingNotification->whereIn('id', $notificationIds)->update(['is_notified' => true]);

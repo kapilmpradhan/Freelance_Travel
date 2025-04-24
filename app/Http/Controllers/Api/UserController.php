@@ -14,6 +14,7 @@ use App\Services\ServiceException;
 use App\Services\UserService;
 use App\Logging\Logger;
 use App\Services\RedeemerService;
+use App\Services\FcmService;
 
 class UserController extends BaseController
 {
@@ -235,6 +236,7 @@ class UserController extends BaseController
     public function removeFcmToken(Request $request, $fcmToken)
     {
         $user = $request->user;
+        $fcmService = new FcmService();
 
         $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $fcmToken);
         if ($checkFcmResponse->isError()) {
@@ -242,6 +244,7 @@ class UserController extends BaseController
         }
 
         $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
+        $fcmService->unsubscribeTokensFromTopic($user->uuid, [$fcmToken]);
         return $this->sendResponseFromService($removeFcmToken);
     }
 }
