@@ -37,7 +37,7 @@ class Kernel extends ConsoleKernel
             return config('vars.test_mode') == false;
         });
 
-        $schedule->job(new SendBookingNotification())->everyTwoMinutes()->when(function () {
+        $schedule->job(new SendBookingNotification())->everyMinute()->when(function () {
             return config('vars.test_mode') == true;
         });
 

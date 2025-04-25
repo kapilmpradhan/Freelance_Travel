@@ -74,9 +74,9 @@ class SendBookingNotification implements ShouldQueue
     {
         $timeNow = now()->format('H:i:s');
         if (config('vars.test_mode')) {
-            $twoMinutesLater = now()->addMinutes(2)->format('H:i:s');
+            $oneMinutesLater = now()->addMinutes(1)->format('H:i:s');
             $dailyBookingNotification = BookingNotificationDaily::where('is_notified', false)
-                                        ->whereBetween('booking_time', [$timeNow, $twoMinutesLater]);
+                                        ->whereBetween('booking_time', [$timeNow, $oneMinutesLater]);
         } else {
             $twoHoursLater = now()->addHours(2)->format('H:i:s');
             $dailyBookingNotification = BookingNotificationDaily::where('is_notified', false)
