@@ -316,9 +316,9 @@ class TdmsService
         }
     }
 
-    public static function getCategoriesByType($type, $agentToken)
+    public static function getCategoriesByType($type, $agentToken, $countryId = 20)
     {
-        $url = config('vars.tdms_api_url') . "/categories/{$type}";
+        $url = config('vars.tdms_api_url') . "/categories/{$type}?countries={$countryId}";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -387,6 +387,92 @@ class TdmsService
                     message: $data['message']
                 );
             }
+        }
+    }
+
+    public static function getProductsByMultipleCategories(array $categoriesIdByTypes, $agentToken, $countryId = 20)
+    {
+        $query = '';
+        foreach ($categoriesIdByTypes as $type => $categoryIds) {
+            $ids = implode(',', $categoryIds);
+            $query = "$query$type=$ids";
+        }
+        $url = config('vars.tdms_api_url') . "/products?countries={$countryId}&$query";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "type" => $type,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
+        }
+    }
+
+    public static function getCountries($agentToken)
+    {
+        $url = config('vars.tdms_api_url') . "/categories?countries";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            return ServiceResponse::badRequest(
+                message: $data['message']
+            );
+        }
+    }
+
+    public static function getCountryRegions($agentToken, $countryId)
+    {
+        $url = config('vars.tdms_api_url') . "/regions?countries={$countryId}";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            return ServiceResponse::badRequest(
+                message: $data['message']
+            );
         }
     }
 }

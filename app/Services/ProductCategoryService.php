@@ -2,9 +2,13 @@
 
 namespace App\Services;
 
+use App\DTOs\HomeFeedProductFilter;
 use App\Logging\Logger;
+use App\Models\Agent;
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Redis;
 
@@ -183,5 +187,75 @@ class ProductCategoryService
             Logger::error('Unable to get product by categories', $e);
             throw new ServiceException('Unable to get product by categories');
         }
+    }
+
+    public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter)
+    {
+        $agent = UserAgentService::getDefaultAgentToken();
+        if ($agent->isError()) {
+            return $agent;
+        }
+        $agentToken = $agent->data['access_token'];
+        try {
+            $homeFeedSchemaResponse = ProductCategoryService::getProductSchemaByCategoriesWithLabel();
+            if ($homeFeedSchemaResponse->isError()) {
+                return $homeFeedSchemaResponse;
+            }
+            $homeFeedSchema = $homeFeedSchemaResponse->data;
+
+            $typeLabels = array_values(array_filter($homeFeedSchema, function ($item) use ($productFilter) {
+                return strtolower($item['type']) === $productFilter->filterBy;
+            }))[0]['labels'];
+
+            $key = Redis::keys($productFilter->cacheKey);
+            if (!empty($key)) {
+                $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
+            }
+
+            if (empty($key) || empty($productsByLabels)) {
+                $tdmsProductIdsByLabels = [];
+                foreach ($typeLabels as $typeLabel) {
+                    $categoriesByLabels = [];
+                    foreach ($typeLabel['categories'] as $category) {
+                        $categoriesByLabels[$category['category_type']][] = $category['category_id'];
+                    }
+
+                    $productsResponse = TdmsService::getProductsByMultipleCategories(
+                        categoriesIdByTypes: $categoriesByLabels,
+                        agentToken: $agentToken,
+                        countryId: $productFilter->countryId
+                    );
+                    if ($productsResponse->isError()) {
+                        return $productsResponse;
+                    }
+
+                    $products = $productsResponse->data;
+                    foreach ($products as $product) {
+                        $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
+                        if (!$productExists) {
+                            CartItemService::cacheProduct($product, Carbon::now());
+                        }
+                        $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+                    }
+                }
+
+                Redis::set($productFilter->cacheKey, json_encode($tdmsProductIdsByLabels));
+            }
+
+            $result = [];
+            $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
+            foreach ($productsByLabels as $label => $productIds) {
+                $products = Product::whereIn('tdms_product_id', $productIds)->get();
+                $result[] = [
+                    "label" => $label,
+                    "products" => $products
+                ];
+            }
+        } catch (Exception $e) {
+            Logger::error('Unable to get product by categories', $e);
+            throw new ServiceException('Unable to get product by categories');
+        }
+
+        return ServiceResponse::success(data: $result);
     }
 }
