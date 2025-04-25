@@ -38,7 +38,7 @@ class SendBookingNotification implements ShouldQueue
         $user = User::find($item->user_id);
         $tokens = $user->fcmTokens();
 
-        $data = ['path' => "booking/{$bookingReference}/{$item->tdms_product_id}"];
+        $data = ['path' => "/booking/{$bookingReference}/{$item->tdms_product_id}"];
 
         $notification = [
             'title' => 'Upcoming Booking Notification',

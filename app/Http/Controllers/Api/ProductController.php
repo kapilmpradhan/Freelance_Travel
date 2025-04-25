@@ -12,6 +12,16 @@ class ProductController extends BaseController
 {
     public function homeFeedProducts(Request $request)
     {
+        try {
+            $productResponse = ProductCategoryService::getProductByCategoriesWithLabel();
+            return $this->sendResponseFromService($productResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+    }
+
+    public function homeFeedProductsV2(Request $request)
+    {
         $countryId = $request->query('countryId');
         $filterBy = $request->query('filterBy');
 

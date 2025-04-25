@@ -43,6 +43,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], f
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'products',], function () {
     Route::get('home', [ProductController::class, 'homeFeedProducts']);
+    Route::get('home/v2', [ProductController::class, 'homeFeedProductsV2']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
