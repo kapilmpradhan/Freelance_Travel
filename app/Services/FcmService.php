@@ -111,7 +111,11 @@ class FcmService
                 ])->post($url, $payload);
 
             if (!$response->successful()) {
-                Logger::error('Error sending fcm notification', extra: $response->json());
+                Logger::error('Error sending fcm notification', extra: [
+                    "payload" => $payload,
+                    "bearer" => $this->accessToken,
+                    "response" => $response->json()
+                ]);
                 return;
             }
             $response = $response->json();
