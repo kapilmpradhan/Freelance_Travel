@@ -105,7 +105,7 @@ jobs:
         envsubst < deployment/env.template.txt > .env
 
         echo "Creating firebase credential json file"
-        mkdir -p storage/$FIREBASE_CREDENTIALS_FILE_PATH
+        mkdir -p storage/app/firebase
         echo "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > storage/$FIREBASE_CREDENTIALS_FILE_PATH
 
     - name: Log in to Docker Hub
