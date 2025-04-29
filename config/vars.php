@@ -38,5 +38,5 @@ return [
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
 
-    'test_mode' => (bool) env('TEST_MODE', false),
+    'test_mode' => env('TEST_MODE', false),
 ];
