@@ -76,6 +76,7 @@ env:
       DEFAULT_AGENT_EMAIL: ${{vars.DEFAULT_AGENT_EMAIL}}
       DEFAULT_AGENT_PASSWORD: ${{vars.DEFAULT_AGENT_PASSWORD}}
       FIREBASE_CREDENTIALS_FILE_PATH: ${{vars.FIREBASE_CREDENTIALS_FILE_PATH}}
+      FIREBASE_CREDENTIAL_JSON: ${{secrets.FIREBASE_CREDENTIAL_JSON}}
       FIREBASE_PROJECT_ID: ${{vars.FIREBASE_PROJECT_ID}}
 
 jobs:
@@ -96,23 +97,16 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Create .env file
+    - name: Create required files
       run: |
         echo "Creating .env file..."
         
         # Create .env file from the template
         envsubst < deployment/env.template.txt > .env
 
-    # - name: Configure AWS Credentials
-    #   uses: aws-actions/configure-aws-credentials@v2
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: ${{ secrets.AWS_REGION }}
-
-    # - name: Log in to Amazon ECR
-    #   run: |
-    #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+        echo "Creating firebase credential json file"
+        mkdir -p storage/$FIREBASE_CREDENTIALS_FILE_PATH
+        echo "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > storage/$FIREBASE_CREDENTIALS_FILE_PATH
 
     - name: Log in to Docker Hub
       run: |

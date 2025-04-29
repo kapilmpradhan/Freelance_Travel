@@ -1,11 +1,12 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     libzip-dev \
     unzip \
     cron \
     redis-tools \
+    vim \
     && docker-php-ext-install zip pdo_mysql \
     && pecl install redis \
     && docker-php-ext-enable redis
@@ -20,14 +21,11 @@ WORKDIR /var/www/html
 COPY . .
 
 # Create required storage directories and files
-RUN mkdir -p storage/framework/cache/data && \
-    mkdir -p storage/framework/sessions && \
-    mkdir -p storage/framework/views && \
-    mkdir -p storage/logs && \
+RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs && \
     touch storage/logs/laravel.log
 
 # Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-cache
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
