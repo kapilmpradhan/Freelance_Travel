@@ -1,0 +1,15 @@
+.git
+.gitignore
+README.md
+tests
+vendor
+node_modules
+.env
+.env.example
+docker-compose.yml
+Dockerfile
+composer.lock
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
