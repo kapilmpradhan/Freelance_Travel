@@ -4,7 +4,6 @@ README.md
 tests
 vendor
 node_modules
-.env
 .env.example
 docker-compose.yml
 Dockerfile
