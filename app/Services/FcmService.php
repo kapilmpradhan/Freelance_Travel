@@ -16,11 +16,20 @@ class FcmService
         $this->accessToken = $this->getAccessToken();
     }
 
-    private function getAccessToken(): ?string
+    public function getAccessToken(): ?string
     {
         try {
             $client = new GoogleClient();
-            $client->setAuthConfig(storage_path(config('firebase.credentials_file_path')));
+            $credentials = config('firebase.credentials');
+
+            if (is_string($credentials)) {
+                $credentials = json_decode($credentials, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new Exception("Invalid JSON in Firebase credentials.");
+                }
+            }
+            $client->setAuthConfig($credentials);
             $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
 
             $token = $client->fetchAccessTokenWithAssertion();

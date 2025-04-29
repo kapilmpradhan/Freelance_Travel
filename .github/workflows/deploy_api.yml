@@ -75,8 +75,7 @@ env:
       DEFAULT_AGENT_BRANCH_CODE: ${{vars.DEFAULT_AGENT_BRANCH_CODE}}
       DEFAULT_AGENT_EMAIL: ${{vars.DEFAULT_AGENT_EMAIL}}
       DEFAULT_AGENT_PASSWORD: ${{vars.DEFAULT_AGENT_PASSWORD}}
-      FIREBASE_CREDENTIALS_FILE_PATH: ${{vars.FIREBASE_CREDENTIALS_FILE_PATH}}
-      FIREBASE_CREDENTIAL_JSON: ${{secrets.FIREBASE_CREDENTIAL_JSON}}
+      FIREBASE_CREDENTIALS: ${{secrets.FIREBASE_CREDENTIALS}}
       FIREBASE_PROJECT_ID: ${{vars.FIREBASE_PROJECT_ID}}
 
 jobs:
@@ -108,18 +107,6 @@ jobs:
             echo "Error: env.template.txt not found!" >&2
             exit 1
         fi
-
-        echo "Creating Firebase credential JSON file..."
-        mkdir -p storage/app/firebase
-
-        # Ensure FIREBASE_CREDENTIALS_FILE_PATH is defined
-        if [ -z "$FIREBASE_CREDENTIALS_FILE_PATH" ]; then
-            echo "Error: FIREBASE_CREDENTIALS_FILE_PATH is not defined!" >&2
-            exit 1
-        fi
-
-        echo "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > storage/$FIREBASE_CREDENTIALS_FILE_PATH
-        echo "Firebase credential file created successfully."
 
     - name: Log in to Docker Hub
       run: |
