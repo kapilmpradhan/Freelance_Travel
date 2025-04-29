@@ -39,6 +39,7 @@ class BookingNotificationService
                 $bookingTime = null;
             }
 
+            Logger::info('Setting up booking notification data for ' . config('vars.test_mode') ? 'test' : 'normal' . 'mode');
             if (config('vars.test_mode')) {
                 // Compare booking date with today's date and booking_time is difference of two dates in minutes
                 $dateDifferenceFromToday = Carbon::now()->diffInDays(Carbon::parse($cartItem->booking_date));
@@ -71,6 +72,7 @@ class BookingNotificationService
                 $isNotifyToday = self::checkIfBookingNotificationToBeSentToday($cartItem);
                 if ($isNotifyToday) {
                     try {
+                        Logger::info('Adding booking notification to daily table');
                         self::setBookingNotificationDaily($bookingNotification);
                     } catch (ServiceException $e) {
                         throw $e;
