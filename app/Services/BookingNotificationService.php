@@ -39,8 +39,8 @@ class BookingNotificationService
                 $bookingTime = null;
             }
 
-            Logger::info('Test Mode Value: ' . config('vars.test_mode'));
-            if (config('vars.test_mode')) {
+            Logger::info('App Mode: ' . config('app.mode'));
+            if (config('app.mode') == 'test') {
                 // Compare booking date with today's date and booking_time is difference of two dates in minutes
                 $dateDifferenceFromToday = Carbon::now()->diffInDays(Carbon::parse($cartItem->booking_date));
                 $bookingTime = Carbon::now()->addMinutes($dateDifferenceFromToday)->format('H:i:s');

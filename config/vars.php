@@ -37,6 +37,4 @@ return [
     'default_agent_token_password' => env('DEFAULT_AGENT_PASSWORD'),
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
-
-    'test_mode' => env('TEST_MODE', false),
 ];

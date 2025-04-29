@@ -36,11 +36,11 @@ class EnableDisableTestMode extends Command
 
         // Check if the command is run with --enable or --disable
         if ($this->option('enable')) {
-            $key = 'TEST_MODE';
-            $value = 'true';
+            $key = 'APP_MODE';
+            $value = 'test';
         } elseif ($this->option('disable')) {
-            $key = 'TEST_MODE';
-            $value = 'false';
+            $key = 'APP_MODE';
+            $value = 'normal';
         } else {
             $this->error('Please specify --enbale or --disable.');
             return;
