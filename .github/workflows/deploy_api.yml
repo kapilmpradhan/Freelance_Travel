@@ -100,13 +100,26 @@ jobs:
     - name: Create required files
       run: |
         echo "Creating .env file..."
-        
-        # Create .env file from the template
-        envsubst < deployment/env.template.txt > .env
 
-        echo "Creating firebase credential json file"
+        if [ -f deployment/env.template.txt ]; then
+            envsubst < deployment/env.template.txt > .env
+            echo ".env file created successfully."
+        else
+            echo "Error: env.template.txt not found!" >&2
+            exit 1
+        fi
+
+        echo "Creating Firebase credential JSON file..."
         mkdir -p storage/app/firebase
+
+        # Ensure FIREBASE_CREDENTIALS_FILE_PATH is defined
+        if [ -z "$FIREBASE_CREDENTIALS_FILE_PATH" ]; then
+            echo "Error: FIREBASE_CREDENTIALS_FILE_PATH is not defined!" >&2
+            exit 1
+        fi
+
         echo "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > storage/$FIREBASE_CREDENTIALS_FILE_PATH
+        echo "Firebase credential file created successfully."
 
     - name: Log in to Docker Hub
       run: |
