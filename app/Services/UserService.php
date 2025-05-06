@@ -7,6 +7,7 @@ use App\Jobs\SendAccountDeletionEmail;
 use App\Logging\Logger;
 use App\Models\FirebaseFcmToken;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 
 class UserService
@@ -44,6 +45,7 @@ class UserService
     public static function deleteUserTemporarily($user)
     {
         $user->is_temporarily_deleted = true;
+        $user->deletion_date = Carbon::now();
         $user->save();
 
         SendAccountDeletionEmail::dispatch($user);

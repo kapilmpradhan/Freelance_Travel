@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\DeleteAccountPermanentlyJob;
 use App\Jobs\HomeFeedProductByCategories;
 use App\Jobs\ScheduledProductCacheJob;
 use App\Jobs\UpdateFavoriteNightly;
@@ -42,6 +43,8 @@ class Kernel extends ConsoleKernel
         });
 
         $schedule->job(new ScheduledProductCacheJob())->dailyAt("00:00");
+
+        $schedule->job(new DeleteAccountPermanentlyJob())->dailyAt("00:20");
     }
 
     /**

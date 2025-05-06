@@ -173,4 +173,10 @@ class User extends Authenticatable
     {
         return User::all();
     }
+
+    public static function getTemporarilyDeletedUsers()
+    {
+        return User::where('is_temporarily_deleted', true)
+                ->where('is_permanently_deleted', false);
+    }
 }
