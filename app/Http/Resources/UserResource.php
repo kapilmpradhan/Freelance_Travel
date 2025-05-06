@@ -27,6 +27,7 @@ class UserResource
             'is_agent_integrated' => $hasUserAgent,
             'is_email_verified' => $data->is_email_verified,
             'created_at' => $data->created_at,
+            'is_temporarily_deleted' => $data->is_temporarily_deleted
         ];
 
         if ($data->sso_type === 'apple') {

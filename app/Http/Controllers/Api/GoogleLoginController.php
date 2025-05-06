@@ -74,7 +74,19 @@ class GoogleLoginController extends BaseController
         $name = $userInfo['name'];
         $email = $userInfo['email'];
 
-        $existing_user = User::where('email', $email)->first();
+        $existing_user = User::getAllUsers()
+                        ->where('email', $email)
+                        ->first();
+
+        if ($existing_user && $existing_user->is_permanently_deleted) {
+            return $this->sendError('This account was deleted permnently');
+        }
+
+        if ($existing_user && $existing_user->is_temporarily_deleted) {
+            $existing_user->is_temporarily_deleted = false;
+            $existing_user->deletion_date = null;
+            $existing_user->save();
+        }
 
         if (!$existing_user) {
             if ($name) {

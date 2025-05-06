@@ -44,9 +44,21 @@ class AppleLoginController extends BaseController
         $first_name = $appleUser['data']['first_name'];
         $last_name = $appleUser['data']['last_name'];
 
-        $user = User::where('email', $email)->first();
-        $requires_real_email = str_ends_with($email, '@privaterelay.appleid.com');
+        $user = User::getAllUsers()
+                    ->where('email', $email)
+                    ->first();
 
+        if ($user && $user->is_permanently_deleted) {
+            return $this->sendError('This account was deleted permnently');
+        }
+
+        if ($user && $user->is_temporarily_deleted) {
+            $user->is_temporarily_deleted = false;
+            $user->deletion_date = null;
+            $user->save();
+        }
+
+        $requires_real_email = str_ends_with($email, '@privaterelay.appleid.com');
         if (!$user) {
             $user = User::Create([
                     'email' => $email,

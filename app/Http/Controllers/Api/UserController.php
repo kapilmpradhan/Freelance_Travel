@@ -53,10 +53,21 @@ class UserController extends BaseController
         }
 
         // Retrieve the user by email
-        $user = User::where('email', $request->email)->first();
+        $user = User::getAllUsers()
+                    ->where('email', $request->email)
+                    ->first();
+
+        if ($user && $user->is_permanently_deleted == true) {
+            return $this->sendError('This account was permanently deleted');
+        }
 
         // Check if the user exists and the password is correct
         if ($user && Hash::check($request->password, $user->password)) {
+            if ($user->is_temporarily_deleted == true) {
+                $user->is_temporarily_deleted = false;
+                $user->deletion_date = null;
+                $user->save();
+            }
             $accessToken = $jwtService->generateAccessToken($user);
             $refreshToken = $jwtService->generateRefreshToken(
                 $user->uuid,
@@ -200,6 +211,13 @@ class UserController extends BaseController
         } catch (ServiceException $e) {
             return $this->sendResponseFromService($e->toServiceResponse());
         }
+    }
+
+    public function deleteUserTemporarily(Request $request)
+    {
+        $user = $request->user();
+        $deleteResponse = UserService::deleteUserTemporarily($user);
+        return $this->sendResponseFromService($deleteResponse);
     }
 
     public function addFcmToken(Request $request)

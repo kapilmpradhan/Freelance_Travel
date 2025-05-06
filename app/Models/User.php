@@ -32,7 +32,10 @@ class User extends Authenticatable
         'date_of_birth',
         'phone_number',
         'post_code',
-        'country_code'
+        'country_code',
+        'deletion_date',
+        'is_temporarily_deleted',
+        'is_permanently_deleted'
     ];
     protected $casts = [
         'is_email_verified' => 'boolean',
@@ -164,5 +167,10 @@ class User extends Authenticatable
     public function fcmTokens()
     {
         return $this->hasMany(FirebaseFcmToken::class, 'user_id', 'uuid')->pluck('token')->toArray();
+    }
+
+    public static function getAllUsers()
+    {
+        return User::all();
     }
 }

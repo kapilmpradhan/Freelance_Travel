@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\UserResource;
+use App\Jobs\SendAccountDeletionEmail;
 use App\Logging\Logger;
 use App\Models\FirebaseFcmToken;
 use App\Models\User;
@@ -38,6 +39,16 @@ class UserService
         }
 
         return ServiceResponse::notFound();
+    }
+
+    public static function deleteUserTemporarily($user)
+    {
+        $user->is_temporarily_deleted = true;
+        $user->save();
+
+        SendAccountDeletionEmail::dispatch($user);
+
+        return ServiceResponse::success();
     }
 
     public static function checkIfFcmTokenExistsForUser($user, $token)
