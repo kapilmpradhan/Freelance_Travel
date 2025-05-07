@@ -203,9 +203,25 @@ class ProductCategoryService
             }
             $homeFeedSchema = $homeFeedSchemaResponse->data;
 
-            $typeLabels = array_values(array_filter($homeFeedSchema, function ($item) use ($productFilter) {
-                return strtolower($item['type']) === $productFilter->filterBy;
-            }))[0]['labels'];
+            if ($productFilter->filterBy == 'destination') {
+                $regionsResponse = TdmsService::getCountryRegions($agentToken, $productFilter->countryId);
+                if ($regionsResponse->isError()) {
+                    return $regionsResponse;
+                }
+
+                $regions = $regionsResponse->data;
+                $typeLabels = [];
+                foreach ($regions as $region) {
+                    $typeLabels[] = [
+                        "label" => $region['text'],
+                        "regionId" => $region['id']
+                    ];
+                }
+            } else {
+                $typeLabels = array_values(array_filter($homeFeedSchema, function ($item) use ($productFilter) {
+                    return strtolower($item['type']) === $productFilter->filterBy;
+                }))[0]['labels'];
+            }
 
             $key = Redis::keys($productFilter->cacheKey);
             if (!empty($key)) {
@@ -214,28 +230,60 @@ class ProductCategoryService
 
             if (empty($key) || empty($productsByLabels)) {
                 $tdmsProductIdsByLabels = [];
-                foreach ($typeLabels as $typeLabel) {
-                    $categoriesByLabels = [];
-                    foreach ($typeLabel['categories'] as $category) {
-                        $categoriesByLabels[$category['category_type']][] = $category['category_id'];
-                    }
-
-                    $productsResponse = TdmsService::getProductsByMultipleCategories(
-                        categoriesIdByTypes: $categoriesByLabels,
-                        agentToken: $agentToken,
-                        countryId: $productFilter->countryId
-                    );
-                    if ($productsResponse->isError()) {
-                        return $productsResponse;
-                    }
-
-                    $products = $productsResponse->data;
-                    foreach ($products as $product) {
-                        $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
-                        if (!$productExists) {
-                            CartItemService::cacheProduct($product, Carbon::now());
+                $numberOfRegions = 10;
+                if ($productFilter->filterBy == 'destination') {
+                    foreach ($typeLabels as $typeLabel) {
+                        $productsResponse = TdmsService::getProductsByRegion(
+                            $agentToken,
+                            $productFilter->countryId,
+                            $typeLabel['regionId']
+                        );
+                        if ($productsResponse->isError()) {
+                            return $productsResponse;
                         }
-                        $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+
+                        $products = $productsResponse->data;
+                        if (empty($products)) {
+                            continue;
+                        } else {
+                            $numberOfRegions -= 1;
+                        }
+                        foreach ($products as $product) {
+                            $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
+                            if (!$productExists) {
+                                CartItemService::cacheProduct($product, Carbon::now());
+                            }
+                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+                        }
+
+                        if ($numberOfRegions < 0) {
+                            break;
+                        }
+                    }
+                } else {
+                    foreach ($typeLabels as $typeLabel) {
+                        $categoriesByLabels = [];
+                        foreach ($typeLabel['categories'] as $category) {
+                            $categoriesByLabels[$category['category_type']][] = $category['category_id'];
+                        }
+
+                        $productsResponse = TdmsService::getProductsByMultipleCategories(
+                            categoriesIdByTypes: $categoriesByLabels,
+                            agentToken: $agentToken,
+                            countryId: $productFilter->countryId
+                        );
+                        if ($productsResponse->isError()) {
+                            return $productsResponse;
+                        }
+
+                        $products = $productsResponse->data;
+                        foreach ($products as $product) {
+                            $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
+                            if (!$productExists) {
+                                CartItemService::cacheProduct($product, Carbon::now());
+                            }
+                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+                        }
                     }
                 }
 

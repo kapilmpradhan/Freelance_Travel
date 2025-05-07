@@ -456,7 +456,29 @@ class TdmsService
 
     public static function getCountryRegions($agentToken, $countryId)
     {
-        $url = config('vars.tdms_api_url') . "/regions?countries={$countryId}";
+        $url = config('vars.tdms_api_url') . "/categories/regions?countries={$countryId}";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            return ServiceResponse::badRequest(
+                message: $data['message']
+            );
+        }
+    }
+
+    public static function getProductsByRegion($agentToken, $countryId, $regionId)
+    {
+        $url = config('vars.tdms_api_url') . "/products?countries={$countryId}&regions={$regionId}";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
