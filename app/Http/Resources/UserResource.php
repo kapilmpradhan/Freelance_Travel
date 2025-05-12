@@ -17,6 +17,7 @@ class UserResource
             'title' => $data->title,
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
+            'nickname' => $data->nickname,
             'email' => $data->email,
             'date_of_birth' => $data->date_of_birth,
             'phone_number' => $data->phone_number,

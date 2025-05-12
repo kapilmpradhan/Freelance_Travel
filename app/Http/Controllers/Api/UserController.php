@@ -15,6 +15,7 @@ use App\Services\UserService;
 use App\Logging\Logger;
 use App\Services\RedeemerService;
 use App\Services\FcmService;
+use Exception;
 
 class UserController extends BaseController
 {
@@ -144,6 +145,25 @@ class UserController extends BaseController
             $errorMessage = "Failed to reset password";
             Logger::error($errorMessage, $e);
             return $this->sendError('Password reset failed');
+        }
+    }
+
+    public function updateNickname(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->all();
+        $validator = Validator::make($data, ['nickname' => 'required|string|max:50']);
+        if ($validator->fails()) {
+            return $this->sendError('Invalid nickname', $validator->errors());
+        }
+
+        try {
+            $user->nickname = $data['nickname'];
+            $user->save();
+            return $this->sendResponse('Nickname updated');
+        } catch (Exception $e) {
+            Logger::error('Unable to update nickname', $e);
+            return $this->sendError('Unable to update nickname');
         }
     }
 
