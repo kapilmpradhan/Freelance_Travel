@@ -18,8 +18,21 @@ return new class extends Migration
         });
 
         // Update existing records to set is_experience to true for specific categories
-        $productService = new ProductCategoryService();
-        $experiences = $productService->experienceOrder;
+        $experiences = [
+            'Tours',
+            'Adventures',
+            'Hiking',
+            'Nature',
+            'Indigenous Culture',
+            'Adrenaline Sports',
+            'Sport Related',
+            'Water Sports',
+            'Health & Wellness',
+            'Ice / Snow Activity',
+            'Food / Drink Related',
+            'Flights',
+            'Hire Options',
+        ];
 
         $transport = [
             'Bus',

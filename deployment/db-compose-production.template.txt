@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: $DB_PASSWORD
       MYSQL_ROOT_PASSWORD: $DB_PASSWORD_ROOT
     volumes:
-      - ./db_data:/var/lib/mysql
+      - /mnt/data/db/db_data:/var/lib/mysql
     networks:
       $NETWORK_NAME:
         ipv4_address: $DB_IP_ADDRESS

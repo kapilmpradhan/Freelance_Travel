@@ -466,7 +466,7 @@ class BookingService
                     }
                 }
             } catch (ServiceException $e) {
-                return $e;
+                throw $e;
             }
         } else {
             $validateProductAvailabilityResponse = CartItemService::validateProductAvailability(
