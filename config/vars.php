@@ -39,4 +39,6 @@ return [
     'default_agent_token_password' => env('DEFAULT_AGENT_PASSWORD'),
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
+
+    'discount_percentage' => (int) env('DISCOUNT_PERCENTAGE', 0)
 ];

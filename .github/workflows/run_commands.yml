@@ -1,0 +1,50 @@
+name: Freelance travel run commands
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Command to run'
+        required: true
+      environment:
+        description: 'Environment to use (staging or production)'
+        required: true
+        default: 'staging'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Fail on Invalid Environment
+      if: ${{ github.event.inputs.environment != 'staging' && github.event.inputs.environment != 'production' }}
+      run: |
+        echo "Invalid environment: ${{ github.event.inputs.environment }}. Options are 'staging' or 'production."
+        exit 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:      
+    - name: Deploy api to EC2 instance
+      run: |
+        # Write the RSA private key to a temporary file
+        echo "$SSH_PRIVATE_KEY" > ec2_key.pem
+        # Set the appropriate permissions for the private key
+        chmod 400 ec2_key.pem
+
+        # Create the .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
+
+        # Add EC2's IP address to known hosts to avoid host key verification issues
+        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+        # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
+        echo 'Getting into EC2 server'
+        ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          echo "Running command ${{ github.event.inputs.command }}"
+          docker exec -it freelance-travel-api bash -c "${{ github.event.inputs.command }}"
+        EOF

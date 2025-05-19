@@ -300,7 +300,7 @@ class ProductCategoryService
                         return ($region['text'] == $label);
                     });
                     $destinationLabel = reset($destinationLabel);
-                    $result = [
+                    $result[] = [
                         "label_id" => !empty($destinationLabel) ? $destinationLabel['id'] : null,
                         "label" => $label,
                         "products" => $products

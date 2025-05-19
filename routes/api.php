@@ -86,6 +86,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::delete('remove/{cartItemId}', [CartItemController::class, 'removeCartItem']);
     Route::post('items/to-quote', [CartItemController::class, 'addExistingCartItemsToQuote']);
     Route::post('items/to-quote/{quoteId}', [CartItemController::class, 'addExistingCartItemsToQuote']);
+    Route::get('discount/', [CartItemController::class, 'getDiscountPercentage']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {

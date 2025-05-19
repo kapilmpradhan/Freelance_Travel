@@ -20,7 +20,8 @@ class UserOrder extends Model
         'user_id',
         'request_data',
         'response_data',
-        'payment_gateway'
+        'payment_gateway',
+        'applied_discount',
     ];
     protected $casts = [
         'cart_item_ids' => 'array',

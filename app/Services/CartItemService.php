@@ -832,7 +832,8 @@ class CartItemService
                 'response_data' => $responseData,
                 'payment_gateway' => $paymentGateway,
                 'user_agent_id' => $userAgentId,
-                'order_id' => $responseData['id']
+                'order_id' => $responseData['id'],
+                'applied_discount' => config('vars.discount_percentage')
             ]);
 
             if ($intent === 'email-quote') { // emailing quote should remove items from cart

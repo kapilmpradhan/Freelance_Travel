@@ -948,4 +948,9 @@ class CartItemController extends BaseController
 
         return $this->sendResponseFromService($getProductCategories);
     }
+
+    public function getDiscountPercentage(Request $request)
+    {
+        return $this->sendResponse('Discount percentage', ['discount' => config('vars.discount_percentage')]);
+    }
 }

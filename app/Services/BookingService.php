@@ -38,6 +38,8 @@ class BookingService
             }
         }
 
+        // Provide discount if exists
+        $totalAmount -= $totalAmount * config('vars.discount_percentage') / 100;
         return $totalAmount;
     }
 
