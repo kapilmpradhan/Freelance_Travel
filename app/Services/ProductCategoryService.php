@@ -294,10 +294,23 @@ class ProductCategoryService
             $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
             foreach ($productsByLabels as $label => $productIds) {
                 $products = Product::whereIn('tdms_product_id', $productIds)->get();
-                $result[] = [
-                    "label" => $label,
-                    "products" => $products
-                ];
+
+                if ($productFilter->filterBy == 'destination') {
+                    $destinationLabel = array_filter($regions, function ($region) use ($label) {
+                        return ($region['text'] == $label);
+                    });
+                    $destinationLabel = reset($destinationLabel);
+                    $result = [
+                        "label_id" => !empty($destinationLabel) ? $destinationLabel['id'] : null,
+                        "label" => $label,
+                        "products" => $products
+                    ];
+                } else {
+                    $result[] = [
+                        "label" => $label,
+                        "products" => $products
+                    ];
+                }
             }
         } catch (Exception $e) {
             Logger::error('Unable to get product by categories', $e);

@@ -191,7 +191,7 @@ class TdmsService
         Logger::error(
             message: 'Error fetching customer orders',
             extra: [
-                "customerEmail" => $$customerEmail,
+                "customerEmail" => $customerEmail,
                 "page" => $page,
                 "afterData" => $afterDate,
                 "responseData" => $data
