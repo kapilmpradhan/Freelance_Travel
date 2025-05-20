@@ -162,42 +162,49 @@ class TdmsService
         ];
     }
 
-    public static function getCustomerBookings($customerEmail, $page, $afterDate)
+    public static function getCustomerBookings($customerEmail)
     {
+        $customerEmail = 'matt.mccourt@hotmail.com';
         $url = config('vars.tdms_customer_api_url') . "?email=" . rawurlencode($customerEmail);
-        if (!empty($page)) {
-            $url .= "&page=" . rawurlencode($page);
-        }
-
-        if (!empty($afterDate)) {
-            $url .= "&afterDate=" . rawurlencode($afterDate);
-        }
 
         // Credentials from config
         $username = config('vars.tdms_customer_api_username');
         $password = config('vars.tdms_customer_api_password');
 
-        $response = Http::withBasicAuth($username, $password)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-            ])
-            ->get($url);
+        $allOrders = [];
+        $page = 1;
+        while (true) {
+            $url .= "&page=" . rawurlencode($page);
+            $response = Http::withBasicAuth($username, $password)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($url);
 
-        // Check if the request was successful
-        $data = $response->json();
-        if ($response->successful()) {
-            return $data;
+            // Check if the request was successful
+            $data = $response->json();
+            if ($response->successful()) {
+                $allOrders = array_merge($allOrders, $data['orders']);
+                if ($data['has_more'] == false) {
+                    break;
+                } else {
+                    $page++;
+                    continue;
+                }
+            }
+            Logger::error(
+                message: 'Error fetching customer orders',
+                extra: [
+                    "customerEmail" => $customerEmail,
+                    "responseData" => $data,
+                    "page" => $page
+                ]
+            );
         }
-        Logger::error(
-            message: 'Error fetching customer orders',
-            extra: [
-                "customerEmail" => $customerEmail,
-                "page" => $page,
-                "afterData" => $afterDate,
-                "responseData" => $data
-            ]
+
+        return ServiceResponse::success(
+            data: ['orders' => $allOrders]
         );
-        return null;
     }
 
     public static function convertQuoteToOrder($agentToken, $bookingReference)

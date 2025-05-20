@@ -892,16 +892,40 @@ class CartItemController extends BaseController
     public function getBookings(Request $request)
     {
         $user = $request->user();
-        $page = $request->query('page');
-        $afterDate = $request->query('afterDate');
 
         try {
-            $bookings = TdmsService::getCustomerBookings($user->email, $page, $afterDate);
+            $bookings = TdmsService::getCustomerBookings($user->email);
             if (!$bookings) {
                 return $this->sendError('Could not fetch customer bookings');
             }
 
-            return $this->sendResponse('Customer bookings', $bookings);
+            $orders = $bookings->data['orders'];
+            foreach ($orders as $orderKey => &$order) {
+                foreach ($order['products'] as $productKey => &$product) {
+                    foreach ($product['redeemers'] as $redeemerKey => &$redeemer) {
+                        foreach ($redeemer['bookingDetails'] as $detailKey => $bookingDetail) {
+                            if ($bookingDetail['travelDate'] == null) {
+                                unset($redeemer['bookingDetails'][$detailKey]);
+                            }
+                        }
+                        if (empty($redeemer['bookingDetails'])) {
+                            unset($product['redeemers'][$redeemerKey]);
+                        }
+                    }
+                    if (empty($product['redeemers'])) {
+                        unset($order['products'][$productKey]);
+                    }
+                }
+                if (empty($order['products'])) {
+                    unset($orders[$orderKey]);
+                }
+            }
+
+            $orders = array_values($orders);
+            return $this->sendResponse(
+                title: 'User bookings',
+                data: ['has_more' => false, 'orders' => $orders]
+            );
         } catch (Exception $e) {
             $errorMessage = 'Failed to get customer bookings';
             Logger::error($errorMessage, $e);
