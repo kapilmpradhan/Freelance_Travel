@@ -164,7 +164,6 @@ class TdmsService
 
     public static function getCustomerBookings($customerEmail)
     {
-        $customerEmail = 'matt.mccourt@hotmail.com';
         $url = config('vars.tdms_customer_api_url') . "?email=" . rawurlencode($customerEmail);
 
         // Credentials from config
