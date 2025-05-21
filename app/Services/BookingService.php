@@ -8,7 +8,6 @@ use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
 use App\Events\CompleteOrderEvent;
-use App\Events\OrderComplete;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
@@ -39,7 +38,9 @@ class BookingService
         }
 
         // Provide discount if exists
-        $totalAmount -= $totalAmount * config('vars.discount_percentage') / 100;
+        $discountPercentageResponse = DiscountService::getDiscountPercentage();
+        $percentage = $discountPercentageResponse->data['percentage'];
+        $totalAmount -= $totalAmount * $percentage / 100;
         return $totalAmount;
     }
 

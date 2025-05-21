@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\CartItemController;
+use App\Http\Controllers\Api\DiscountController;
 use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\UserAgentController;
@@ -61,6 +62,14 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);
     Route::post('/fcm/token/add', [UserController::class, 'addFcmToken']);
     Route::delete('/fcm/token/{fcmToken}', [UserController::class, 'removeFcmToken']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'middleware' => 'admin'], function () {
+    Route::post('/add-discount', [DiscountController::class, 'addNewDiscount']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount'], function () {
+    Route::get('/active', [DiscountController::class, 'getDiscount']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
