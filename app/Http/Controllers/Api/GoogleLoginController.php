@@ -85,6 +85,10 @@ class GoogleLoginController extends BaseController
         if ($existing_user && $existing_user->is_temporarily_deleted) {
             $existing_user->is_temporarily_deleted = false;
             $existing_user->deletion_date = null;
+        }
+
+        if ($existing_user) {
+            $existing_user->last_login = now();
             $existing_user->save();
         }
 

@@ -67,8 +67,10 @@ class UserController extends BaseController
             if ($user->is_temporarily_deleted == true) {
                 $user->is_temporarily_deleted = false;
                 $user->deletion_date = null;
-                $user->save();
             }
+            $user->last_login = now();
+            $user->save();
+
             $accessToken = $jwtService->generateAccessToken($user);
             $refreshToken = $jwtService->generateRefreshToken(
                 $user->uuid,

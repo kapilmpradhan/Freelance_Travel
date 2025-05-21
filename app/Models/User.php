@@ -34,6 +34,7 @@ class User extends Authenticatable
         'post_code',
         'country_code',
         'deletion_date',
+        'last_login',
         'is_temporarily_deleted',
         'is_permanently_deleted'
     ];

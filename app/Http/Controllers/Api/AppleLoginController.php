@@ -55,6 +55,10 @@ class AppleLoginController extends BaseController
         if ($user && $user->is_temporarily_deleted) {
             $user->is_temporarily_deleted = false;
             $user->deletion_date = null;
+        }
+
+        if ($user) {
+            $user->last_login = now();
             $user->save();
         }
 
