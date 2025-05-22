@@ -56,7 +56,7 @@ class CartCustomerDetail extends Model
             ['items' => $data], // Wrap data in a parent key
             [
             'items' => 'array',
-            'items.*.title' => 'in:Mr,Mrs',
+            'items.*.title' => 'in:Master,Mr,Miss,Mrs,Ms,Mx',
             'items.*.firstName' => [
                 'required',
                 'string',
@@ -84,7 +84,7 @@ class CartCustomerDetail extends Model
         $onlyCharRegex = config('vars.only_char_regex');
 
         return [
-            "title" => "required|in:Mr,Mrs",
+            "title" => "required|in:Master,Mr,Miss,Mrs,Ms,Mx",
             "firstName" => "required|string|max:200|regex:{$onlyCharRegex}",
             "lastName" => "required|string|max:200|regex:{$onlyCharRegex}",
             "dateOfBirth" => "required|date_format:d-M-Y",

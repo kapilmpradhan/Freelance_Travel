@@ -120,7 +120,7 @@ class User extends Authenticatable
     public function updateProfileRule()
     {
         return [
-            "title" => "in:Mr,Mrs",
+            "title" => "in:Master,Mr,Miss,Mrs,Ms,Mx",
             'first_name' => [
                 'required',
                 'string',
