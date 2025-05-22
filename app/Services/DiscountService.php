@@ -12,14 +12,18 @@ class DiscountService
     {
         $activeDiscount = Discount::where('is_active', true)->first();
         if (!$activeDiscount) {
-            return ServiceResponse::notFound();
+            $data = [
+                'title' => null,
+                'description' => null,
+                'discount' => 0
+            ];
+        } else {
+            $data = [
+                'title' => $activeDiscount->title,
+                'description' => $activeDiscount->description,
+                'discount' => $activeDiscount->percentage
+            ];
         }
-
-        $data = [
-            'title' => $activeDiscount->title,
-            'description' => $activeDiscount->description,
-            'percentage' => $activeDiscount->percentage
-        ];
 
         return ServiceResponse::success(
             data: $data
