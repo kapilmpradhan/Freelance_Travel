@@ -30,4 +30,35 @@ class Discount extends Model
             'expires_at' => 'required|date|after:activate_at',
         ];
     }
+
+    public static function updateDiscountRule()
+    {
+        return [
+            'title' => 'string|max:255',
+            'description' => 'string|max:255',
+            'percentage' => 'integer|min:1|max:100',
+            'is_active' => 'boolean',
+            'activate_at' => 'date',
+            'expires_at' => 'date|after:activate_at',
+        ];
+    }
+
+    public static function getNonDeletedDiscounts()
+    {
+        return self::where('is_deleted', false)->get();
+    }
+
+    public static function getActiveDiscount()
+    {
+        return self::getNonDeletedDiscounts()
+                    ->where('is_active', true)
+                    ->first();
+    }
+
+    public static function getDiscountById($id)
+    {
+        return self::getNonDeletedDiscounts()
+                    ->where('id', $id)
+                    ->first();
+    }
 }

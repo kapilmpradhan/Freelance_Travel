@@ -65,7 +65,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'middleware' => 'admin'], function () {
-    Route::post('/add-discount', [DiscountController::class, 'addNewDiscount']);
+    Route::post('/discount/add', [DiscountController::class, 'addNewDiscount']);
+    Route::get('/discount/all', [DiscountController::class, 'getAllDiscounts']);
+    Route::put('/discount/{discountId}/update', [DiscountController::class, 'updateDiscount']);
+    Route::delete('/discount/{discountId}/delete', [DiscountController::class, 'deleteDiscount']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount'], function () {

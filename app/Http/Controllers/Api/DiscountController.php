@@ -15,6 +15,12 @@ class DiscountController extends BaseController
         return $this->sendResponseFromService($discountResponse);
     }
 
+    public function getAllDiscounts()
+    {
+        $discountResponse = DiscountService::getAllDiscounts();
+        return $this->sendResponseFromService($discountResponse);
+    }
+
     public function addNewDiscount()
     {
         $data = request()->all();
@@ -37,5 +43,37 @@ class DiscountController extends BaseController
                 $e->toServiceResponse()
             );
         }
+    }
+
+    public function updateDiscount($discountId)
+    {
+        $data = request()->all();
+        $validator = Validator::make($data, Discount::updateDiscountRule());
+        if ($validator->fails()) {
+            return $this->sendError(
+                title: 'Validation Error',
+                data: $validator->errors(),
+                code: 400
+            );
+        }
+
+        try {
+            $updateDiscountResponse = DiscountService::updateDiscount($discountId, $data);
+            return $this->sendResponseFromService(
+                $updateDiscountResponse
+            );
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService(
+                $e->toServiceResponse()
+            );
+        }
+    }
+
+    public function deleteDiscount($discountId)
+    {
+        $deleteDiscountResponse = DiscountService::deleteDiscount($discountId);
+        return $this->sendResponseFromService(
+            $deleteDiscountResponse
+        );
     }
 }
