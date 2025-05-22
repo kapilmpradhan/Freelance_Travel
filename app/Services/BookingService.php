@@ -224,7 +224,7 @@ class BookingService
                                         ? $bookingData['dropoffId']
                                         : null;
                     $dropoffLocation = isset($bookingData['dropoffLocation'])
-                                        ? $bookingData['dropoffLocatoin']
+                                        ? $bookingData['dropoffLocation']
                                         : null;
                     $optionalData = isset($bookingData['optionalData'])
                                         ? $bookingData['optionalData']
