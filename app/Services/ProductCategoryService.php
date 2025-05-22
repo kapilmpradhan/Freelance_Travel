@@ -95,10 +95,10 @@ class ProductCategoryService
     public static function getProductSchemaByCategoriesWithLabel()
     {
         $resultOrder = [
-            'Experience',
-            'Destination',
-            'Accommodation',
-            'Transport'
+            'Experiences',
+            'Destinations',
+            'Accommodations',
+            'Transports'
         ];
 
         try {
@@ -108,7 +108,7 @@ class ProductCategoryService
                     ->groupBy('type')
                     ->map(function ($groups, $type) {
                         return [
-                            'type' => $type,
+                            'type' => $type . 's',
                             'labels' => $groups->whereNotNull('category_id')
                                 ->groupBy('label')
                                 ->map(function ($groupedItems, $label) {
@@ -145,7 +145,7 @@ class ProductCategoryService
 
                 // Sort the labels for 'Experience' type
                 $productCategories = $productCategories->map(function ($category) {
-                    if ($category['type'] === 'Experience') {
+                    if ($category['type'] === 'Experiences') {
                         $sortedLabels = [];
 
                         foreach (self::$experienceOrder as $experience) {
