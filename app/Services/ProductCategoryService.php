@@ -219,7 +219,7 @@ class ProductCategoryService
                 }
             } else {
                 $typeLabels = array_values(array_filter($homeFeedSchema, function ($item) use ($productFilter) {
-                    return strtolower($item['type']) === $productFilter->filterBy;
+                    return strtolower($item['type']) === $productFilter->filterBy . 's';
                 }))[0]['labels'];
             }
 
