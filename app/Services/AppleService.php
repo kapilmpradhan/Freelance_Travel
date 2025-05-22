@@ -26,9 +26,7 @@ class AppleService
             return [
                 'success' => true,
                 'data' => [
-                    'email' => $tokenData['email'],
-                    'first_name' => $tokenData['first_name'] ?? null,
-                    'last_name' => $tokenData['last_name'] ?? null
+                    'email' => $tokenData['email']
                 ]
             ];
         } catch (\Exception $e) {

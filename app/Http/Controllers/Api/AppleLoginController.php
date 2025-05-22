@@ -28,6 +28,8 @@ class AppleLoginController extends BaseController
     {
         $data = $request->all();
         $validator = Validator::make($data, [
+            'first_name' => 'string',
+            'last_name' => 'string',
             'access_token' => 'required|string'
         ]);
 
@@ -41,8 +43,8 @@ class AppleLoginController extends BaseController
         }
 
         $email = $appleUser['data']['email'];
-        $first_name = $appleUser['data']['first_name'];
-        $last_name = $appleUser['data']['last_name'];
+        $first_name = $data['first_name'] ?? null;
+        $last_name = $data['last_name'] ?? null;
 
         $user = User::getAllUsers()
                     ->where('email', $email)
