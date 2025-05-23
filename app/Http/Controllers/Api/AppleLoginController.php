@@ -28,8 +28,8 @@ class AppleLoginController extends BaseController
     {
         $data = $request->all();
         $validator = Validator::make($data, [
-            'first_name' => 'string',
-            'last_name' => 'string',
+            'first_name' => 'string|nullable',
+            'last_name' => 'string|nullable',
             'access_token' => 'required|string'
         ]);
 
@@ -51,7 +51,7 @@ class AppleLoginController extends BaseController
                     ->first();
 
         if ($user && $user->is_permanently_deleted) {
-            return $this->sendError('This account was deleted permnently');
+            return $this->sendError('This account was deleted permanently');
         }
 
         if ($user && $user->is_temporarily_deleted) {

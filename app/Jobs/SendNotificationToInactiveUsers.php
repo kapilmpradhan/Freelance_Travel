@@ -14,7 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class NotificationToInactiveUsers implements ShouldQueue
+class SendNotificationToInactiveUsers implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -26,7 +26,7 @@ class NotificationToInactiveUsers implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info('NotificationToInActiveUsers job started');
+        Logger::info('NotificationToInactiveUsers job started');
 
         $availableDiscount = DiscountService::getActiveDiscount();
         if ($availableDiscount->isError()) {

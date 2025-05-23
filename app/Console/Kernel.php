@@ -4,7 +4,7 @@ namespace App\Console;
 
 use App\Jobs\DeleteAccountPermanentlyJob;
 use App\Jobs\HomeFeedProductByCategories;
-use App\Jobs\NotificationToInactiveUsers;
+use App\Jobs\SendNotificationToInactiveUsers;
 use App\Jobs\ScheduledProductCacheJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -46,7 +46,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->job(new DeleteAccountPermanentlyJob())->dailyAt("00:20");
 
-        $schedule->job(new NotificationToInactiveUsers())->dailyAt("08:30");
+        $schedule->job(new SendNotificationToInactiveUsers())->dailyAt("08:30");
     }
 
     /**
