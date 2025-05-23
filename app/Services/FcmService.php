@@ -56,13 +56,13 @@ class FcmService
             ])->post($url, $payload);
 
             if (!$response->successful()) {
-                Logger::error('Error sending fcm notification', extra: $response->json());
-                return HttpResponse::failed('Error sending notification', $response->status());
+                Logger::error('Error while subscribing', extra: $response->json());
+                return HttpResponse::failed('Error while subscribing', $response->status());
             }
-            $response = $response->json();
+            return HttpResponse::success($response->json());
         } catch (Exception $e) {
-            Logger::error('Error sending fcm notification', extra: $response->json());
-            return HttpResponse::failed('Error sending fcm notification', 500);
+            Logger::error('Error while subsribing', $e);
+            return HttpResponse::failed('Error while subsribing', 500);
         }
     }
 
@@ -83,13 +83,13 @@ class FcmService
             ])->post($url, $payload);
 
             if (!$response->successful()) {
-                Logger::error('Error sending fcm notification', extra: $response->json());
-                return HttpResponse::failed('Error sending notification', $response->status());
+                Logger::error('Error while un-subscribing', extra: $response->json());
+                return HttpResponse::failed('Error while un-subscribing', $response->status());
             }
-            $response = $response->json();
+            return HttpResponse::success($response->json());
         } catch (Exception $e) {
-            Logger::error('Error sending fcm notification', extra: $response->json());
-            return HttpResponse::failed('Error sending fcm notification', 500);
+            Logger::error('Error while un-subscribing', $e);
+            return HttpResponse::failed('Error while un-subscribing', 500);
         }
     }
 
@@ -101,9 +101,12 @@ class FcmService
         $payload = [
             'message' => [
                 'notification' => $notification,
-                'data' => $data
             ]
         ];
+
+        if ($data) {
+            $payload['message']['data'] = $data;
+        }
 
         if ($token) {
             $payload['message']['token'] = $token;

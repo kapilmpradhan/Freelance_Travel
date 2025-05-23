@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Http\Resources\UserResource;
 use App\Jobs\SendAccountDeletionEmail;
+use App\Jobs\SubscribeToFCMTopic;
+use App\Jobs\UnsubscribeFromFCMTopic;
 use App\Logging\Logger;
 use App\Models\FirebaseFcmToken;
 use App\Models\User;
@@ -73,6 +75,8 @@ class UserService
             'client_user_agent' => $clientUserAgent
         ]);
 
+        SubscribeToFCMTopic::dispatch($token, 'all');
+
         return ServiceResponse::success();
     }
 
@@ -81,6 +85,8 @@ class UserService
         $token = FirebaseFcmToken::where('user_id', $user->uuid)
                                 ->where('token', $token)
                                 ->first();
+
+        UnsubscribeFromFCMTopic::dispatch($token->token, 'all');
 
         $token->delete();
         return ServiceResponse::success();

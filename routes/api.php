@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\RedeemerController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Api\BCRController;
 use App\Http\Controllers\Api\FavoriteController;
@@ -69,6 +70,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'm
     Route::get('/discount/all', [DiscountController::class, 'getAllDiscounts']);
     Route::put('/discount/{discountId}/update', [DiscountController::class, 'updateDiscount']);
     Route::delete('/discount/{discountId}/delete', [DiscountController::class, 'deleteDiscount']);
+    Route::post('/send/notification/topic', [AdminController::class, 'sendNotificationToTopic']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount'], function () {
