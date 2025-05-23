@@ -24,7 +24,7 @@ class OtpController extends BaseController
         $user = $user->getSsoEmailUser($data['email']);
 
         if (!$user) {
-            return $this->sendError('Invalid email');
+            return $this->sendError('Email not registered');
         }
 
         // Generate OTP
