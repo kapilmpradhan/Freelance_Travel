@@ -30,6 +30,20 @@ class DiscountService
         );
     }
 
+    public static function getActiveDiscount()
+    {
+        $activeDiscount = Discount::where('is_active', true)->first();
+        if (!$activeDiscount) {
+            return ServiceResponse::notFound(
+                message: 'No active discount found'
+            );
+        }
+
+        return ServiceResponse::success(
+            data: $activeDiscount
+        );
+    }
+
     public static function getAllDiscounts()
     {
         $discounts = Discount::getNonDeletedDiscounts();
