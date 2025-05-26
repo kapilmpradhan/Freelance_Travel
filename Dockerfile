@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
     cron \
+    git \
     redis-tools \
     && docker-php-ext-install zip pdo_mysql \
     && pecl install redis \
