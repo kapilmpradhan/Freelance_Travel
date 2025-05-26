@@ -279,12 +279,12 @@ class UserController extends BaseController
         $fcmService = new FcmService();
 
         $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $fcmToken);
-        if ($checkFcmResponse->isError()) {
-            return $this->sendResponseFromService($checkFcmResponse);
+        if ($checkFcmResponse->isSuccess()) {
+            $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
+            $fcmService->unsubscribeTokensFromTopic($user->uuid, [$fcmToken]);
+            return $this->sendResponseFromService($removeFcmToken);
         }
 
-        $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
-        $fcmService->unsubscribeTokensFromTopic($user->uuid, [$fcmToken]);
-        return $this->sendResponseFromService($removeFcmToken);
+        return $this->sendResponse('Success');
     }
 }
