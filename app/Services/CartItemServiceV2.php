@@ -49,9 +49,40 @@ class CartItemServiceV2
         );
 
         $result = [];
+        $existingUserCartItems = CartItem::userCartItems($userId);
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
             $quantityDetails = $productPriceDetails['quantityDetails'];
+
+            $bookingDates = array_map(function ($detail) {
+                return $detail['bookingDate'];
+            }, $quantityDetails);
+
+            $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
+                                ->whereIn('booking_date', $bookingDates);
+
+            if ($sameItemsOnSameDate->isNotEmpty()) {
+                $productDetails = Product::where('tdms_product_id', $sameItemsOnSameDate->first()->tdms_product_id)
+                                        ->first();
+
+                $isAccommodationProduct = $productDetails->json['productClass'] == 'A';
+
+                if (!$isAccommodationProduct) {
+                    $sameItems = [];
+                    foreach ($sameItemsOnSameDate as $sameItemOnSameDate) {
+                        $sameItems[] = [
+                            'cartItemId' => $sameItemOnSameDate->id,
+                            'productPriceDetailsId' => $productPriceDetailsId,
+                            'bookingDate' => $sameItemOnSameDate->booking_date,
+                        ];
+                    }
+                    return ServiceResponse::badRequest(
+                        message: 'Item already exists in cart',
+                        data: $sameItems
+                    );
+                }
+            }
+
 
             $bookingDetailsResponse = ProductService::getBookingDetails(
                 agentToken: $defaultAgentAccessToken,
