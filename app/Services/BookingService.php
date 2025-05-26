@@ -458,15 +458,24 @@ class BookingService
                 }
 
                 $validatedItemsData = $validateOrderDataResponse->data;
+                $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
                     if ($item['status'] === 'Available') {
                         continue;
                     } else {
-                        return ServiceResponse::badRequest(
-                            message: 'Invalid order data',
-                            data: $item
-                        );
+                        $overallStatus[] = [
+                            'status' => $item['status'],
+                            'productId' => $item['productDetail']['productId'],
+                            'productPricesDetailsId' => $item['productDetail']['productPricesDetailsId'],
+                            'errors' => $item['message'] ?? [],
+                        ];
                     }
+                }
+                if (!empty($overallStatus)) {
+                    return ServiceResponse::badRequest(
+                        message: 'Invalid order data',
+                        data: $overallStatus
+                    );
                 }
             } catch (ServiceException $e) {
                 throw $e;
