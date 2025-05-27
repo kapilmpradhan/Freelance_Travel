@@ -3,26 +3,34 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use App\Models\Favourites;
+use App\Services\FavouritesService;
+use App\Services\ServiceException;
 
 class FavouritesController extends BaseController
 {
-    public function addFavorite(Request $request, Favourites $favourites)
+    public function addFavouriteProduct(Request $request, $tdmsProductId)
     {
-        $create = $favourites->addFavorite($request->email, $request->productId, $request->all());
-        return $this->sendResponse($create, __('successfully'), 200);
+        try {
+            $addResponse = FavouritesService::addFavourite($request->user->uuid, $tdmsProductId);
+            return $this->sendResponseFromService($addResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
     }
 
-
-    public function getFavourites($email, Favourites $favourites)
+    public function getFavouriteProducts(Request $request)
     {
-        $favourites = $favourites->getFavoriteByEmail($email);
-        return $this->sendResponse($favourites, __('successfully'), 200);
+        $favouriteProducts = FavouritesService::getUserFavouriteProducts($request->user->uuid);
+        return $this->sendResponseFromService($favouriteProducts);
     }
 
-    public function deleteFavorite(Request $request, Favourites $favourites)
+    public function removeFavouriteProduct(Request $request, $tdmsProductId)
     {
-        $favourites->removeFavorite($request->email, $request->productId);
-        return $this->sendResponse([], __('successfully'), 200);
+        try {
+            $removeResponse = FavouritesService::removeFavourite($request->user->uuid, $tdmsProductId);
+            return $this->sendResponseFromService($removeResponse);
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
     }
 }

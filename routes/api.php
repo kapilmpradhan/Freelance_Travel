@@ -142,6 +142,12 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'favourite', 'middleware' => 'auth.jwt'], function () {
+    Route::get('products/all', [FavouritesController::class, 'getFavouriteProducts']);
+    Route::post('products/add/{tdmsProductId}', [FavouritesController::class, 'addFavouriteProduct']);
+    Route::delete('products/remove/{tdmsProductId}', [FavouritesController::class, 'removeFavouriteProduct']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
     Route::get('default/token', [UserAgentController::class, 'getDefaultAgentToken']);
 });
