@@ -48,7 +48,7 @@ class FavouritesService
                 'user_id' => $userId,
                 'tdms_product_id' => $tdmsProductId,
             ]);
-            return ServiceResponse::success($favourite);
+            return ServiceResponse::success($favourite, 'Added to favourites');
         } catch (Exception $e) {
             Logger::error("Failed to add favourite for user {$userId} and product {$tdmsProductId}: ", $e);
             throw new ServiceException("Failed to add favourite");
@@ -65,7 +65,7 @@ class FavouritesService
                 return ServiceResponse::notFound("Product does not exist in favourites.");
             }
             $favourite->delete();
-            return ServiceResponse::success();
+            return ServiceResponse::success(message: 'Removed from favourites');
         } catch (Exception $e) {
             Logger::error("Failed to remove favourite for user {$userId} and product {$tdmsProductId}: ", $e);
             throw new ServiceException("Failed to remove favourite");
