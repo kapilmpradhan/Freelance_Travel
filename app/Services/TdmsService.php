@@ -104,7 +104,7 @@ class TdmsService
     {
         $url = config('vars.tdms_api_url') . "/order";
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(60)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$agentToken}"
             ])
