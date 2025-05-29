@@ -517,8 +517,8 @@ class CartItemService
         }
 
         if (count($cartItems) === 0) {
-            return ServiceResponse::notFound(
-                message: 'Cart items not found',
+            return ServiceResponse::success(
+                message: 'No cart items found'
             );
         }
 
@@ -583,7 +583,7 @@ class CartItemService
         }
 
         if (count($quoteItems) === 0) {
-            return ServiceResponse::notFound(
+            return ServiceResponse::success(
                 message: 'Quote items not found',
             );
         }
