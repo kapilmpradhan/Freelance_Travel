@@ -462,6 +462,12 @@ class BookingService
                 foreach ($validatedItemsData as $item) {
                     if ($item['status'] === 'Available') {
                         continue;
+                    }
+
+                    if ($item['status'] === 'Commission Details') {
+                        if (!isset($item['message']['errors'])) {
+                            continue;
+                        }
                     } else {
                         $productId = !empty($item['productDetail'])
                             ? $item['productDetail']['productId']
