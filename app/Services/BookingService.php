@@ -463,10 +463,19 @@ class BookingService
                     if ($item['status'] === 'Available') {
                         continue;
                     } else {
+                        $productId = !empty($item['productDetail'])
+                            ? $item['productDetail']['productId']
+                            : null;
+
+                        $productPricesDetailsId = !empty($item['productDetail'])
+                            ? $item['productDetail']['productPricesDetailsId']
+                            : null;
+
+
                         $overallStatus[] = [
                             'status' => $item['status'],
-                            'productId' => $item['productDetail']['productId'],
-                            'productPricesDetailsId' => $item['productDetail']['productPricesDetailsId'],
+                            'productId' => $productId,
+                            'productPricesDetailsId' => $productPricesDetailsId,
                             'errors' => $item['message'] ?? [],
                         ];
                     }
