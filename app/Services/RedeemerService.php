@@ -9,6 +9,40 @@ class RedeemerService
 {
     public static function addNewRedeemer($userId, $redeemerData, ItemType $itemType)
     {
+        $userRedeemers = CartCustomerDetail::where('user_id', $userId)
+            ->where('is_deleted', false)
+            ->where(function ($query) use ($itemType) {
+                if ($itemType->isQuote) {
+                    $query->where('quote_id', $itemType->typeId);
+                } elseif ($itemType->isDirect) {
+                    $query->where('is_direct_purchase', true);
+                } else {
+                    $query->where('quote_id', null)
+                        ->where('is_direct_purchase', false);
+                }
+            })
+            ->where('user_order_id', null);
+
+        $sameNameRedeemers = (clone $userRedeemers)
+            ->where('first_name', $redeemerData['firstName'])
+            ->where('last_name', 'like', $redeemerData['lastName'] . '%');
+
+        $sameEmailRedeemers = (clone $userRedeemers)
+            ->where('email', $redeemerData['email']);
+
+        if ($sameEmailRedeemers->count() > 0) {
+            return ServiceResponse::badRequest(
+                message: 'A redeemer with this email already exists.'
+            );
+        }
+
+        if ($sameNameRedeemers->count() > 0) {
+            $redeemerData['lastName'] = $sameNameRedeemers->
+                                        orderByDesc('created_at')
+                                        ->first()
+                                        ->last_name . '+';
+        }
+
         $redeemer = CartCustomerDetail::create([
             'user_id' => $userId,
             'title' => $redeemerData['title'],
