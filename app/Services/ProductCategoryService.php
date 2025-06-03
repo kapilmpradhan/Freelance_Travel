@@ -189,7 +189,7 @@ class ProductCategoryService
         }
     }
 
-    public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter)
+    public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter, $isJobRun = false)
     {
         $agent = UserAgentService::getDefaultAgentToken();
         if ($agent->isError()) {
@@ -224,11 +224,11 @@ class ProductCategoryService
             }
 
             $key = Redis::keys($productFilter->cacheKey);
-            if (!empty($key)) {
+            if (!empty($key) && !$isJobRun) {
                 $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
             }
 
-            if (empty($key) || empty($productsByLabels)) {
+            if (empty($key) || empty($productsByLabels) || $isJobRun) {
                 $tdmsProductIdsByLabels = [];
                 $numberOfRegions = 10;
                 if ($productFilter->filterBy == 'destination') {
@@ -288,6 +288,10 @@ class ProductCategoryService
                 }
 
                 Redis::set($productFilter->cacheKey, json_encode($tdmsProductIdsByLabels));
+            }
+
+            if ($isJobRun) {
+                return;
             }
 
             $result = [];

@@ -22,4 +22,9 @@ class HomeFeedProductFilter
 
         return new self($countryId, $filterBy);
     }
+
+    public static function fromJob($countryId, $filterBy)
+    {
+        return new self($countryId, $filterBy);
+    }
 }
