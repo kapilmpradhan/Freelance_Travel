@@ -376,9 +376,17 @@ class CartItemService
 
         $cartItems->each(function ($cartItem) use ($products) {
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
-                                        ->orderByDesc('version')
+                                        ->where('version', $cartItem->product_version)
                                         ->first();
+            $isProductLatest = true;
+            if (!$product) {
+                $product = ProductHistory::where('tdms_product_id', $cartItem->tdms_product_id)
+                                        ->where('version', $cartItem->product_version)
+                                        ->first();
+                $isProductLatest = false;
+            }
             $cartItem->product = $product;
+            $cartItem->is_product_latest = $isProductLatest;
         });
         return ServiceResponse::success(data: $cartItems);
     }
@@ -720,21 +728,24 @@ class CartItemService
             $item = $item->toArray();
             $tdmsProductId = $item['tdms_product_id'];
 
+            $isLatestVersion = true;
             $productDetailsResponse = Product::where('tdms_product_id', $tdmsProductId)
-                            ->orderBy('version', 'desc')
+                            ->where('version', $item['product_version'])
                             ->first();
-            if ($productDetailsResponse) {
-                $item['version'] = $productDetailsResponse->version;
-                $item['counter'] = $productDetailsResponse->counter;
-                $item['details'] = $productDetailsResponse->json;
-                $item['details']['availability'] = $productPriceAvailability
-                                                ? $productPriceAvailability->toArray()
-                                                : [];
-            } else {
-                $item['version'] = 0;
-                $item['counter'] = 0;
-                $item['details'] = null;
+            if (!$productDetailsResponse) {
+                $isLatestVersion = false;
+                $productDetailsResponse = ProductHistory::where('tdms_product_id', $tdmsProductId)
+                                                ->where('version', $item['product_version'])
+                                                ->first();
             }
+            $item['version'] = $productDetailsResponse->version;
+            $item['counter'] = $productDetailsResponse->counter;
+            $item['details'] = $productDetailsResponse->json;
+            $item['details']['availability'] = $productPriceAvailability
+                                            ? $productPriceAvailability->toArray()
+                                            : [];
+            $item['is_latest_version'] = $isLatestVersion;
+
             $itemsWithProductDetails[] = $item;
         }
 
