@@ -81,16 +81,20 @@ env:
       FIREBASE_PROJECT_ID: ${{vars.FIREBASE_PROJECT_ID}}
 
 jobs:
+  validate-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail on Invalid Environment
+        if: ${{ github.event.inputs.environment != 'staging' && github.event.inputs.environment != 'production' }}
+        run: |
+          echo "Invalid environment: ${{ github.event.inputs.environment }}. Options are 'staging' or 'production."
+          exit 1
+  
   build:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    
+    needs: validate-environment
     steps:
-    - name: Fail on Invalid Environment
-      if: ${{ github.event.inputs.environment != 'staging' && github.event.inputs.environment != 'production' }}
-      run: |
-        echo "Invalid environment: ${{ github.event.inputs.environment }}. Options are 'staging' or 'production."
-        exit 1
 
     - name: Checkout Code
       uses: actions/checkout@v3
