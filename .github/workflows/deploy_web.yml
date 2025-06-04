@@ -22,13 +22,15 @@ on:
 
 env:
   S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
-  CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
   CLARITY_CODE_BLOCK : ${{ vars.CLARITY_CODE_BLOCK }}
   HELP_SCOUT_CODE_BLOCK: ${{ vars.HELP_SCOUT_CODE_BLOCK }}
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
 
 jobs:
-  validate-environment:
+  build:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
     steps:
       - name: Fail on Invalid Environment
         if: ${{ github.event.inputs.environment != 'staging' && github.event.inputs.environment != 'production' }}
@@ -36,12 +38,6 @@ jobs:
           echo "Invalid environment: ${{ github.event.inputs.environment }}. Options are 'staging' or 'production."
           exit 1
 
-  build:
-    runs-on: ubuntu-latest
-    needs: validate-environment
-    outputs:
-      build-dir: ${{ steps.set-build-dir.outputs.build-dir }}
-    steps:
       - name: Set up SSH for Deploy Key
         run: |
           mkdir ~/.ssh
@@ -70,15 +66,8 @@ jobs:
       - name: Build Frontend
         run: npm run build:${{ github.event.inputs.environment }}
         working-directory: freelance-website
-
-      - name: Set Build Directory Output
-        id: set-build-dir
-        run: echo "::set-output name=build-dir::freelance-website/build"
-
-  deploy-to-s3:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
+      
+      # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -88,23 +77,11 @@ jobs:
           aws-region: ap-southeast-2
 
       - name: Remove all files from S3
-        run: aws s3 rm s3://$S3_BUCKET_NAME --recursive --region ap-southeast-2
+        run: aws s3 rm s3://$S3_BUCKET_NAME --recursive --region $AWS_REGION
 
       - name: Deploy Frontend to S3
         run: |
-          aws s3 sync ${{ needs.build.outputs.build-dir }} s3://$S3_BUCKET_NAME --delete --region ap-southeast-2
-
-  invalidate-cloudfront:
-    runs-on: ubuntu-latest
-    needs: deploy-to-s3
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ github.event.inputs.aws-access-key-id }}
-          aws-secret-access-key: ${{ github.event.inputs.aws-secret-access-key }}
-          aws-session-token: ${{ github.event.inputs.aws-session-token }}
-          aws-region: ap-southeast-2
+          aws s3 sync freelance-website/build/ s3://$S3_BUCKET_NAME --delete --region $AWS_REGION
 
       - name: Invalidate CloudFront Cache
         run: |
