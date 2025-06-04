@@ -82,9 +82,3 @@ jobs:
       - name: Deploy Frontend to S3
         run: |
           aws s3 sync freelance-website/build/ s3://$S3_BUCKET_NAME --delete --region $AWS_REGION
-
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
-            --paths "/*"
