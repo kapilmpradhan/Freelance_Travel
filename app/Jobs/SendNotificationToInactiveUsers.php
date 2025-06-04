@@ -30,7 +30,6 @@ class SendNotificationToInactiveUsers implements ShouldQueue
 
         $availableDiscount = DiscountService::getActiveDiscount();
         if ($availableDiscount->isError()) {
-            Logger::error('No active discount found');
             return;
         }
 

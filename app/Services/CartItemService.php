@@ -149,7 +149,7 @@ class CartItemService
         );
 
         if ($bookingDetailsResponse->isError()) {
-            if ($bookingDetailsResponse->statusCode != 404) {
+            if ($bookingDetailsResponse->responseCode != 404) {
                 return ServiceResponse::notFound('Booking details not found');
             }
 

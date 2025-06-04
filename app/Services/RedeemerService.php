@@ -21,14 +21,23 @@ class RedeemerService
                         ->where('is_direct_purchase', false);
                 }
             })
-            ->where('user_order_id', null);
+            ->where('user_order_id', null)
+            ->orWhere(function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->where('is_primary', true);
+            })
+            ->get();
 
-        $sameNameRedeemers = (clone $userRedeemers)
-            ->where('first_name', $redeemerData['firstName'])
-            ->where('last_name', 'like', $redeemerData['lastName'] . '%');
+        // Filter for same name redeemers
+        $sameNameRedeemers = $userRedeemers->filter(function ($redeemer) use ($redeemerData) {
+            return $redeemer->first_name === $redeemerData['firstName'] &&
+                preg_match('/^' . preg_quote($redeemerData['lastName'], '/') . '([0-9]*)?$/', $redeemer->last_name);
+        });
 
-        $sameEmailRedeemers = (clone $userRedeemers)
-            ->where('email', $redeemerData['email']);
+        // Filter for same email redeemers
+        $sameEmailRedeemers = $userRedeemers->filter(function ($redeemer) use ($redeemerData) {
+            return $redeemer->email === $redeemerData['email'];
+        });
 
         if ($sameEmailRedeemers->count() > 0) {
             return ServiceResponse::badRequest(
@@ -37,10 +46,7 @@ class RedeemerService
         }
 
         if ($sameNameRedeemers->count() > 0) {
-            $redeemerData['lastName'] = $sameNameRedeemers->
-                                        orderByDesc('created_at')
-                                        ->first()
-                                        ->last_name . '+';
+            $redeemerData['lastName'] .= $sameNameRedeemers->count();
         }
 
         $redeemer = CartCustomerDetail::create([
