@@ -124,7 +124,7 @@ class CartItemServiceV2
                     // Find fareTypeId for the given productPricesDetailsId
                     $fareTypeId = null;
                     foreach ($farePrices as $fare) {
-                        if ($fare["productPricesDetailsId"] === $productPriceDetailsId) {
+                        if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
                             $fareTypeId = $fare["fareTypeId"];
                             break;
                         }
