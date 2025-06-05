@@ -670,7 +670,7 @@ class BookingService
 
         $cartItemQ = CartItem::whereIn('id', $cartItemIds);
         $quoteIds = (clone $cartItemQ)->select('quote_id')->distinct()->pluck('quote_id')->filter()->toArray();
-        $isDirectPurchase = $cartItemQ->where('is_direct_purchase', true)->exists();
+        $isDirectPurchase = (clone $cartItemQ)->where('is_direct_purchase', true)->exists();
 
         DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds, $isDirectPurchase) {
             $userOrder->is_paid = true;
