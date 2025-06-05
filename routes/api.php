@@ -33,7 +33,6 @@ use App\Http\Controllers\Api\ProductController;
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user',], function () {
     Route::post('signup/email/', [UserController::class, 'userSignupEmail']);
-    Route::post('email/send-verification', [UserController::class, 'sendVerificationEmail']);
     Route::post('login/email/', [UserController::class, 'userLoginEmail']);
     Route::post('login/email/forgot-password/', [OtpController::class, 'sendOtp']);
     Route::post('email/otp/verify/', [OtpController::class, 'verifyOtp']);
@@ -56,6 +55,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'products',
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {
     Route::get('detail', [UserController::class, 'userDetail']);
     Route::put('detail', [UserController::class, 'updateProfile']);
+    Route::post('email/send-verification', [UserController::class, 'sendVerificationEmail']);
     Route::put('nickname', [UserController::class, 'updateNickname']);
     Route::delete('delete', [UserController::class, 'deleteUserTemporarily']);
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
