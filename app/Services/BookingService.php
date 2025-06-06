@@ -685,7 +685,7 @@ class BookingService
                 ->where('user_order_id', null)
                 ->where('is_primary', false)
                 ->where('is_direct_purchase', $isDirectPurchase)
-                ->when(!is_null($quoteIds), fn ($query) => $query->whereIn('quote_id', $quoteIds))
+                ->when(!empty($quoteIds), fn ($query) => $query->whereIn('quote_id', $quoteIds))
                 ->update(['user_order_id' => $userOrder->id]);
 
             event(new CompleteOrderEvent(
