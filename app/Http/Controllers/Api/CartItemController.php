@@ -438,27 +438,52 @@ class CartItemController extends BaseController
         $validator->after(function ($validator) use ($data, $userId, $quoteId) {
             if ($quoteId) {
                 $itemType = ItemType::quote($quoteId);
-                $userCartItems = CartItem::userQuoteItems($userId, $itemType)->pluck('id')->toArray();
+                $cartItems = CartItem::userQuoteItems($userId, $itemType);
             } else {
                 $itemType = ItemType::cart();
-                $userCartItems = CartItem::userCartItems($userId)->pluck('id')->toArray();
+                $cartItems = CartItem::userCartItems($userId);
             }
-            if (empty($userCartItems)) {
+            $cartItemIds = $cartItems->pluck('id')->toArray();
+            if (empty($cartItemIds)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
                 return;
             }
+            $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
+            $products = Product::whereIn('tdms_product_id', $productIds);
+
             $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
             foreach ($data as $item) {
+                $cartItem = $cartItems->where('id', $item['cartItemId'])->first();
                 // Check if cartItemId provided exists in user cart
-                if (!in_array($item['cartItemId'], $userCartItems)) {
+                if (!$cartItem) {
                     $validator->errors()->add(
                         $item['cartItemId'],
                         'Cart item not found'
                     );
                     continue;
                 };
+
+                $product = $products->where('tdms_product_id', $cartItem->tdms_product_id)->first();
+                $farePrices = $product->json['faresprices'];
+
+                foreach ($farePrices as $fare) {
+                    if ((string) $fare["productPricesDetailsId"] === (string) $cartItem->product_price_details_id) {
+                        break;
+                    }
+                }
+
+                if (
+                    isset($fare['fareQtyRestrictions'])
+                    && (int) $item['quantity'] % (int) $fare['fareQtyRestrictions'] != 0
+                ) {
+                    $validator->errors()->add(
+                        $item['cartItemId'],
+                        'Quantity must be multiple of ' . $fare['fareQtyRestrictions']
+                    );
+                }
+
 
                 // Check if quantityIndex in order
                 $quantityIndices = array_column($item['bookingData'], 'quantityIndex');

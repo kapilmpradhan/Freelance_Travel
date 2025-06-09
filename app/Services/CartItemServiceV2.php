@@ -118,17 +118,27 @@ class CartItemServiceV2
                     }
                 }
 
-                if ($productDetails['apiProviderId'] > 0 && $productDetails['groupFaresForAvailabilityCheck'] == true) {
-                    $farePrices = $productDetails['faresprices'];
+                $farePrices = $productDetails['faresprices'];
 
-                    // Find fareTypeId for the given productPricesDetailsId
-                    $fareTypeId = null;
-                    foreach ($farePrices as $fare) {
-                        if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
-                            $fareTypeId = $fare["fareTypeId"];
-                            break;
-                        }
+                // Find fareTypeId for the given productPricesDetailsId
+                $fareTypeId = null;
+                foreach ($farePrices as $fare) {
+                    if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
+                        $fareTypeId = $fare["fareTypeId"];
+                        break;
                     }
+                }
+
+                if (
+                    isset($fare['fareQtyRestrictions'])
+                    && $quantity % (int) $fare['fareQtyRestrictions'] != 0
+                ) {
+                    return ServiceResponse::badRequest(
+                        message: 'Quantity must be multiple of ' . $fare['fareQtyRestrictions']
+                    );
+                }
+
+                if ($productDetails['apiProviderId'] > 0 && $productDetails['groupFaresForAvailabilityCheck'] == true) {
                     $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
                         agentToken: $defaultAgentAccessToken,
                         fareTypeId: $fareTypeId,
