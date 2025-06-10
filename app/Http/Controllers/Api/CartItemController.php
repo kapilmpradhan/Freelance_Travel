@@ -465,7 +465,7 @@ class CartItemController extends BaseController
                     continue;
                 };
 
-                $product = $products->where('tdms_product_id', $cartItem->tdms_product_id)->first();
+                $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)->first();
                 $farePrices = $product->json['faresprices'];
 
                 foreach ($farePrices as $fare) {
