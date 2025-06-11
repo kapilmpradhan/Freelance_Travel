@@ -886,6 +886,11 @@ class CartItemController extends BaseController
             if (!$postOrderResponse->isSuccess()) {
                 return $this->sendResponseFromService($postOrderResponse);
             }
+            CartCustomerDetail::where('user_id', $user->uuid)
+                            ->where('is_primary', false)
+                            ->where('is_deleted', false)
+                            ->whereNull('user_order_id')
+                            ->update(['is_deleted' => true]);
         } catch (Exception $e) {
             $errorMessage = "Failed to direct purchase";
             Logger::error($errorMessage, $e);

@@ -8,7 +8,6 @@ use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
 use App\DTOs\OrderItemRequestData;
 use App\Logging\Logger;
-use App\Models\CartCustomerDetail;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
@@ -20,6 +19,7 @@ class CartItemServiceV2
         string $userId,
         int $tdmsProductId,
         array $productPricesDetails,
+        $itemType = null
     ): ServiceResponse {
         $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         $userAgent = $userAgentResponse->data;
@@ -51,6 +51,9 @@ class CartItemServiceV2
 
         $result = [];
         $existingUserCartItems = CartItem::userCartItems($userId);
+        if ($itemType->isDirect) {
+            $existingUserCartItems = CartItem::userDirectPurchaseItems($userId);
+        }
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
             $quantityDetails = $productPriceDetails['quantityDetails'];
@@ -102,13 +105,33 @@ class CartItemServiceV2
             $bookingDetails = $bookingDetailsResponse->data;
 
             foreach ($quantityDetails as $details) {
-                $quantity = $details['quantity'];
-                $timeId = $details['timeId'] ?? '0';
-                $commences = $details['commences'] ?? null;
-                $optionalData = $details['bookingData']['optionalData'] ?? [];
-                $bookingData = $details['bookingData'] ?? [];
-
-                if (empty($bookingData)) {
+                if ($itemType && $itemType->isDirect) {
+                    $quantityIndex = 0;
+                    $bookingData = [];
+                    foreach ($details['bookingData'] as $data) {
+                        $timeId = $data['timeId'];
+                        $commences = $data['commences'];
+                        $optionalData = $data['optionalData'] ?? [];
+                        $pickupId = $data['pickupId'] ?? null;
+                        $pickupLocation = $data['pickupLocation'] ?? null;
+                        $redeemers = $data['redeemers'] ?? null;
+                        $bookingData[] = [
+                            "quantityIndex" => ++$quantityIndex,
+                            "timeId" => $timeId,
+                            "commences" => $commences,
+                            "pickupId" => $pickupId,
+                            "pickupLocation" => $pickupLocation,
+                            "optionalData" => $optionalData,
+                            "redeemers" => $redeemers
+                        ];
+                    }
+                    $quantity = $quantityIndex;
+                } elseif (empty($bookingData)) {
+                    $quantity = $details['quantity'];
+                    $timeId = $details['timeId'] ?? '0';
+                    $commences = $details['commences'] ?? null;
+                    $optionalData = $details['bookingData']['optionalData'] ?? [];
+                    $bookingData = $details['bookingData'] ?? [];
                     for ($i = 1; $i <= $quantity; $i++) {
                         $bookingData[] = [
                             "quantityIndex" => $i,
@@ -164,7 +187,11 @@ class CartItemServiceV2
                         1,
                     );
                 }
-                if (empty($productAvailabilities)) {
+                if (
+                    empty($productAvailabilities) ||
+                    (isset($productAvailabilities['statusCode']) &&
+                    $productAvailabilities['statusCode'] != 200)
+                ) {
                     return ServiceResponse::notFound(
                         message: 'Product availability not found',
                     );
@@ -256,7 +283,8 @@ class CartItemServiceV2
             $buildRequestDataResponse = self::buildOrderItemRequestData(
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
-                productPricesDetails: $productPricesDetails
+                productPricesDetails: $productPricesDetails,
+                itemType: $itemType
             );
             if (!$buildRequestDataResponse->isSuccess()) {
                 return $buildRequestDataResponse;
@@ -339,14 +367,6 @@ class CartItemServiceV2
 
                 return $cartItems;
             });
-
-            if ($itemType->isDirect) {
-                CartCustomerDetail::where('user_id', $userId)
-                                ->where('is_primary', false)
-                                ->where('is_deleted', false)
-                                ->whereNull('user_order_id')
-                                ->update(['is_deleted' => true]);
-            }
 
             return ServiceResponse::success(data: $cartItems);
         } catch (ServiceException $e) {

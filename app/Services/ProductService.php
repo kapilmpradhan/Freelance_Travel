@@ -108,20 +108,14 @@ class ProductService
         $startDate,
         $days,
     ) {
-        $requestUrl = config('vars.tdms_api_url');
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            "{$requestUrl}/checkavailabilityrange/{$productPricesDetailsId}/{$timeId}/{$startDate}/$days",
-        );
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentToken}",
-            "Content-Type: application/json",
-        ));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        $response = curl_exec($curl);
+        $requestUrl = config('vars.tdms_api_url')
+                    . "/checkavailabilityrange/{$productPricesDetailsId}/{$timeId}/{$startDate}/$days";
+        $response = Http::withToken($agentToken)
+            ->withHeaders([
+                "Authorization: Bearer {$agentToken}",
+                'Content-Type' => 'application/json',
+            ])
+            ->get($requestUrl);
         $response = json_decode($response, true);
         return $response;
     }
