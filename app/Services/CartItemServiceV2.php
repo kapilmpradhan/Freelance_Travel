@@ -8,6 +8,7 @@ use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
 use App\DTOs\OrderItemRequestData;
 use App\Logging\Logger;
+use App\Models\CartCustomerDetail;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
@@ -338,6 +339,14 @@ class CartItemServiceV2
 
                 return $cartItems;
             });
+
+            if ($itemType->isDirect) {
+                CartCustomerDetail::where('user_id', $userId)
+                                ->where('is_primary', false)
+                                ->where('is_deleted', false)
+                                ->whereNull('user_order_id')
+                                ->update(['is_deleted' => true]);
+            }
 
             return ServiceResponse::success(data: $cartItems);
         } catch (ServiceException $e) {
