@@ -110,7 +110,7 @@ class CartItemServiceV2
                     $bookingData = [];
                     foreach ($details['bookingData'] as $data) {
                         $timeId = $data['timeId'];
-                        $commences = $data['commences'];
+                        $commences = $data['commences'] ?? null;
                         $optionalData = $data['optionalData'] ?? [];
                         $pickupId = $data['pickupId'] ?? null;
                         $pickupLocation = $data['pickupLocation'] ?? null;
