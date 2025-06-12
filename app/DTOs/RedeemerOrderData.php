@@ -53,7 +53,7 @@ class RedeemerOrderData
             "phone" => $this->phoneNumber,
             "redeemerCountry" => $this->countryCode,
             "dateOfBirth" => $this->dateOfBirth,
-            "postCode" => $this->postalCode,
+            "postcode" => $this->postalCode,
             "products" => $productData
         ];
 
