@@ -219,7 +219,7 @@ class CartItem extends Model
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.dropoffId'] = 'nullable|string';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.dropoffLocation'] = 'nullable|string';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.redeemers'] = 'required|array|min:1';
-        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.optionalData'] = 'nullable|string';
+        $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.optionalData'] = 'nullable|array';
 
         return $rule;
     }
