@@ -158,7 +158,7 @@ class BookingService
                         phoneNumber: $userRedeemer->phone_number,
                         countryCode: $userRedeemer->country_code,
                         dateOfBirth: $userRedeemer->date_of_birth,
-                        postalCode: $userRedeemer->post_code,
+                        postalCode: $userRedeemer->postal_code,
                     );
                     foreach ($redeemers as $redeemer) {
                         if ($redeemer->redeemerId == $userRedeemer->id) {
