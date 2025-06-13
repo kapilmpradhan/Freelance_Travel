@@ -145,6 +145,7 @@ class BookingService
                         'bookingData' => $bookingData
                     ], code: 400);
                 }
+                $isPrimaryRedeemer = true;
                 foreach ($redeemerIds as $redeemerId) {
                     // Order data for redeemers
                     $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
@@ -252,10 +253,13 @@ class BookingService
                             && $product->redeemerId == $newBooking->redeemerId
                             && $product->datePriceCacheId == $newBooking->datePriceCacheId
                         ) {
-                            $product->redeemerQuantity += 1;
+                            $product->redeemerQuantity = $isPrimaryRedeemer
+                                                ? $product->redeemerQuantity + 1
+                                                : $product->redeemerQuantity;
                             $product->bookings[] = $newBooking;
                         }
                     }
+                    $isPrimaryRedeemer = false;
                 }
             }
         }
@@ -280,16 +284,10 @@ class BookingService
                             ->where('version', $cartItem->product_version)
                             ->first();
 
-            $farePrice = array_filter($product->json['faresprices'], function ($farePrice) use ($cartItem) {
-                return $farePrice['productPricesDetailsId'] == $cartItem->product_price_details_id;
-            });
-
-            $numpax = array_values($farePrice)[0]['numPax'];
-
             $isNewProduct = true;
             $newProduct = new ProductOrderData(
                 productPricesDetailsId: strVal($cartItem->product_price_details_id),
-                quantity: $cartItem->booking_quantity * $numpax,
+                quantity: $cartItem->booking_quantity,
                 datePriceCacheId: $datePriceCacheId,
                 cartItemIds: [$cartItem->id]
             );
