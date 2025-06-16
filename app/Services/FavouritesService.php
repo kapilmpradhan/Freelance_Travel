@@ -38,7 +38,7 @@ class FavouritesService
             }
 
             CartItemService::cacheProduct(
-                product: $productDetailsFromTdms['results'],
+                product: $productDetailsFromTdms['results'][0],
                 checkTime: now()
             );
         }
