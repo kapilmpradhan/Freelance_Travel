@@ -142,7 +142,7 @@ class CartItemServiceV2
                     }
                 }
 
-                $farePrices = $productDetails['faresprices'];
+                $farePrices = $productDetails->json['faresprices'];
 
                 // Find fareTypeId for the given productPricesDetailsId
                 $fareTypeId = null;
