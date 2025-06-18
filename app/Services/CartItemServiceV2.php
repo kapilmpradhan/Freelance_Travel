@@ -66,10 +66,10 @@ class CartItemServiceV2
                                 ->whereIn('booking_date', $bookingDates);
 
             if ($sameItemsOnSameDate->isNotEmpty()) {
-                $productDetails = Product::where('tdms_product_id', $sameItemsOnSameDate->first()->tdms_product_id)
+                $productDetailsOfSameItem = Product::where('tdms_product_id', $sameItemsOnSameDate->first()->tdms_product_id)
                                         ->first();
 
-                $isAccommodationProduct = $productDetails->json['productClass'] == 'A';
+                $isAccommodationProduct = $productDetailsOfSameItem->json['productClass'] == 'A';
 
                 if (!$isAccommodationProduct) {
                     $sameItems = [];
@@ -142,7 +142,7 @@ class CartItemServiceV2
                     }
                 }
 
-                $farePrices = $productDetails->json['faresprices'];
+                $farePrices = $productDetails['faresprices'];
 
                 // Find fareTypeId for the given productPricesDetailsId
                 $fareTypeId = null;
