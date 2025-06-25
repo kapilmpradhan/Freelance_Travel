@@ -22,11 +22,11 @@
         "monolog/monolog": "^3.8",
         "predis/predis": "^2.3",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
-        "symfony/mailer": "^6.3"
+        "symfony/mailer": "^6.3",
+        "fakerphp/faker": "^1.23"
     },
     "require-dev": {
         "behat/behat": "^3.14",
-        "fakerphp/faker": "^1.23",
         "friendsofphp/php-cs-fixer": "^3.64",
         "laravel/sail": "^1.21",
         "mockery/mockery": "^1.6",
