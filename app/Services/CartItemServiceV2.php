@@ -19,7 +19,8 @@ class CartItemServiceV2
         string $userId,
         int $tdmsProductId,
         array $productPricesDetails,
-        $itemType = null
+        $itemType = null,
+        $isDryRun = false
     ): ServiceResponse {
         $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         $userAgent = $userAgentResponse->data;
@@ -65,7 +66,7 @@ class CartItemServiceV2
             $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
                                 ->whereIn('booking_date', $bookingDates);
 
-            if ($sameItemsOnSameDate->isNotEmpty()) {
+            if ($sameItemsOnSameDate->isNotEmpty() && !$isDryRun) {
                 $productDetailsOfSameItem = Product::where(
                     'tdms_product_id',
                     $sameItemsOnSameDate->first()->tdms_product_id
@@ -283,6 +284,8 @@ class CartItemServiceV2
     ) {
         try {
             if ($isDryRun) {
+                $itemType->isCart = false;
+                $itemType->isDirect = true;
                 CartItemService::cleanDirectPurchase($userId);
             }
 
@@ -290,7 +293,8 @@ class CartItemServiceV2
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
                 productPricesDetails: $productPricesDetails,
-                itemType: $itemType
+                itemType: $itemType,
+                isDryRun: $isDryRun
             );
             if (!$buildRequestDataResponse->isSuccess()) {
                 return $buildRequestDataResponse;
@@ -310,6 +314,7 @@ class CartItemServiceV2
                 $cartItems,
                 $addToQuote,
                 $itemType,
+                $isDryRun
             ) {
                 $quote = null;
                 if (!is_null($addToQuote)) {
