@@ -15,6 +15,7 @@ use App\Models\ProductHistory;
 use App\Models\ProductPriceAvailability;
 use App\Models\Quote;
 use App\Models\UserOrder;
+use App\Models\UserOrderCommission;
 use Exception;
 
 class CartItemService
@@ -853,6 +854,9 @@ class CartItemService
                                 ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
                                 ->when(is_null($quoteId), fn ($query) => $query->whereNull('quote_id'))
                                 ->update(['user_order_id' => $userOrder->id]);
+                UserOrderCommission::where('user_id', $userId)
+                                ->when(is_null($quoteId), fn ($query) => $query->where('is_cart', true))
+                                ->update(['user_order_id', $userOrder->id]);
             }
         });
     }

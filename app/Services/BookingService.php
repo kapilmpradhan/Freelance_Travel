@@ -19,13 +19,14 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\User;
 use App\Models\UserOrder;
+use App\Models\UserOrderCommission;
 use App\Services\TdmsService;
 use App\Services\UserAgentService;
 use Carbon\Carbon;
 
 class BookingService
 {
-    public static function getTotalChargeAmount($cartItems)
+    public static function getTotalChargeAmount($cartItems, $userId, $isDry = false, $itemType = null)
     {
         $totalAmount = 0;
 
@@ -37,9 +38,13 @@ class BookingService
             }
         }
 
+        if ($isDry) {
+            return $totalAmount;
+        }
+
         // Provide discount if exists
-        $discountPercentageResponse = DiscountService::getDiscountPercentage();
-        $percentage = $discountPercentageResponse->data['percentage'];
+        $discountPercentageResponse = DiscountService::getItemsDiscount($itemType, $userId);
+        $percentage = $discountPercentageResponse->data['applicableDiscount'];
         $totalAmount -= $totalAmount * $percentage / 100;
         return $totalAmount;
     }
@@ -124,9 +129,12 @@ class BookingService
         return $redeemers;
     }
 
-    public static function buildRedeemersDataV2($cartItems, $userId)
+    public static function buildRedeemersDataV2($cartItems, $userId, $isDry = false)
     {
         $userRedeemers = CartCustomerDetail::where('user_id', $userId)->get();
+        if ($isDry) {
+            $fakeRedeemer = CartCustomerDetail::factory(count: 1)->make()->first();
+        }
 
         $redeemers = [];
         $products = [];
@@ -138,7 +146,11 @@ class BookingService
                             : null;
 
             foreach ($bookingDatas as $bookingData) {
-                $redeemerIds = $bookingData['redeemers'] ?? [];
+                if (!$isDry) {
+                    $redeemerIds = $bookingData['redeemers'] ?? [];
+                } else {
+                    $redeemerIds = [$fakeRedeemer->id];
+                }
                 if (empty($redeemerIds)) {
                     throw new ServiceException('Redeemer not found', data: [
                         'cartItemId' => $cartItem->id,
@@ -148,7 +160,12 @@ class BookingService
                 $isPrimaryRedeemer = true;
                 foreach ($redeemerIds as $redeemerId) {
                     // Order data for redeemers
-                    $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
+                    if (!$isDry) {
+                        $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
+                    } else {
+                        $userRedeemer = $fakeRedeemer;
+                    }
+
                     $isNewRedeemer = true;
                     $newRedeemer = new RedeemerOrderData(
                         redeemerId: $userRedeemer->id,
@@ -323,11 +340,13 @@ class BookingService
         string $paymentMethodCode,
         $cartItems,
         $customers,
+        $isDry = false,
+        $itemType = null
     ) {
-        $totalChargeAmount = self::getTotalChargeAmount($cartItems);
+        $totalChargeAmount = self::getTotalChargeAmount($cartItems, $userId, $isDry, $itemType);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $isDry);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -398,10 +417,9 @@ class BookingService
     public static function basePostOrder(
         string $userId,
         string $intent,
-        array $customers = [],
-        string $quoteId = null,
+        ItemType $itemType,
         bool $processAsQuote = true,
-        bool $isDirectPurchase = false
+        array $customers = []
     ) {
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         if ($getAgentResponse->isError()) {
@@ -409,13 +427,13 @@ class BookingService
         }
         $agent = $getAgentResponse->data;
 
-        if ($isDirectPurchase) {
+        if ($itemType->isDirect) {
             $cartItems = CartItem::userDirectPurchaseItems($userId);
         } else {
             $cartItems = (
-                is_null($quoteId)
+                !$itemType->isQuote
                 ? CartItem::userCartItems($userId)
-                : CartItem::userQuoteItems($userId, ItemType::quote($quoteId))
+                : CartItem::userQuoteItems($userId, $itemType)
             );
         }
         $cartItemIds = $cartItems->pluck('id')->toArray();
@@ -442,6 +460,7 @@ class BookingService
             paymentMethodCode: $onlinePaymentMethod['code'],
             cartItems: $cartItems,
             customers: $customers,
+            itemType: $itemType
         );
 
         if (OrderDataValidationFeature::isEnabled()) {
@@ -575,7 +594,7 @@ class BookingService
             responseData: $orderResponseData,
             intent: $intent,
             emailData: $emailData,
-            quoteId: $quoteId,
+            quoteId: $itemType->typeId,
             paymentGateway: [
                 "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
                 "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']
@@ -595,64 +614,14 @@ class BookingService
     public static function postOrder(
         string $userId,
         string $intent,
-        int $quoteId = null,
-        bool $processAsQuote = true,
-        bool $isDirectPurchase = false
+        ItemType $itemType,
+        bool $processAsQuote = true
     ) {
         $basePostOrderResponse = self::basePostOrder(
             userId: $userId,
             intent: $intent,
-            quoteId: $quoteId,
             processAsQuote: $processAsQuote,
-            isDirectPurchase: $isDirectPurchase
-        );
-
-        return $basePostOrderResponse;
-    }
-
-    public static function postOrderV2(
-        string $userId,
-        string $intent,
-        string $quoteId = null,
-        bool $processAsQuote = true,
-        bool $isDirectPurchase = false
-    ) {
-        $user = User::where('uuid', $userId)->first();
-        $checkIfUserContainsLeadCustomerDetailResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
-        if ($checkIfUserContainsLeadCustomerDetailResponse->isError()) {
-            return ServiceResponse::badRequest(message: 'Unable to get lead customer details');
-        }
-        $leadCustomer = [
-            "email" => $user->email,
-            "title" => $user->title ?? null,
-            "first_name" => $user->first_name,
-            "last_name" => $user->last_name,
-            "phone_number" => $user->phone_number,
-            "country_code" => $user->country_code,
-            "date_of_birth" => $user->date_of_birth,
-            "postal_code" => $user->post_code,
-            "customer_index" => 0
-        ];
-
-        // Lead customer is indexed 0 so others customers index are incremented by 1 in memory.
-        $customers = CartCustomerDetail::where('user_id', $userId)
-                            ->where('is_direct_purchase', $isDirectPurchase)
-                            ->when(!is_null($quoteId), fn ($query) => $query->where('quote_id', $quoteId))
-                            ->orderBy('customer_index', 'desc')
-                            ->get()
-                            ->map(function ($customer) {
-                                $customer->customer_index += 1;
-                                return $customer;
-                            })
-                            ->toArray();
-        $customers = array_merge([$leadCustomer], $customers);
-        $basePostOrderResponse = self::basePostOrder(
-            userId: $userId,
-            intent: $intent,
-            customers: $customers,
-            quoteId: $quoteId,
-            processAsQuote: $processAsQuote,
-            isDirectPurchase: $isDirectPurchase
+            itemType: $itemType
         );
 
         return $basePostOrderResponse;
@@ -684,6 +653,12 @@ class BookingService
                 ->where('is_primary', false)
                 ->where('is_direct_purchase', $isDirectPurchase)
                 ->when(!empty($quoteIds), fn ($query) => $query->whereIn('quote_id', $quoteIds))
+                ->update(['user_order_id' => $userOrder->id]);
+            UserOrderCommission::where('user_id', $userOrder->user_id)
+                ->where('user_order_id', null)
+                ->when(!empty($quoteIds), fn ($query) => $query->whereIn('quote_id', $quoteIds))
+                ->where('is_direct_purchase', $isDirectPurchase)
+                ->when(empty($quoteIds) && !$isDirectPurchase, fn ($query) => $query->where('is_cart', true))
                 ->update(['user_order_id' => $userOrder->id]);
 
             event(new CompleteOrderEvent(

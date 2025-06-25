@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Jobs\SetupProfileJob;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

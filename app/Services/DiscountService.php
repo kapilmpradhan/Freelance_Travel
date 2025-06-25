@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Logging\Logger;
+use App\Models\CartItem;
 use App\Models\Discount;
+use App\Models\UserOrderCommission;
 use Exception;
 
 class DiscountService
@@ -27,6 +29,129 @@ class DiscountService
 
         return ServiceResponse::success(
             data: $data
+        );
+    }
+
+    public static function getOrderCommission($itemType, $userId)
+    {
+        $items = CartItem::userItems($userId, $itemType);
+        if (count($items) == 0) {
+            return ServiceResponse::notFound('No items available');
+        }
+
+        $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
+        $orderCommission = $orderCommissionResponse->data;
+
+        if (!$orderCommission || is_null($orderCommission->percentage)) {
+            $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
+            if ($getAgentResponse->isError()) {
+                return $getAgentResponse;
+            }
+            $agent = $getAgentResponse->data;
+
+            if (!$orderCommission) {
+                $orderCommission = UserOrderCommission::create([
+                    'user_id' => $userId,
+                    'agent_branch' => $agent['branch_code'],
+                    'is_cart' => $itemType->isCart,
+                    'quote_id' => $itemType->typeId,
+                    'is_direct_purchase' => $itemType->isDirect,
+                    'percentage' => null
+                ]);
+            }
+
+            $items = CartItem::userItems(userId: $userId, itemType: $itemType);
+
+            $bookingReference = TdmsService::getBookingRefrence($agent->access_token);
+            $onlinePaymentMethod = BookingService::getOnlinePaymentMethod($agent->access_token);
+            if (is_null($onlinePaymentMethod)) {
+                throw new ServiceException('Missing online payment method');
+            }
+
+            $orderRequestData = BookingService::buildOrderRequestData(
+                userId: $userId,
+                processAsQuote: true,
+                bookingReference: $bookingReference,
+                paymentMethodCode: $onlinePaymentMethod['code'],
+                cartItems: $items,
+                customers: [],
+                isDry: true,
+                itemType: $itemType
+            );
+
+            $validateOrderDataResponse = TdmsService::validateOrderData(
+                agentToken: $agent->access_token,
+                bookingReference: $bookingReference,
+                orderData: $orderRequestData,
+            );
+
+            if ($validateOrderDataResponse->isError()) {
+                return ServiceResponse::badRequest(
+                    message: 'Failed to validate order data',
+                    data: $validateOrderDataResponse->data
+                );
+            }
+
+            $data = $validateOrderDataResponse->data;
+            $commission = $data['commission']['message']['estimatedCommission'];
+            $totalRrp = $orderRequestData['totalCharged'];
+
+            $commissionPercentage = round($commission / $totalRrp * 100, 2);
+
+            $orderCommission->percentage = $commissionPercentage;
+            $orderCommission->save();
+        }
+        return ServiceResponse::success($orderCommission);
+    }
+
+    // Calculates the overall discount based on the active discount percentage and commission percentage
+    // e.g. If active discount is 10% and commission is 15%, the overall discount will be 10%
+    // e.g. If active discount is 10% and commission is 12%, the overall discount will be 7% (12% - 5% threshold)
+    // Reference link: blob:https://websitetravel.atlassian.net/854bd471-24c8-48b2-a606-745b19d8fa2e#media-blob-url=true&id=c0b28879-aa4e-4615-8fc6-7ec45200a9dd&collection=&contextId=22708&width=855&height=335&alt=
+    public static function calcuateOverallDiscount($activeDiscountPercentage, $commissionPercentage, $threshold = 5)
+    {
+        if ($commissionPercentage - $threshold >= $activeDiscountPercentage) {
+            $applicableDiscount = $activeDiscountPercentage;
+        } elseif (
+            $commissionPercentage - $threshold < $activeDiscountPercentage &&
+            $commissionPercentage - $threshold > 0
+        ) {
+            $applicableDiscount = $commissionPercentage - $threshold;
+        } else {
+            $applicableDiscount = 0;
+        }
+
+        return $applicableDiscount;
+    }
+
+    public static function getItemsDiscount($itemType, $userId)
+    {
+        $activeDiscount = Discount::where('is_active', true)->first();
+        if (!$activeDiscount || $activeDiscount->percentage == 0) {
+            return ServiceResponse::success(
+                data: ['applicableDiscount' => 0]
+            );
+        }
+
+        $orderCommissionResponse = self::getOrderCommission($itemType, $userId);
+        if ($orderCommissionResponse->isError()) {
+            return $orderCommissionResponse;
+        }
+
+        $agentBranch = $orderCommissionResponse->data->agent_branch;
+
+        // TODO: Hard-coded branch code to FTX for now. Will update later!!
+        if ($agentBranch !== 'FTX') {
+            return ServiceResponse::success(data: ['discount' => 0]);
+        }
+
+        $applicableDiscount = self::calcuateOverallDiscount(
+            activeDiscountPercentage: $activeDiscount->percentage,
+            commissionPercentage: $orderCommissionResponse->data->percentage,
+        );
+
+        return ServiceResponse::success(
+            data: ['applicableDiscount' => $applicableDiscount]
         );
     }
 

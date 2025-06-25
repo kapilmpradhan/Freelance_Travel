@@ -66,8 +66,10 @@ class CartItemServiceV2
                                 ->whereIn('booking_date', $bookingDates);
 
             if ($sameItemsOnSameDate->isNotEmpty()) {
-                $productDetailsOfSameItem = Product::where('tdms_product_id', $sameItemsOnSameDate->first()->tdms_product_id)
-                                        ->first();
+                $productDetailsOfSameItem = Product::where(
+                    'tdms_product_id',
+                    $sameItemsOnSameDate->first()->tdms_product_id
+                )->first();
 
                 $isAccommodationProduct = $productDetailsOfSameItem->json['productClass'] == 'A';
 
@@ -280,6 +282,10 @@ class CartItemServiceV2
         bool $isDryRun = false,
     ) {
         try {
+            if ($isDryRun) {
+                CartItemService::cleanDirectPurchase($userId);
+            }
+
             $buildRequestDataResponse = self::buildOrderItemRequestData(
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
@@ -292,31 +298,6 @@ class CartItemServiceV2
             $orderItemsData = $buildRequestDataResponse->data;
 
             $now = Carbon::now();
-            if ($isDryRun) {
-                $cartItemsData = self::buildCartItemsData(
-                    userId: $userId,
-                    tdmsProductId: $tdmsProductId,
-                    productVersion: null,
-                    startDate: $startDate,
-                    days: $days,
-                    selectedAvailableIndices: $selectedAvailableIndices,
-                    availabilityLastUpdatedAt: $now,
-                    itemType: $itemType,
-                    quote: null,
-                    orderItemsData: $orderItemsData
-                );
-                $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
-                                ->orderBy('version', 'desc')
-                                ->first();
-
-                $cartItemsData = array_map(
-                    fn ($cartItemData) => array_merge($cartItemData, ['product' => $cachedProduct]),
-                    $cartItemsData,
-                );
-
-                return ServiceResponse::success(data: $cartItemsData);
-            }
-
             $cartItems = [];
             $cartItems = DB::transaction(function () use (
                 $tdmsProductId,
@@ -367,6 +348,13 @@ class CartItemServiceV2
 
                 return $cartItems;
             });
+
+            $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
+            if ($orderCommissionResponse->isSuccess()) {
+                $orderCommission = $orderCommissionResponse->data;
+                $orderCommission->percentage = null;
+                $orderCommission->save();
+            }
 
             return ServiceResponse::success(data: $cartItems);
         } catch (ServiceException $e) {

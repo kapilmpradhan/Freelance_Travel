@@ -15,10 +15,12 @@ use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Services\CartItemServiceV2;
+use App\Services\DiscountService;
 use App\Services\ProductCategoryService;
 use App\Services\RedeemerService;
 use App\Services\ServiceException;
 use App\Services\TdmsService;
+use App\Services\UserOrderCommissionService;
 use Illuminate\Support\Facades\DB;
 
 class CartItemController extends BaseController
@@ -432,17 +434,19 @@ class CartItemController extends BaseController
     {
         $userId = $request->user->uuid;
         $quoteId = $request->query('quoteId');
+
+        if ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+            $cartItems = CartItem::userQuoteItems($userId, $itemType);
+        } else {
+            $itemType = ItemType::cart();
+            $cartItems = CartItem::userCartItems($userId);
+        }
+
         $data = json_decode($request->getContent(), true);
         $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
 
-        $validator->after(function ($validator) use ($data, $userId, $quoteId) {
-            if ($quoteId) {
-                $itemType = ItemType::quote($quoteId);
-                $cartItems = CartItem::userQuoteItems($userId, $itemType);
-            } else {
-                $itemType = ItemType::cart();
-                $cartItems = CartItem::userCartItems($userId);
-            }
+        $validator->after(function ($validator) use ($data, $userId, $quoteId, $itemType, $cartItems) {
             $cartItemIds = $cartItems->pluck('id')->toArray();
             if (empty($cartItemIds)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
@@ -532,6 +536,13 @@ class CartItemController extends BaseController
             $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingData(
                 data: $data
             );
+            $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
+            if ($orderCommissionResponse->isSuccess()) {
+                $orderCommission = $orderCommissionResponse->data;
+                $orderCommission->percentage = null;
+                $orderCommission->save();
+            }
+
             return $this->sendResponseFromService($updateItemBookingDataResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to set booking data';
@@ -686,45 +697,18 @@ class CartItemController extends BaseController
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
         }
-
         try {
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
                 processAsQuote: true,
+                itemType: ItemType::cart()
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
             $errorMessage = "Failed to submit order";
             Logger::error($errorMessage, $e);
             return $this->sendResponseFromService($e->toServiceResponse());
-        }
-    }
-
-    public function submitOrderV2(Request $request)
-    {
-        $data = $request->all();
-        $validate = Validator::make($data, ["paymentType" => "required|in:email-quote,pay-now"]);
-
-        if ($validate->fails()) {
-            return $this->sendError("Place order failed", $validate->errors());
-        }
-
-        try {
-            $postOrderResponse = BookingService::postOrderV2(
-                userId: $request->user->uuid,
-                intent: $data['paymentType'],
-                processAsQuote: true,
-            );
-            return $this->sendResponseFromService($postOrderResponse);
-        } catch (ServiceException $e) {
-            $errorMessage = "Failed to submit order";
-            Logger::error($errorMessage, $e);
-            return $this->sendResponseFromService($e->toServiceResponse());
-        } catch (Exception $e) {
-            $errorMessage = "Failed to submit order";
-            Logger::error($errorMessage, $e);
-            return $this->sendError($e->getMessage());
         }
     }
 
@@ -735,7 +719,7 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 intent: 'pay-now',
                 processAsQuote: true,
-                quoteId: $quoteId,
+                itemType: ItemType::quote($quoteId)
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
@@ -749,91 +733,12 @@ class CartItemController extends BaseController
         }
     }
 
-    public function directPurchase(Request $request)
-    {
-        $user = $request->user();
-        $data = $request->all();
-        $validate = Validator::make($data, CartItem::directPurchaseRule());
-
-        if ($validate->fails()) {
-            return $this->sendError("Place order failed", $validate->errors());
-        }
-
-        try {
-            $cleanResponse = CartItemService::cleanDirectPurchase($user->uuid);
-            if (!$cleanResponse->isSuccess()) {
-                return $this->sendResponseFromService($cleanResponse);
-            }
-        } catch (ServiceException $e) {
-            return $this->sendResponseFromService($e->toServiceResponse());
-        }
-
-        DB::beginTransaction();
-        try {
-            $saveItemsResponse = CartItemService::saveItems(
-                userId: $user->uuid,
-                tdmsProductId: $data['tdmsProductId'],
-                productPricesDetailsId: $data['productPricesDetailsId'],
-                timeId: $data['timeId'] ?? null,
-                startDate: $data['startDate'],
-                days: $data['days'],
-                selectedAvailableIndices: $data['selectedAvailableIndices'],
-                bookingData: $data['bookingData'] ?? [],
-                addToQuote: null,
-                itemType: ItemType::direct()
-            );
-
-            if (!$saveItemsResponse->isSuccess()) {
-                DB::rollBack();
-                return $this->sendResponseFromService($saveItemsResponse);
-            }
-
-            if (isset($data['redeemers']) && count($data['redeemers']) > 0) {
-                $setCustomersResponse = CartItemService::setCustomers(
-                    userId: $user->uuid,
-                    data: $data['redeemers'],
-                    itemType: ItemType::direct()
-                );
-
-                if (!$setCustomersResponse->isSuccess()) {
-                    DB::rollBack();
-                    return $this->sendResponseFromService($setCustomersResponse);
-                }
-            }
-        } catch (Exception $e) {
-            DB::rollBack();
-            $errorMessage = "Failed to direct purchase";
-            Logger::error($errorMessage, $e);
-            return $this->sendError($e->getMessage());
-        }
-
-        // Add item to database as BookingService::postOrderV2 service goes thorugh DB to get the items.
-        DB::commit();
-
-        try {
-            $postOrderResponse = BookingService::postOrderV2(
-                userId: $user->uuid,
-                intent: 'pay-now',
-                processAsQuote: true,
-                isDirectPurchase: true
-            );
-
-            if (!$postOrderResponse->isSuccess()) {
-                return $this->sendResponseFromService($postOrderResponse);
-            }
-        } catch (Exception $e) {
-            $errorMessage = "Failed to direct purchase";
-            Logger::error($errorMessage, $e);
-            return $this->sendError($e->getMessage());
-        }
-        return $this->sendResponseFromService($postOrderResponse);
-    }
-
     public function directPurchaseV2(Request $request)
     {
         $user = $request->user();
         $data = $request->all();
         $validate = Validator::make($data, CartItem::directPurchaseRuleV2());
+        $isDry = $request->query('isDry') == 1;
 
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
@@ -858,7 +763,8 @@ class CartItemController extends BaseController
                 productPricesDetails: $data['productPricesDetails'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
                 addToQuote: null,
-                itemType: ItemType::direct()
+                itemType: ItemType::direct(),
+                isDryRun: $isDry
             );
 
             if (!$saveItemsResponse->isSuccess()) {
@@ -875,12 +781,16 @@ class CartItemController extends BaseController
         // Add item to database as BookingService::postOrderV2 service goes thorugh DB to get the items.
         DB::commit();
 
+        if ($isDry) {
+            return $this->sendResponseFromService($saveItemsResponse);
+        }
+
         try {
             $postOrderResponse = BookingService::postOrder(
                 userId: $user->uuid,
                 intent: 'pay-now',
                 processAsQuote: true,
-                isDirectPurchase: true
+                itemType: ItemType::direct()
             );
 
             if (!$postOrderResponse->isSuccess()) {
@@ -1005,6 +915,27 @@ class CartItemController extends BaseController
 
     public function getDiscountPercentage(Request $request)
     {
-        return $this->sendResponse('Discount percentage', ['discount' => config('vars.discount_percentage')]);
+        $userId = $request->user->uuid;
+        $isCart = $request->query('isCart') == 1;
+        $quoteId = $request->query('quoteId');
+        $isDirect = $request->query('isDirect') == 1;
+
+
+        if ($isCart) {
+            $itemType = ItemType::cart();
+        } elseif ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+        } elseif ($isDirect) {
+            $itemType = ItemType::direct();
+        } else {
+            return $this->sendError('Invalid request. Please provide either isCart, quoteId or isDirect parameter.');
+        }
+
+        $orderDiscountResponse = DiscountService::getItemsDiscount(
+            itemType: $itemType,
+            userId: $userId
+        );
+
+        return $this->sendResponseFromService($orderDiscountResponse);
     }
 }
