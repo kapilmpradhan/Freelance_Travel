@@ -54,6 +54,8 @@ class CartItemServiceV2
         $existingUserCartItems = CartItem::userCartItems($userId);
         if ($itemType->isDirect) {
             $existingUserCartItems = CartItem::userDirectPurchaseItems($userId);
+        } if ($itemType->isQuote) {
+            $existingUserCartItems = CartItem::userQuoteItems($userId, $itemType);
         }
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
@@ -84,7 +86,7 @@ class CartItemServiceV2
                         ];
                     }
                     return ServiceResponse::badRequest(
-                        message: 'Item already exists in cart',
+                        message: 'Item already exists',
                         data: $sameItems
                     );
                 }
@@ -108,9 +110,9 @@ class CartItemServiceV2
             $bookingDetails = $bookingDetailsResponse->data;
 
             foreach ($quantityDetails as $details) {
-                if ($itemType && $itemType->isDirect) {
-                    $quantityIndex = 0;
-                    $bookingData = [];
+                $quantityIndex = 0;
+                $bookingData = [];
+                if (isset($details['bookingData'])) {
                     foreach ($details['bookingData'] as $data) {
                         $timeId = $data['timeId'];
                         $commences = $data['commences'] ?? null;
@@ -128,8 +130,7 @@ class CartItemServiceV2
                             "redeemers" => $redeemers
                         ];
                     }
-                    $quantity = $quantityIndex;
-                } elseif (empty($bookingData)) {
+                } else {
                     $quantity = $details['quantity'];
                     $timeId = $details['timeId'] ?? '0';
                     $commences = $details['commences'] ?? null;
@@ -137,13 +138,14 @@ class CartItemServiceV2
                     $bookingData = $details['bookingData'] ?? [];
                     for ($i = 1; $i <= $quantity; $i++) {
                         $bookingData[] = [
-                            "quantityIndex" => $i,
+                            "quantityIndex" => ++$quantityIndex,
                             "timeId" => $timeId,
                             "commences" => $commences,
                             "optionalData" => $optionalData
                         ];
                     }
                 }
+                $quantity = $quantityIndex;
 
                 $farePrices = $productDetails['faresprices'];
 
@@ -289,6 +291,19 @@ class CartItemServiceV2
                 CartItemService::cleanDirectPurchase($userId);
             }
 
+            $quote = null;
+            if (!is_null($addToQuote)) {
+                if ($addToQuote->isNew) {
+                    $quote = Quote::create([
+                        'user_id' => $userId,
+                        'title' => $addToQuote->title,
+                    ]);
+                } else {
+                    $quote = Quote::where('id', $addToQuote->quoteId)->first();
+                }
+                $itemType->typeId = $quote->id;
+            }
+
             $buildRequestDataResponse = self::buildOrderItemRequestData(
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
@@ -312,22 +327,10 @@ class CartItemServiceV2
                 $selectedAvailableIndices,
                 $orderItemsData,
                 $cartItems,
-                $addToQuote,
+                $quote,
                 $itemType,
                 $isDryRun
             ) {
-                $quote = null;
-                if (!is_null($addToQuote)) {
-                    if ($addToQuote->isNew) {
-                        $quote = Quote::create([
-                            'user_id' => $userId,
-                            'title' => $addToQuote->title,
-                        ]);
-                    } else {
-                        $quote = Quote::where('id', $addToQuote->quoteId)->first();
-                    }
-                }
-
                 $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
                                 ->orderBy('version', 'desc')
                                 ->first();
