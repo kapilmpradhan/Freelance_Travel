@@ -28,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '300');
+
         Schema::defaultStringLength(191);
 
         if (config('app.env') !== 'local') {

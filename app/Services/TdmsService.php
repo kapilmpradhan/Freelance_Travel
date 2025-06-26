@@ -396,19 +396,34 @@ class TdmsService
         }
     }
 
-    public static function getProductsByMultipleCategories(array $categoriesIdByTypes, $agentToken, $countryId = 20)
-    {
+    public static function getProductsByMultipleCategories(
+        array $categoriesIdByTypes,
+        $agentToken,
+        $countryId = 20,
+        $recordStart = 0,
+        $recordsLength = 10
+    ) {
         $query = '';
         foreach ($categoriesIdByTypes as $type => $categoryIds) {
             $ids = implode(',', $categoryIds);
             $query = "$query$type=$ids";
         }
-        $url = config('vars.tdms_api_url') . "/products?countries={$countryId}&$query";
+        $url = config('vars.tdms_api_url') .
+            "/products?countries={$countryId}&$query&records-start=$recordStart&records-length=$recordsLength";
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            "Authorization" => "Bearer {$agentToken}"
-        ])->get($url);
+        $retryCount = 0;
+        while ($retryCount < 3) {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                "Authorization" => "Bearer {$agentToken}"
+            ])->timeout(60)->get($url);
+
+            if (!$response->successful()) {
+                $retryCount += 1;
+            } else {
+                break;
+            }
+        }
 
         $data = $response->json();
 
@@ -419,7 +434,7 @@ class TdmsService
         } else {
             if (!isset($data['message'])) {
                 Logger::error(
-                    message: 'Error validating order data',
+                    message: 'Error while fetching products by multiple categories',
                     extra: [
                         "type" => $type,
                         "responseData" => $data

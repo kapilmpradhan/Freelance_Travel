@@ -267,16 +267,38 @@ class ProductCategoryService
                             $categoriesByLabels[$category['category_type']][] = $category['category_id'];
                         }
 
-                        $productsResponse = TdmsService::getProductsByMultipleCategories(
-                            categoriesIdByTypes: $categoriesByLabels,
-                            agentToken: $agentToken,
-                            countryId: $productFilter->countryId
-                        );
-                        if ($productsResponse->isError()) {
-                            return $productsResponse;
-                        }
+                        $recordStart = 0;
+                        $recordLength = 5;
+                        $products = [];
+                        while (true) {
+                            $productsResponse = TdmsService::getProductsByMultipleCategories(
+                                categoriesIdByTypes: $categoriesByLabels,
+                                agentToken: $agentToken,
+                                countryId: $productFilter->countryId,
+                                recordStart: $recordStart,
+                                recordsLength: $recordLength
+                            );
+                            if ($productsResponse->isError()) {
+                                return $productsResponse;
+                            }
 
-                        $products = $productsResponse->data;
+                            $productData = $productsResponse->data;
+
+                            $filteredProducts = array_filter($productData, function ($product) use ($productFilter) {
+                                if ($productFilter->filterBy === 'accommodation') {
+                                    return $product['productClass'] === 'A';
+                                }
+                                return $product;
+                            });
+
+                            $products = array_merge($products, $filteredProducts);
+
+                            if (count($products) < 5 && count($productData) > 0) {
+                                $recordStart += $recordLength;
+                            } else {
+                                break;
+                            }
+                        }
                         foreach ($products as $product) {
                             $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
                             if (!$productExists) {
