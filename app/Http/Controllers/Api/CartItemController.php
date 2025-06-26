@@ -528,10 +528,6 @@ class CartItemController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $cartItemIds = array_map(function ($item) {
-            return $item['cartItemId'];
-        }, $data);
-
         try {
             $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingData(
                 data: $data
