@@ -351,7 +351,10 @@ class CartItemServiceV2
 
                 foreach ($cartItemsData as $cartItemData) {
                     $newCartItem = CartItem::create($cartItemData);
-                    array_push($cartItems, $newCartItem);
+                    $cartItemWithProduct = CartItem::with('product')
+                        ->where('id', $newCartItem->id)
+                        ->first();
+                    array_push($cartItems, $cartItemWithProduct);
                 }
 
                 return $cartItems;
