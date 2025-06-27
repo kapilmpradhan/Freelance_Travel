@@ -47,9 +47,14 @@ Route::group(['namespace' => 'App\Http\Controllers\Api'], function () {
     Route::get('health-check', [HealthCheckController::class, 'healthCheck']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'countries'], function () {
+    Route::get('locations', [ProductController::class, 'homeTabLocations']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'products',], function () {
     Route::get('home', [ProductController::class, 'homeFeedProducts']);
     Route::get('home/v2', [ProductController::class, 'homeFeedProductsV2']);
+    Route::get('home/locations', [ProductController::class, 'homeTabLocations']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'middleware' => 'auth.jwt'], function () {

@@ -455,7 +455,7 @@ class TdmsService
 
     public static function getCountries($agentToken)
     {
-        $url = config('vars.tdms_api_url') . "/categories?countries";
+        $url = config('vars.tdms_api_url') . "/categories/countries";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -516,6 +516,74 @@ class TdmsService
             return ServiceResponse::badRequest(
                 message: $data['message']
             );
+        }
+    }
+
+    public static function getCategoriesByTypeAndSubtype($agentToken, $type, $subType, $subtypeId)
+    {
+        $url = config('vars.tdms_api_url') . "/categories/{$type}?{$subType}={$subtypeId}";
+
+        $maxRetries = 3;
+        $retryDelay = 1000;
+
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                "Authorization" => "Bearer {$agentToken}"
+            ])->get($url);
+
+            if (!$response->successful()) {
+                Logger::error(
+                    message: 'Error fetching categories by type and subtype',
+                    extra: [
+                        "type" => $type,
+                        "subType" => $subType,
+                        "subtypeId" => $subtypeId,
+                        "responseData" => $response->json()
+                    ]
+                );
+                if ($attempt < $maxRetries - 1) {
+                    usleep($retryDelay * 1000);
+                    continue;
+                } else {
+                    throw new ServiceException(
+                        message: 'Internal server error while fetching categories',
+                        data: $response->json(),
+                        code: $response->status()
+                    );
+                }
+            }
+        }
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            $data = $data['results'] ?? [];
+            if (count($data) === 1 && $data[0]['id'] === 0) {
+                $data = [];
+            }
+            return ServiceResponse::success(
+                data: $data
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "type" => $type,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
         }
     }
 }

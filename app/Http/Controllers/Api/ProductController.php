@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\HomeFeedProductFilter;
+use App\Jobs\CountryLocationsJob;
+use App\Logging\Logger;
 use App\Services\ProductCategoryService;
 use App\Services\ServiceException;
 use App\Services\ServiceResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 
 class ProductController extends BaseController
 {
@@ -17,6 +20,22 @@ class ProductController extends BaseController
             return $this->sendResponseFromService($productResponse);
         } catch (ServiceException $e) {
             return $this->sendResponseFromService($e->toServiceResponse());
+        }
+    }
+
+    public function homeTabLocations(Request $request)
+    {
+        try {
+            $locations = Redis::get('all_countries_states_regions_locations');
+            if (!$locations) {
+                CountryLocationsJob::dispatch();
+                return $this->sendError('Locations data not found');
+            }
+            $locations = json_decode($locations, true);
+            return $this->sendResponse('All countries location', $locations);
+        } catch (ServiceException $e) {
+            Logger::error('Error fetching home tab locations: ' . $e->getMessage());
+            return $this->sendError($e->getMessage(), $e->getCode());
         }
     }
 
