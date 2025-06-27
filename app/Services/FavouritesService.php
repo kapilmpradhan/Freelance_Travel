@@ -13,18 +13,18 @@ class FavouritesService
     public static function getUserFavouriteProducts($userId)
     {
         $favourites = Favourites::where('user_id', $userId)
+                        ->orderBy('created_at', 'desc')
                         ->get();
 
         $favouiteProductIds = $favourites->pluck('tdms_product_id')->toArray();
         $products = Product::whereIn('tdms_product_id', $favouiteProductIds)->get();
 
         foreach ($favourites as $favourite) {
-            $product = $products->where('tdms_product_id', $favourite->tdms_product_id)->first();
-            $product->created_at = $favourite->created_at;
-            $product->updated_at = $favourite->updated_at;
+            $favouriteProduct = $products->where('tdms_product_id', $favourite->tdms_product_id)->first();
+            $favouriteProducts[] = $favouriteProduct;
         }
 
-        return ServiceResponse::success($products);
+        return ServiceResponse::success($favouriteProducts);
     }
 
     public static function addFavourite($userId, $tdmsProductId)
