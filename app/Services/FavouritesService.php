@@ -13,12 +13,16 @@ class FavouritesService
     public static function getUserFavouriteProducts($userId)
     {
         $favourites = Favourites::where('user_id', $userId)
-                        ->get()
-                        ->pluck('tdms_product_id')
-                        ->toArray();
-
-        $products = Product::whereIn('tdms_product_id', $favourites)
                         ->get();
+
+        $favouiteProductIds = $favourites->pluck('tdms_product_id')->toArray();
+        $products = Product::whereIn('tdms_product_id', $favouiteProductIds)->get();
+
+        foreach ($favourites as $favourite) {
+            $product = $products->where('tdms_product_id', $favourite->tdms_product_id)->first();
+            $product->created_at = $favourite->created_at;
+            $product->updated_at = $favourite->updated_at;
+        }
 
         return ServiceResponse::success($products);
     }
