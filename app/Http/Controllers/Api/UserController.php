@@ -8,7 +8,6 @@ use App\Services\OtpService;
 use App\Jobs\SendProfileEmailOtp;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
-use App\Jobs\CountryLocationsJob;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ServiceException;
@@ -50,7 +49,6 @@ class UserController extends BaseController
 
     public function userLoginEmail(Request $request, User $user, JwtService $jwtService)
     {
-        CountryLocationsJob::dispatch();
         $validate = Validator::make($request->all(), $user->emailLoginRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
