@@ -19,6 +19,7 @@ class FavouritesService
         $favouiteProductIds = $favourites->pluck('tdms_product_id')->toArray();
         $products = Product::whereIn('tdms_product_id', $favouiteProductIds)->get();
 
+        $favouriteProducts = [];
         foreach ($favourites as $favourite) {
             $favouriteProduct = $products->where('tdms_product_id', $favourite->tdms_product_id)->first();
             $favouriteProducts[] = $favouriteProduct;
