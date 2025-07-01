@@ -23,10 +23,11 @@ use App\Models\UserOrderCommission;
 use App\Services\TdmsService;
 use App\Services\UserAgentService;
 use Carbon\Carbon;
+use Database\Factories\CartItemFactory;
 
 class BookingService
 {
-    public static function getTotalChargeAmount($cartItems, $userId, $isDry = false, $itemType = null)
+    public static function getTotalChargeAmount($cartItems)
     {
         $totalAmount = 0;
 
@@ -38,14 +39,7 @@ class BookingService
             }
         }
 
-        if ($isDry) {
-            return $totalAmount;
-        }
 
-        // Provide discount if exists
-        $discountPercentageResponse = DiscountService::getItemsDiscount($itemType, $userId);
-        $percentage = $discountPercentageResponse->data['applicableDiscount'];
-        $totalAmount -= $totalAmount * $percentage / 100;
         return $totalAmount;
     }
 
@@ -343,10 +337,10 @@ class BookingService
         $isDry = false,
         $itemType = null
     ) {
-        $totalChargeAmount = self::getTotalChargeAmount($cartItems, $userId, $isDry, $itemType);
+        $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $isDry);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->isDry);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -427,7 +421,10 @@ class BookingService
         }
         $agent = $getAgentResponse->data;
 
-        if ($itemType->isDirect) {
+        if ($itemType->isDry) {
+            $cartItemData = $itemType->data;
+            $cartItems = CartItemFactory::withProvidedData($cartItemData);
+        } elseif ($itemType->isDirect) {
             $cartItems = CartItem::userDirectPurchaseItems($userId);
         } else {
             $cartItems = (
@@ -475,6 +472,37 @@ class BookingService
                 }
 
                 $validatedItemsData = $validateOrderDataResponse->data;
+
+                $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
+                $totalRrp = $orderRequestData['totalCharged'];
+                $commissionPercentage = round(((int) $commission / (int) $totalRrp) * 100, 2);
+
+                if (!$itemType->isDry) {
+                    $userOrderCommission = UserOrderCommission::firstOrCreate([
+                            'user_id' => $userId,
+                            'quote_id' => $itemType->typeId,
+                            'is_cart' => $itemType->isCart,
+                            'is_direct_purchase' => $itemType->isDirect,
+                            'agent_branch' => $agent->branch_code,
+                            'user_order_id' => null,
+                        ]);
+
+                    $userOrderCommission->percentage = $commissionPercentage;
+                    $userOrderCommission->save();
+                }
+
+                $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
+                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+
+                if ($itemType->isDry) {
+                    return ServiceResponse::success(
+                        message: 'Order data validated successfully',
+                        data: [
+                            'branch' => $agent->branch_code,
+                            'commission' => $commissionPercentage
+                        ]
+                    );
+                }
                 $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
                     if ($item['status'] === 'Available') {

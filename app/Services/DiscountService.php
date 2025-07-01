@@ -68,6 +68,8 @@ class DiscountService
                 throw new ServiceException('Missing online payment method');
             }
 
+            // This is a dry run to calculate the commission percentage
+            $itemType->isDry = true;
             $orderRequestData = BookingService::buildOrderRequestData(
                 userId: $userId,
                 processAsQuote: true,
@@ -75,7 +77,6 @@ class DiscountService
                 paymentMethodCode: $onlinePaymentMethod['code'],
                 cartItems: $items,
                 customers: [],
-                isDry: true,
                 itemType: $itemType
             );
 
@@ -108,8 +109,14 @@ class DiscountService
     // e.g. If active discount is 10% and commission is 15%, the overall discount will be 10%
     // e.g. If active discount is 10% and commission is 12%, the overall discount will be 7% (12% - 5% threshold)
     // Reference link: blob:https://websitetravel.atlassian.net/854bd471-24c8-48b2-a606-745b19d8fa2e#media-blob-url=true&id=c0b28879-aa4e-4615-8fc6-7ec45200a9dd&collection=&contextId=22708&width=855&height=335&alt=
-    public static function calcuateOverallDiscount($activeDiscountPercentage, $commissionPercentage, $threshold = 5)
+    public static function calcuateOverallDiscount($commissionPercentage, $threshold = 5)
     {
+        $activeDiscount = Discount::where('is_active', true)->first();
+        if (!$activeDiscount || $activeDiscount->percentage == 0) {
+            return 0;
+        }
+
+        $activeDiscountPercentage = $activeDiscount->percentage;
         if ($commissionPercentage - $threshold >= $activeDiscountPercentage) {
             $applicableDiscount = $activeDiscountPercentage;
         } elseif (
@@ -146,7 +153,6 @@ class DiscountService
         }
 
         $applicableDiscount = self::calcuateOverallDiscount(
-            activeDiscountPercentage: $activeDiscount->percentage,
             commissionPercentage: $orderCommissionResponse->data->percentage,
         );
 

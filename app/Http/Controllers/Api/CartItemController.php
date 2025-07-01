@@ -98,7 +98,7 @@ class CartItemController extends BaseController
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
                 addToQuote: null,
-                itemType: ItemType::cart(),
+                itemType: $isDryRun ? ItemType::dry() : ItemType::cart(),
                 isDryRun: $isDryRun,
             );
             return $this->sendResponseFromService($saveItemsResponse);
@@ -734,7 +734,6 @@ class CartItemController extends BaseController
         $user = $request->user();
         $data = $request->all();
         $validate = Validator::make($data, CartItem::directPurchaseRuleV2());
-        $isDry = $request->query('isDry') == 1;
 
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
@@ -759,8 +758,7 @@ class CartItemController extends BaseController
                 productPricesDetails: $data['productPricesDetails'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
                 addToQuote: null,
-                itemType: ItemType::direct(),
-                isDryRun: $isDry
+                itemType: ItemType::direct()
             );
 
             if (!$saveItemsResponse->isSuccess()) {
@@ -776,10 +774,6 @@ class CartItemController extends BaseController
 
         // Add item to database as BookingService::postOrderV2 service goes thorugh DB to get the items.
         DB::commit();
-
-        if ($isDry) {
-            return $this->sendResponseFromService($saveItemsResponse);
-        }
 
         try {
             $postOrderResponse = BookingService::postOrder(
@@ -933,5 +927,48 @@ class CartItemController extends BaseController
         );
 
         return $this->sendResponseFromService($orderDiscountResponse);
+    }
+
+    public function getDiscountPercentageV2(Request $request)
+    {
+        $datas = $request->except('user');
+        $validator = Validator::make($datas, CartItem::calculateCommissionRule());
+        if ($validator->fails()) {
+            return $this->sendError("Get discount percentage failed", $validator->errors());
+        }
+
+        $itemType = ItemType::dry();
+        $allItemsCartResponse = [];
+        foreach ($datas as $data) {
+            $saveItemsResponse = CartItemServiceV2::saveItems(
+                userId: $request->user->uuid,
+                tdmsProductId: $data['tdmsProductId'],
+                productPricesDetails: $data['productPricesDetails'],
+                startDate: $data['startDate'],
+                days: $data['days'],
+                selectedAvailableIndices: $data['selectedAvailableIndices'],
+                addToQuote: null,
+                itemType: $itemType
+            );
+
+            $allItemsCartResponse = array_merge($allItemsCartResponse, $saveItemsResponse->data);
+        }
+
+        $itemType->data = $allItemsCartResponse;
+        $commissionResponse = BookingService::postOrder(
+            userId: $request->user->uuid,
+            intent: 'pay-now',
+            processAsQuote: true,
+            itemType: $itemType
+        );
+
+        $commissionData = $commissionResponse->data;
+
+        return $this->sendResponse(
+            title: 'Applicable discount',
+            data: [
+                'applicableDiscount' => DiscountService::calcuateOverallDiscount($commissionData['commission'])
+            ]
+        );
     }
 }

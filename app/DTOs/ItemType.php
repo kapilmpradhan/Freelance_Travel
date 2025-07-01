@@ -7,6 +7,7 @@ class ItemType
     public $type;
     public $typeId;
     public $subTypeId;
+    public $data;
     public $isCart = false;
     public $isCartItem = false;
     public $isGroup = false;
@@ -14,12 +15,18 @@ class ItemType
     public $isQuoteItem = false;
     public $isDirect = false;
     public $isProduct = false;
+    public $isDry = false;
 
-    public function __construct(string $type, null|int|string $typeId = null, null|int|string $subTypeId = null)
-    {
+    public function __construct(
+        string $type,
+        null|int|string $typeId = null,
+        null|int|string $subTypeId = null,
+        $data = null
+    ) {
         $this->type = $type;
         $this->typeId = $typeId;
         $this->subTypeId = $subTypeId;
+        $this->data = $data;
     }
 
     public static function cart()
@@ -69,5 +76,13 @@ class ItemType
         $direct = new ItemType('direct');
         $direct->isDirect = true;
         return $direct;
+    }
+
+    public static function dry($data = null)
+    {
+        $dry = new ItemType('dry');
+        $dry->isDry = true;
+        $dry->data = $data;
+        return $dry;
     }
 }

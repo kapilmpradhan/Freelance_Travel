@@ -65,33 +65,34 @@ class CartItemServiceV2
                 return $detail['bookingDate'];
             }, $quantityDetails);
 
-            $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
-                                ->whereIn('booking_date', $bookingDates);
+            if (!$itemType->isDry) {
+                $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
+                                    ->whereIn('booking_date', $bookingDates);
 
-            if ($sameItemsOnSameDate->isNotEmpty() && !$isDryRun) {
-                $productDetailsOfSameItem = Product::where(
-                    'tdms_product_id',
-                    $sameItemsOnSameDate->first()->tdms_product_id
-                )->first();
+                if ($sameItemsOnSameDate->isNotEmpty() && !$isDryRun) {
+                    $productDetailsOfSameItem = Product::where(
+                        'tdms_product_id',
+                        $sameItemsOnSameDate->first()->tdms_product_id
+                    )->first();
 
-                $isAccommodationProduct = $productDetailsOfSameItem->json['productClass'] == 'A';
+                    $isAccommodationProduct = $productDetailsOfSameItem->json['productClass'] == 'A';
 
-                if (!$isAccommodationProduct) {
-                    $sameItems = [];
-                    foreach ($sameItemsOnSameDate as $sameItemOnSameDate) {
-                        $sameItems[] = [
-                            'cartItemId' => $sameItemOnSameDate->id,
-                            'productPriceDetailsId' => $productPriceDetailsId,
-                            'bookingDate' => $sameItemOnSameDate->booking_date,
-                        ];
+                    if (!$isAccommodationProduct) {
+                        $sameItems = [];
+                        foreach ($sameItemsOnSameDate as $sameItemOnSameDate) {
+                            $sameItems[] = [
+                                'cartItemId' => $sameItemOnSameDate->id,
+                                'productPriceDetailsId' => $productPriceDetailsId,
+                                'bookingDate' => $sameItemOnSameDate->booking_date,
+                            ];
+                        }
+                        return ServiceResponse::badRequest(
+                            message: 'Item already exists',
+                            data: $sameItems
+                        );
                     }
-                    return ServiceResponse::badRequest(
-                        message: 'Item already exists',
-                        data: $sameItems
-                    );
                 }
             }
-
 
             $bookingDetailsResponse = ProductService::getBookingDetails(
                 agentToken: $defaultAgentAccessToken,
@@ -285,25 +286,6 @@ class CartItemServiceV2
         bool $isDryRun = false,
     ) {
         try {
-            if ($isDryRun) {
-                $itemType->isCart = false;
-                $itemType->isDirect = true;
-                CartItemService::cleanDirectPurchase($userId);
-            }
-
-            $quote = null;
-            if (!is_null($addToQuote)) {
-                if ($addToQuote->isNew) {
-                    $quote = Quote::create([
-                        'user_id' => $userId,
-                        'title' => $addToQuote->title,
-                    ]);
-                } else {
-                    $quote = Quote::where('id', $addToQuote->quoteId)->first();
-                }
-                $itemType->typeId = $quote->id;
-            }
-
             $buildRequestDataResponse = self::buildOrderItemRequestData(
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
@@ -327,10 +309,22 @@ class CartItemServiceV2
                 $selectedAvailableIndices,
                 $orderItemsData,
                 $cartItems,
-                $quote,
+                $addToQuote,
                 $itemType,
-                $isDryRun
             ) {
+                $quote = null;
+                if (!is_null($addToQuote)) {
+                    if ($addToQuote->isNew) {
+                        $quote = Quote::create([
+                            'user_id' => $userId,
+                            'title' => $addToQuote->title,
+                        ]);
+                    } else {
+                        $quote = Quote::where('id', $addToQuote->quoteId)->first();
+                    }
+                    $itemType->typeId = $quote->id;
+                }
+
                 $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
                                 ->orderBy('version', 'desc')
                                 ->first();
@@ -349,6 +343,13 @@ class CartItemServiceV2
                     orderItemsData: $orderItemsData
                 );
 
+                if ($itemType->isDry) {
+                    foreach ($cartItemsData as &$cartItemData) {
+                        $cartItemData['product'] = $cachedProduct->toArray();
+                    }
+                    return $cartItemsData;
+                }
+
                 foreach ($cartItemsData as $cartItemData) {
                     $newCartItem = CartItem::create($cartItemData);
                     $cartItemWithProduct = CartItem::with('product')
@@ -359,13 +360,6 @@ class CartItemServiceV2
 
                 return $cartItems;
             });
-
-            $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
-            if ($orderCommissionResponse->isSuccess()) {
-                $orderCommission = $orderCommissionResponse->data;
-                $orderCommission->percentage = null;
-                $orderCommission->save();
-            }
 
             return ServiceResponse::success(data: $cartItems);
         } catch (ServiceException $e) {

@@ -139,6 +139,24 @@ class CartItem extends Model
         ];
     }
 
+    public static function calculateCommissionRule()
+    {
+        return [
+            "*.tdmsProductId" => 'required|integer',
+            "*.productPricesDetails" => 'required|array|min:1',
+            "*.productPricesDetails.*.quantityDetails" => 'required|array|min:1',
+            "*.productPricesDetails.*.quantityDetails.*.quantity" => 'required|integer|min:1',
+            "*.productPricesDetails.*.quantityDetails.*.bookingDate" => 'required|date_format:d-M-Y',
+            "*.productPricesDetails.*.quantityDetails.*.timeId" => 'required|string',
+            "*.productPricesDetails.*.quantityDetails.*.commences" => 'nullable|string',
+            "*.productPricesDetails.*.quantityDetails.*.bookingData" => 'nullable|array',
+            '*.startDate' => 'required|date|date_format:d-M-Y',
+            '*.days' => 'required|integer|min:1',
+            '*.selectedAvailableIndices' => 'required|array|min:1',
+            '*.selectedAvailableIndices.*' => 'integer|min:0',
+        ];
+    }
+
     public static function saveItemsInNewQuote()
     {
         return array_merge(self::$baseSaveItemsRule, [
