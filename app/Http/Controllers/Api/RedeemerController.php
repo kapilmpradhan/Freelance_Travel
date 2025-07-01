@@ -21,7 +21,7 @@ class RedeemerController extends BaseController
         $validator = Validator::make($data, CartCustomerDetail::addNewRedeemerRule());
 
         if ($validator->fails()) {
-            return $this->sendResponse('Redeemer validation error', $validator->errors());
+            return $this->sendError('Redeemer validation error', $validator->errors());
         }
 
         if ($quoteId) {
