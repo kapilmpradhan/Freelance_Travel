@@ -27,9 +27,10 @@ class CartItemServiceV2
         $defaultAgentAccessToken = $userAgent->access_token;
 
         $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-        if (!$productDetailsResponse) {
+        if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
             return ServiceResponse::notFound(
                 message: 'Product not found',
+                data: ['tdmsProductId' => $tdmsProductId]
             );
         }
         $productDetails = $productDetailsResponse['results'][0];

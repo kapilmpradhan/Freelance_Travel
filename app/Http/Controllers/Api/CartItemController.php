@@ -951,6 +951,9 @@ class CartItemController extends BaseController
                 itemType: $itemType
             );
 
+            if (!$saveItemsResponse->isSuccess()) {
+                return $this->sendResponseFromService($saveItemsResponse);
+            }
             $allItemsCartResponse = array_merge($allItemsCartResponse, $saveItemsResponse->data);
         }
 
