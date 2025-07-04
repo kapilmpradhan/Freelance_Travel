@@ -931,46 +931,44 @@ class CartItemController extends BaseController
 
     public function getDiscountPercentageV2(Request $request)
     {
-        $datas = $request->except('user');
-        $validator = Validator::make($datas, CartItem::calculateCommissionRule());
-        if ($validator->fails()) {
-            return $this->sendError("Get discount percentage failed", $validator->errors());
+        $datas = json_decode($request->getContent(), true) ?? [];
+
+        $itemType = ItemType::discount();
+        if ($request->query('isCart') ?? null) {
+            $itemType->isCart = true;
+        } elseif ($request->query('quoteId') ?? null) {
+            $itemType->isQuote = true;
+            $itemType->typeId = $request->query('quoteId');
+        } elseif ($request->query('dry') ?? null) {
+            $itemType->isDry = true;
+        } else {
+            return $this->sendError('isCart, quoteId or dry parameter is required');
         }
 
-        $itemType = ItemType::dry();
-        $allItemsCartResponse = [];
-        foreach ($datas as $data) {
-            $saveItemsResponse = CartItemServiceV2::saveItems(
+        if ($itemType->isCart || $itemType->isQuote) {
+            $commissionResponse = UserOrderCommissionService::getOrSetCommissionOfUserCartOrQuote(
                 userId: $request->user->uuid,
-                tdmsProductId: $data['tdmsProductId'],
-                productPricesDetails: $data['productPricesDetails'],
-                startDate: $data['startDate'],
-                days: $data['days'],
-                selectedAvailableIndices: $data['selectedAvailableIndices'],
-                addToQuote: null,
                 itemType: $itemType
             );
-
-            if (!$saveItemsResponse->isSuccess()) {
-                return $this->sendResponseFromService($saveItemsResponse);
+        } elseif ($itemType->isDry) {
+            $validator = Validator::make($datas, CartItem::calculateCommissionRule());
+            if ($validator->fails() || empty($datas)) {
+                return $this->sendError("Get discount percentage failed", $validator->errors());
             }
-            $allItemsCartResponse = array_merge($allItemsCartResponse, $saveItemsResponse->data);
+
+            $itemType->data = $datas;
+            $commissionResponse = UserOrderCommissionService::getCommissionForDry(
+                userId: $request->user->uuid,
+                itemType: $itemType
+            );
         }
 
-        $itemType->data = $allItemsCartResponse;
-        $commissionResponse = BookingService::postOrder(
-            userId: $request->user->uuid,
-            intent: 'pay-now',
-            processAsQuote: true,
-            itemType: $itemType
-        );
-
-        $commissionData = $commissionResponse->data;
+        $commissionPercentage = $commissionResponse->data['commission'];
 
         return $this->sendResponse(
             title: 'Applicable discount',
             data: [
-                'applicableDiscount' => DiscountService::calcuateOverallDiscount($commissionData['commission'])
+                'applicableDiscount' => DiscountService::calcuateOverallDiscount($commissionPercentage)
             ]
         );
     }

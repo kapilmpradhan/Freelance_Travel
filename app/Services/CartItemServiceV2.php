@@ -66,7 +66,7 @@ class CartItemServiceV2
                 return $detail['bookingDate'];
             }, $quantityDetails);
 
-            if (!$itemType->isDry) {
+            if (!$itemType->isDry && !$itemType->forDiscount) {
                 $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
                                     ->whereIn('booking_date', $bookingDates);
 
@@ -344,11 +344,21 @@ class CartItemServiceV2
                     orderItemsData: $orderItemsData
                 );
 
-                if ($itemType->isDry) {
+                if ($itemType->isDry || $itemType->forDiscount) {
                     foreach ($cartItemsData as &$cartItemData) {
                         $cartItemData['product'] = $cachedProduct->toArray();
                     }
                     return $cartItemsData;
+                } else {
+                    $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+                        $userId,
+                        $itemType
+                    );
+                    if ($commissionResponse->success()) {
+                        $commission = $commissionResponse->data;
+                        $commission->percentage = null;
+                        $commission->save();
+                    }
                 }
 
                 foreach ($cartItemsData as $cartItemData) {

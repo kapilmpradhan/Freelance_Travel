@@ -123,10 +123,10 @@ class BookingService
         return $redeemers;
     }
 
-    public static function buildRedeemersDataV2($cartItems, $userId, $isDry = false)
+    public static function buildRedeemersDataV2($cartItems, $userId, $forDiscount = false)
     {
         $userRedeemers = CartCustomerDetail::where('user_id', $userId)->get();
-        if ($isDry) {
+        if ($forDiscount) {
             $fakeRedeemer = CartCustomerDetail::factory(count: 1)->make()->first();
         }
 
@@ -140,7 +140,7 @@ class BookingService
                             : null;
 
             foreach ($bookingDatas as $bookingData) {
-                if (!$isDry) {
+                if (!$forDiscount) {
                     $redeemerIds = $bookingData['redeemers'] ?? [];
                 } else {
                     $redeemerIds = [$fakeRedeemer->id];
@@ -154,7 +154,7 @@ class BookingService
                 $isPrimaryRedeemer = true;
                 foreach ($redeemerIds as $redeemerId) {
                     // Order data for redeemers
-                    if (!$isDry) {
+                    if (!$forDiscount) {
                         $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
                     } else {
                         $userRedeemer = $fakeRedeemer;
@@ -340,7 +340,7 @@ class BookingService
         $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->isDry);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->forDiscount);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -421,7 +421,7 @@ class BookingService
         }
         $agent = $getAgentResponse->data;
 
-        if ($itemType->isDry) {
+        if ($itemType->forDiscount) {
             $cartItemData = $itemType->data;
             $cartItems = CartItemFactory::withProvidedData($cartItemData);
         } elseif ($itemType->isDirect) {
@@ -473,28 +473,14 @@ class BookingService
 
                 $validatedItemsData = $validateOrderDataResponse->data;
 
-                $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
-                $totalRrp = $orderRequestData['totalCharged'];
-                $commissionPercentage = round(((int) $commission / (int) $totalRrp) * 100, 2);
 
-                if (!$itemType->isDry) {
-                    $userOrderCommission = UserOrderCommission::firstOrCreate([
-                            'user_id' => $userId,
-                            'quote_id' => $itemType->typeId,
-                            'is_cart' => $itemType->isCart,
-                            'is_direct_purchase' => $itemType->isDirect,
-                            'agent_branch' => $agent->branch_code,
-                            'user_order_id' => null,
-                        ]);
+                if ($itemType->forDiscount) {
+                    $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
+                    $totalRrp = $orderRequestData['totalCharged'];
+                    $commissionPercentage = round(((int) $commission / (int) $totalRrp) * 100, 2);
 
-                    $userOrderCommission->percentage = $commissionPercentage;
-                    $userOrderCommission->save();
-                }
-
-                $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
-                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
-
-                if ($itemType->isDry) {
+                    $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
+                    $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
                     return ServiceResponse::success(
                         message: 'Order data validated successfully',
                         data: [
