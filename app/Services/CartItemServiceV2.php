@@ -354,7 +354,7 @@ class CartItemServiceV2
                         $userId,
                         $itemType
                     );
-                    if ($commissionResponse->success()) {
+                    if ($commissionResponse->isSuccess()) {
                         $commission = $commissionResponse->data;
                         $commission->percentage = null;
                         $commission->save();
