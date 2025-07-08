@@ -477,7 +477,7 @@ class BookingService
                 if ($itemType->forDiscount) {
                     $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
                     $totalRrp = $orderRequestData['totalCharged'];
-                    $commissionPercentage = round(((int) $commission / (int) $totalRrp) * 100, 2);
+                    $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
 
                     $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
                     $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
