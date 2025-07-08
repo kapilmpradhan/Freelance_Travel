@@ -2,12 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Logging\Logger;
 
 class TdmsService
 {
+    const CURRENCY_ID_AUD = 297;
+    const SUB_SYSTEM_TYPE_CASHBACK = 'FIT';
+
     public static function getAgentToken(string $username, string $password, string $userId = null)
     {
         $url = config('vars.tdms_api_url') . '/agentToken';
@@ -585,5 +589,61 @@ class TdmsService
                 );
             }
         }
+    }
+
+    public static function upgradeToAgent(User $user, string $agentToken, string $agentCode): ServiceResponse
+    {
+        $url = config('vars.tdms_api_url') . "/upgradeToAgent";
+
+        $params = [
+            'lastName' => $user->last_name,
+            'firstName' => $user->first_name,
+            'emailAddress' => $user->email,
+            'currencyId' => '',
+            'subSystemType' => self::SUB_SYSTEM_TYPE_CASHBACK,
+            'token' => self::tokenFromUser($user),
+        ];
+
+        if ($agentCode !== config(key: 'vars.default_agent_branch_code')) {
+            $params['referredBranch'] = $agentCode;
+        }
+
+        $response = Http::asJson()->withToken($agentToken)->post($url, $params);
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error upgrading User to Agent',
+                extra: array_merge($params, ["responseData" => $response->json()])
+            );
+
+            throw new ServiceException(
+                message: 'Error upgrading User to Agent',
+                data: $response->json(),
+                code: $response->status()
+            );
+        }
+
+        $responseData = $response->json();
+
+        if (count($responseData['error'] ?? []) > 0) {
+            $messages = array_map(fn($item) => $item['message'], $responseData['error'] ?? []);
+
+            return ServiceResponse::badRequest(
+                message: implode(". ", $messages),
+                data: $responseData,
+            );
+        }
+
+        return ServiceResponse::success($responseData);
+    }
+
+    private static function tokenFromUser(User $user): string
+    {
+        return 'ft_'
+            . $user->first_name
+            . '@'
+            . self::CURRENCY_ID_AUD
+            . now()->format('Ym')
+        ;
     }
 }

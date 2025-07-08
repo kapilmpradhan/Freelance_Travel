@@ -144,6 +144,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::get('integration', [UserAgentController::class, 'getUserAgent']);
     Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);
     Route::post('integration', [UserAgentController::class, 'addUserAgent']);
+    Route::post('integration/upgradeToAgent', [UserAgentController::class, 'upgradeToAgent']);
     Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
     Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);
 });

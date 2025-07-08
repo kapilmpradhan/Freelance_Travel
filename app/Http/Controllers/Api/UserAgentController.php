@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\UserAgent;
+use App\Services\TdmsService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
@@ -97,5 +100,26 @@ class UserAgentController extends BaseController
         $unkinkAgentResponse = UserAgentService::unlinkAgent($agent);
 
         return $this->sendResponseFromService($unkinkAgentResponse);
+    }
+
+    public function upgradeToAgent(Request $request, UserAgent $userAgent, TdmsService $tdmsService): JsonResponse
+    {
+        $user = $request->user; /** @var User $user */
+
+        $agent = $userAgent->getActiveAgent($user->uuid);
+
+        if (!$agent) {
+            return $this->sendError('No agent integrated');
+        }
+
+        $getAgentResponse = UserAgentService::getUserAgentById($user->agentToken());
+
+        if ($getAgentResponse->isError()) {
+            return $this->sendResponseFromService($getAgentResponse);
+        }
+
+        $responseData = $getAgentResponse->data;
+
+        return $this->sendResponseFromService($tdmsService->upgradeToAgent($user, $responseData->access_token, $agent->branch_code));
     }
 }
