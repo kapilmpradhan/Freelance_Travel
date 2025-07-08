@@ -9,8 +9,8 @@ use App\Logging\Logger;
 
 class TdmsService
 {
-    const CURRENCY_ID_AUD = 297;
-    const SUB_SYSTEM_TYPE_CASHBACK = 'FIT';
+    private const CURRENCY_ID_AUD = 297;
+    private const SUB_SYSTEM_TYPE_CASHBACK = 'FIT';
 
     public static function getAgentToken(string $username, string $password, string $userId = null)
     {
