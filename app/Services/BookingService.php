@@ -474,13 +474,11 @@ class BookingService
                 $validatedItemsData = $validateOrderDataResponse->data;
 
 
-                if ($itemType->forDiscount) {
-                    $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
-                    $totalRrp = $orderRequestData['totalCharged'];
-                    $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
+                $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
+                $totalRrp = $orderRequestData['totalCharged'];
+                $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
 
-                    $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
-                    $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+                if ($itemType->forDiscount) {
                     return ServiceResponse::success(
                         message: 'Order data validated successfully',
                         data: [
@@ -489,6 +487,10 @@ class BookingService
                         ]
                     );
                 }
+
+                $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
+                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+
                 $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
                     if ($item['status'] === 'Available') {
