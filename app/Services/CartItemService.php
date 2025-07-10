@@ -447,6 +447,20 @@ class CartItemService
             }
 
             foreach ($cartItems as $cartItem) {
+                $bookingData = $cartItem->booking_data;
+                if ($bookingData) {
+                    $redeemers = [];
+                    foreach ($bookingData as $data) {
+                        if (isset($data['redeemers'])) {
+                            $cartItemRedeemers = $data['redeemers'];
+                            $redeemers = array_merge($redeemers, $cartItemRedeemers);
+                        }
+                    }
+
+                    CartCustomerDetail::whereIn('id', $redeemers)
+                        ->where('is_primary', false)
+                        ->update(['quote_id' => $quote->id]);
+                }
                 $cartItem->quote_id = $quote->id;
                 $cartItem->save();
             }
