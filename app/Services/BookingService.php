@@ -490,6 +490,7 @@ class BookingService
 
                 $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
                 $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+                $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
 
                 $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
