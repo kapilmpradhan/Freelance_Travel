@@ -611,6 +611,17 @@ class CartItemService
         foreach ($quoteItems as $quoteItem) {
             $quoteItem->delete();
         }
+
+        $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+            userId: $userId,
+            itemType: $type
+        );
+        $commission = $commissionResponse->data;
+        if ($commission) {
+            $commission->percentage = null;
+            $commission->save();
+        }
+
         return ServiceResponse::success();
     }
 
