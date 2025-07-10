@@ -24,6 +24,7 @@ use App\Services\TdmsService;
 use App\Services\UserAgentService;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
+use Illuminate\Support\Facades\Redis;
 
 class BookingService
 {
@@ -330,8 +331,8 @@ class BookingService
     public static function buildOrderRequestData(
         string $userId,
         bool $processAsQuote,
-        string $bookingReference,
-        string $paymentMethodCode,
+        string|null $bookingReference,
+        string|null $paymentMethodCode,
         $cartItems,
         $customers,
         $isDry = false,
@@ -438,23 +439,28 @@ class BookingService
             return ServiceResponse::badRequest('No items available');
         }
 
-        $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
-        if (is_null($onlinePaymentMethod)) {
-            throw new ServiceException('Missing online payment method');
-        }
+        if ($itemType->forDiscount) {
+            $bookingReference = null;
+            $onlinePaymentMethod = null;
+        } else {
+            $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
+            if (is_null($onlinePaymentMethod)) {
+                throw new ServiceException('Missing online payment method');
+            }
 
-        $newBookingReference = TdmsService::getBookingRefrence($agent->access_token);
-        $webAppReturnUrl = $onlinePaymentMethod['paymentReturnUrl'] . '/' . config(
-            'vars.web_order_check_url',
-            'order/check',
-        ) . "?bookingReference={$newBookingReference}";
-        Logger::debug("web app return url: {$webAppReturnUrl}");
+            $bookingReference = TdmsService::getBookingRefrence($agent->access_token);
+            $webAppReturnUrl = $onlinePaymentMethod['paymentReturnUrl'] . '/' . config(
+                'vars.web_order_check_url',
+                'order/check',
+            ) . "?bookingReference={$bookingReference}";
+            Logger::debug("web app return url: {$webAppReturnUrl}");
+        }
 
         $orderRequestData = self::buildOrderRequestData(
             userId: $userId,
             processAsQuote: $processAsQuote,
-            bookingReference: $newBookingReference,
-            paymentMethodCode: $onlinePaymentMethod['code'],
+            bookingReference: $bookingReference,
+            paymentMethodCode: $onlinePaymentMethod ? $onlinePaymentMethod['code'] : null,
             cartItems: $cartItems,
             customers: $customers,
             itemType: $itemType
