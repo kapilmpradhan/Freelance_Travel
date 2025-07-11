@@ -549,6 +549,7 @@ class CartItemService
             $cartItem->delete();
         }
 
+        $type->isCart = true;
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             userId: $userId,
             itemType: $type
@@ -626,6 +627,7 @@ class CartItemService
             $quoteItem->delete();
         }
 
+        $type->isQuote = true;
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             userId: $userId,
             itemType: $type

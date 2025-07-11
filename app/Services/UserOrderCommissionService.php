@@ -11,7 +11,11 @@ class UserOrderCommissionService
     {
         $userOrderCommission = UserOrderCommission::where('user_id', $userId)
                                     ->where('is_cart', $itemType->isCart)
-                                    ->where('quote_id', $itemType->typeId)
+                                    ->when(
+                                        $itemType->isQuote,
+                                        fn ($query)
+                                        => $query->where('quote_id', $itemType->typeId)
+                                    )
                                     ->where('is_direct_purchase', $itemType->isDirect)
                                     ->where('user_order_id', null)
                                     ->first();

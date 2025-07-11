@@ -968,7 +968,7 @@ class CartItemController extends BaseController
         return $this->sendResponse(
             title: 'Applicable discount',
             data: [
-                'applicableDiscount' => DiscountService::calcuateOverallDiscount($commissionPercentage)
+                'applicableDiscount' => round(DiscountService::calcuateOverallDiscount($commissionPercentage), 2)
             ]
         );
     }
