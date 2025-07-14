@@ -3,17 +3,13 @@
 namespace App\Services;
 
 use App\Logging\Logger;
-use App\Models\AgentToken;
 use App\Models\UserAgent;
-use App\Models\Agent;
 use Carbon\Carbon;
-use App\Services\TdmsService;
 use App\Http\Resources\AgentResource;
-use App\Models\User;
 
 class UserAgentService
 {
-    public static function refreshAgent($agent)
+    public static function refreshAgent(UserAgent $agent): ?UserAgent
     {
         if (
             !$agent->access_token
@@ -72,7 +68,7 @@ class UserAgentService
         return ServiceResponse::success(["access_token" => $refreshedAgent->access_token]);
     }
 
-    public static function getUserAgentIfExistsElseDefault($userId)
+    public static function getUserAgentIfExistsElseDefault($userId): ServiceResponse
     {
         $userAgent = new UserAgent();
         $activeAgent = $userAgent->getActiveAgent($userId);
@@ -100,14 +96,17 @@ class UserAgentService
         return substr($bookingReferenceResponse, 0, 3);
     }
 
-    public static function addUserAgent($userId, $username, $password)
+    public static function addUserAgent($userId, $username, $password, string $branchCode = null): ServiceResponse
     {
         $agentDetail = TdmsService::getAgentToken($username, $password);
         if (!$agentDetail) {
             return ServiceResponse::badRequest('Invalid agent credential');
         }
 
-        $branchCode = self::getBranchCodeOfAgent($agentDetail['access_token']);
+        if (!$branchCode) {
+            $branchCode = self::getBranchCodeOfAgent($agentDetail['access_token']);
+        }
+
         if (!$branchCode) {
             return ServiceResponse::badRequest('Could not get branch code. Unable to add agent.');
         }

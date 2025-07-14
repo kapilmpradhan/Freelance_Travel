@@ -2,9 +2,34 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read int $id
+ * @property int|null $user_id
+ * @property int|null $agent_id
+ * @property string $type
+ * @property string|null $email
+ * @property string|null $password
+ * @property string|null $access_token
+ * @property string $status
+ * @property int|null $expires_in
+ * @property string|null $token_type
+ * @property string|null $scope
+ * @property string|null $bank_bsb
+ * @property string|null $bank_account
+ * @property string|null $bank_country_short_code
+ * @property string|null $business_number
+ * @property string|null $trading_name
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property bool $is_active
+ * @property bool $is_deleted
+ * @property string $branch_code
+ */
 class UserAgent extends Model
 {
     use HasFactory;
@@ -33,12 +58,12 @@ class UserAgent extends Model
 
     protected $hidden = ['password'];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'uuid');
     }
 
-    public function getActiveAgent($userId)
+    public function getActiveAgent($userId): ?UserAgent
     {
         return $this::where('user_id', $userId)
                     ->where('type', 'integration')
@@ -48,7 +73,7 @@ class UserAgent extends Model
                     ->first();
     }
 
-    public function getDefaultAgent()
+    public function getDefaultAgent(): ?UserAgent
     {
         return $this::where('branch_code', config('vars.default_agent_branch_code'))
                     ->where('email', config('vars.default_agent_email'))

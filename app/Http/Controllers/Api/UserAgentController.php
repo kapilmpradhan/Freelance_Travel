@@ -23,7 +23,7 @@ class UserAgentController extends BaseController
         $data = $request->all();
         $validate = Validator::make($data, ['username' => 'required|email', 'password' => 'required|string']);
         if ($validate->fails()) {
-            return $this->sendError('Error occured', $validate->errors(), 400);
+            return $this->sendError('Error occurred', $validate->errors(), 400);
         }
 
         $addUserAgentResponse = UserAgentService::addUserAgent(
@@ -102,26 +102,32 @@ class UserAgentController extends BaseController
         return $this->sendResponseFromService($unkinkAgentResponse);
     }
 
-    public function upgradeToAgent(Request $request, UserAgent $userAgent, TdmsService $tdmsService): JsonResponse
+    public function upgradeToAgent(Request $request, TdmsService $tdmsService): JsonResponse
     {
         $user = $request->user; /** @var User $user */
 
-        $agent = $userAgent->getActiveAgent($user->uuid);
-
-        if (!$agent) {
-            return $this->sendError('No agent integrated');
-        }
-
-        $getAgentResponse = UserAgentService::getUserAgentById($user->agentToken());
+        $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($user->uuid);
 
         if ($getAgentResponse->isError()) {
             return $this->sendResponseFromService($getAgentResponse);
         }
 
         $responseData = $getAgentResponse->data;
+        $upgradeToAgentResponse = $tdmsService->upgradeToAgent($user, $responseData->access_token, $responseData->branch_code);
 
-        return $this->sendResponseFromService(
-            $tdmsService->upgradeToAgent($user, $responseData->access_token, $agent->branch_code)
+        if ($upgradeToAgentResponse->isError()) {
+            return $this->sendResponseFromService($upgradeToAgentResponse);
+        }
+
+        $data = $upgradeToAgentResponse->data;
+
+        $addUserAgentResponse = UserAgentService::addUserAgent(
+            userId: $user->uuid,
+            username: $data['emailAddress'],
+            password: $data['password'],
+            branchCode: $data['agentCode']
         );
+
+        return $this->sendResponseFromService($addUserAgentResponse);
     }
 }

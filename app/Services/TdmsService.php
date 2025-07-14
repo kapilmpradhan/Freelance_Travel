@@ -599,7 +599,7 @@ class TdmsService
             'lastName' => $user->last_name,
             'firstName' => $user->first_name,
             'emailAddress' => $user->email,
-            'currencyId' => '',
+            'currencyId' => self::CURRENCY_ID_AUD,
             'subSystemType' => self::SUB_SYSTEM_TYPE_CASHBACK,
             'token' => self::tokenFromUser($user),
         ];
@@ -608,7 +608,10 @@ class TdmsService
             $params['referredBranch'] = $agentCode;
         }
 
-        $response = Http::asJson()->withToken($agentToken)->post($url, $params);
+        $response = Http::asJson()
+            ->timeout(120)
+            ->withToken($agentToken)
+            ->post($url, $params);
 
         if (!$response->successful()) {
             Logger::error(
