@@ -113,7 +113,11 @@ class UserAgentController extends BaseController
         }
 
         $responseData = $getAgentResponse->data;
-        $upgradeToAgentResponse = $tdmsService->upgradeToAgent($user, $responseData->access_token, $responseData->branch_code);
+        $upgradeToAgentResponse = $tdmsService->upgradeToAgent(
+            $user,
+            $responseData->access_token,
+            $responseData->branch_code
+        );
 
         if ($upgradeToAgentResponse->isError()) {
             return $this->sendResponseFromService($upgradeToAgentResponse);
