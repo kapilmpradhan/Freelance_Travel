@@ -287,8 +287,11 @@ class TdmsService
         }
     }
 
-    public static function customerOrderHistory(string $agentToken, string $customerEmail, ?Carbon $sinceDate = null): ServiceResponse
-    {
+    public static function customerOrderHistory(
+        string $agentToken,
+        string $customerEmail,
+        ?Carbon $sinceDate = null
+    ): ServiceResponse {
         $params = [
             "searchOnlyStatus" => "Order",
             "email" => $customerEmail
