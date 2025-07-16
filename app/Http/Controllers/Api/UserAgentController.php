@@ -7,6 +7,7 @@ use App\Models\UserAgent;
 use App\Services\TdmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
 use App\Services\UserAgentService;
@@ -113,10 +114,29 @@ class UserAgentController extends BaseController
         }
 
         $responseData = $getAgentResponse->data;
+
+        // need to lookup order history for this user and find where they've done the most
+        $orderHistoryResponse = TdmsService::customerOrderHistory(
+            $responseData->access_token,
+            $user->email,
+            now()->subMonths(config('vars.agent_upgrade_order_months_history'))
+        );
+
+        $topBranchCode = null;
+
+        if (count($orderHistoryResponse->data) >= 0) {
+            $orderHistory = collect($orderHistoryResponse->data)
+                ->reject(fn ($order) => $order['salesBranchCode'] === config('vars.default_agent_branch_code'))
+                ->groupBy('salesBranchCode')
+                ->map(fn (Collection $orders, $branchCode) => $orders->sum('totalAmountExcludeCCFee'));
+            $totalsByBranch = $orderHistory->sortDesc();
+            $topBranchCode = $totalsByBranch->keys()->first();
+        }
+
         $upgradeToAgentResponse = $tdmsService->upgradeToAgent(
             $user,
             $responseData->access_token,
-            $responseData->branch_code
+            $topBranchCode
         );
 
         if ($upgradeToAgentResponse->isError()) {

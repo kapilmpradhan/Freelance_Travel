@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Logging\Logger;
@@ -284,6 +285,46 @@ class TdmsService
             );
             return ServiceResponse::badRequest(message: 'Internal server error');
         }
+    }
+
+    public static function customerOrderHistory(string $agentToken, string $customerEmail, ?Carbon $sinceDate = null): ServiceResponse
+    {
+        $params = [
+            "searchOnlyStatus" => "Order",
+            "email" => $customerEmail
+        ];
+
+        if ($sinceDate !== null) {
+            $params['sinceDate'] = $sinceDate->toDateString();
+        }
+
+        try {
+            $response = Http::asJson()
+                ->withToken($agentToken)
+                ->withQueryParameters($params)
+                ->get(config('vars.tdms_api_url') . "/customerOrderDetail");
+        } catch (Exception $e) {
+            Logger::error(
+                message: "Error while fetching customer order history",
+                extra: array_merge($params, ["exception" => $e])
+            );
+            throw new ServiceException(message: 'Server error while fetching customer order history');
+        }
+
+        if ($response->ok()) {
+            return ServiceResponse::success($response->json());
+        }
+
+        if ($response->notFound()) {
+            return ServiceResponse::notFound();
+        }
+
+        Logger::error(
+            message: "Error while fetching customer order history",
+            extra: array_merge($params, ["response" => $response->json()])
+        );
+
+        return ServiceResponse::badRequest(message: 'Internal server error');
     }
 
     public static function validateOrderData($agentToken, $bookingReference, $orderData)
@@ -591,8 +632,11 @@ class TdmsService
         }
     }
 
-    public static function upgradeToAgent(User $user, string $agentToken, string $agentCode): ServiceResponse
-    {
+    public static function upgradeToAgent(
+        User $user,
+        string $agentToken,
+        ?string $referredAgentCode
+    ): ServiceResponse {
         $url = config('vars.tdms_api_url') . "/upgradeToAgent";
 
         $params = [
@@ -604,8 +648,8 @@ class TdmsService
             'token' => self::tokenFromUser($user),
         ];
 
-        if ($agentCode !== config(key: 'vars.default_agent_branch_code')) {
-            $params['referredBranch'] = $agentCode;
+        if ($referredAgentCode && $referredAgentCode !== config(key: 'vars.default_agent_branch_code')) {
+            $params['referredBranch'] = $referredAgentCode;
         }
 
         $response = Http::asJson()
