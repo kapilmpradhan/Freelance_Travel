@@ -7,12 +7,17 @@ use App\Models\CartItem;
 use App\Models\Discount;
 use App\Models\UserOrderCommission;
 use Exception;
+use Laravel\Pennant\Feature;
 
 class DiscountService
 {
-    public static function getActiveDiscountData()
+    public static function getActiveDiscountData($user = null)
     {
-        $activeDiscount = Discount::where('is_active', true)->first();
+        if ($user && Feature::for($user)->active('tester')) {
+            $activeDiscount = Discount::where('is_test', true)->first();
+        } else {
+            $activeDiscount = Discount::where('is_active', true)->first();
+        }
         if (!$activeDiscount) {
             $data = [
                 'title' => null,
@@ -109,9 +114,14 @@ class DiscountService
     // e.g. If active discount is 10% and commission is 15%, the overall discount will be 10%
     // e.g. If active discount is 10% and commission is 12%, the overall discount will be 7% (12% - 5% threshold)
     // Reference link: blob:https://websitetravel.atlassian.net/854bd471-24c8-48b2-a606-745b19d8fa2e#media-blob-url=true&id=c0b28879-aa4e-4615-8fc6-7ec45200a9dd&collection=&contextId=22708&width=855&height=335&alt=
-    public static function calcuateOverallDiscount($commissionPercentage, $threshold = 5)
+    public static function calcuateOverallDiscount($commissionPercentage, $threshold = 5, $user = null)
     {
-        $activeDiscount = Discount::where('is_active', true)->first();
+        if (Feature::for($user)->active('tester')) {
+            $activeDiscount = Discount::where('is_test', true)->first();
+        } else {
+            $activeDiscount = Discount::where('is_active', true)->first();
+        }
+
         if (!$activeDiscount || $activeDiscount->percentage == 0) {
             return 0;
         }

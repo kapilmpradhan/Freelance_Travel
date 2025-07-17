@@ -68,6 +68,7 @@ class Kernel extends HttpKernel
         'cors' => \App\Http\Middleware\Cors::class,
         'checkToken' => \App\Http\Middleware\CheckToken::class,
         'auth.jwt' => \App\Http\Middleware\JwtAuthenticate::class,
+        'auth.ifToken' => \App\Http\Middleware\CheckTokenIfAvailable::class,
         'admin' => \App\Http\Middleware\AdminAuthenticate::class,
     ];
 }

@@ -494,7 +494,10 @@ class BookingService
                     );
                 }
 
-                $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
+                $discount = DiscountService::calcuateOverallDiscount(
+                    commissionPercentage: $commissionPercentage,
+                    user: User::find($userId)
+                );
                 $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
                 $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
 

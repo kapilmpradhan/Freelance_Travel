@@ -17,6 +17,7 @@ class Discount extends Model
         'activate_at',
         'expires_at',
         'is_active',
+        'is_test',
         'is_deleted',
     ];
 
