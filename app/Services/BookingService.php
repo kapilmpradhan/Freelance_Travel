@@ -456,6 +456,17 @@ class BookingService
             Logger::debug("web app return url: {$webAppReturnUrl}");
         }
 
+        foreach ($cartItems as $cartItem) {
+            $updateItemAvailabilityResponse = CartItemServiceV2::updateAvailabilityBeforeOrder(
+                agentToken: $agent->access_token,
+                cartItem: $cartItem
+            );
+
+            if ($updateItemAvailabilityResponse->isError()) {
+                return $updateItemAvailabilityResponse;
+            }
+        }
+
         $orderRequestData = self::buildOrderRequestData(
             userId: $userId,
             processAsQuote: $processAsQuote,

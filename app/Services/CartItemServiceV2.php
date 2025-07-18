@@ -416,4 +416,57 @@ class CartItemServiceV2
 
         return ServiceResponse::success('Cart items updated successfully');
     }
+
+    public static function updateAvailabilityBeforeOrder($agentToken, $cartItem)
+    {
+        $productDetails = Product::where('tdms_product_id', $cartItem->tdms_product_id)
+            ->where('version', $cartItem->product_version)
+            ->first();
+
+        $product = $productDetails->json;
+        if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
+            $farePrices = $product['faresprices'];
+
+            // Find fareTypeId for the given productPricesDetailsId
+            $fareTypeId = null;
+            foreach ($farePrices as $fare) {
+                if ($fare["productPricesDetailsId"] === $cartItem->product_price_details_id) {
+                    $fareTypeId = $fare["fareTypeId"];
+                    break;
+                }
+            }
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
+                agentToken: $agentToken,
+                fareTypeId: $fareTypeId,
+                productId: $product['productId'],
+                startDate: $cartItem->booking_date,
+                endDate: Carbon::parse($cartItem->booking_date)->addDays(1)->toDateString()
+            );
+
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found for cart item: ' . $cartItem->id,
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
+        } else {
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                $agentToken,
+                $cartItem->product_price_details_id,
+                $cartItem->time_id,
+                $cartItem->booking_date,
+                1,
+            );
+        }
+
+        if (empty($productAvailabilities)) {
+            return ServiceResponse::notFound(
+                message: 'Product availability not found for cart item: ' . $cartItem->id,
+            );
+        }
+
+        $cartItem->availability = $productAvailabilities[0];
+        return ServiceResponse::success();
+    }
 }
