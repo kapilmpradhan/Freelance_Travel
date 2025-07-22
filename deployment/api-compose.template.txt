@@ -1,6 +1,6 @@
 services:
   api:
-    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    image: $DOCKER_IMAGE_NAME:$VERSION
     container_name: freelance-travel-api
     platform: linux/amd64
     ports:
@@ -9,7 +9,7 @@ services:
       $NETWORK_NAME:
         ipv4_address: $API_IP_ADDRESS
   migrator:
-    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    image: $DOCKER_IMAGE_NAME:$VERSION
     container_name: freelance-travel-migrator
     platform: linux/amd64
     entrypoint: php artisan migrate --force
