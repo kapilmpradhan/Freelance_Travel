@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Logging\Logger;
 
 class TdmsService
 {
+    private const CURRENCY_ID_AUD = 297;
+    private const SUB_SYSTEM_TYPE_CASHBACK = 'FIT';
+
     public static function getAgentToken(string $username, string $password, string $userId = null)
     {
         $url = config('vars.tdms_api_url') . '/agentToken';
@@ -280,6 +285,49 @@ class TdmsService
             );
             return ServiceResponse::badRequest(message: 'Internal server error');
         }
+    }
+
+    public static function customerOrderHistory(
+        string $agentToken,
+        string $customerEmail,
+        ?Carbon $sinceDate = null
+    ): ServiceResponse {
+        $params = [
+            "searchOnlyStatus" => "Order",
+            "email" => $customerEmail
+        ];
+
+        if ($sinceDate !== null) {
+            $params['sinceDate'] = $sinceDate->toDateString();
+        }
+
+        try {
+            $response = Http::asJson()
+                ->withToken($agentToken)
+                ->withQueryParameters($params)
+                ->get(config('vars.tdms_api_url') . "/customerOrderDetail");
+        } catch (Exception $e) {
+            Logger::error(
+                message: "Error while fetching customer order history",
+                extra: array_merge($params, ["exception" => $e])
+            );
+            throw new ServiceException(message: 'Server error while fetching customer order history');
+        }
+
+        if ($response->ok()) {
+            return ServiceResponse::success($response->json());
+        }
+
+        if ($response->notFound()) {
+            return ServiceResponse::notFound();
+        }
+
+        Logger::error(
+            message: "Error while fetching customer order history",
+            extra: array_merge($params, ["response" => $response->json()])
+        );
+
+        return ServiceResponse::badRequest(message: 'Internal server error');
     }
 
     public static function validateOrderData($agentToken, $bookingReference, $orderData)
@@ -585,5 +633,67 @@ class TdmsService
                 );
             }
         }
+    }
+
+    public static function upgradeToAgent(
+        User $user,
+        string $agentToken,
+        ?string $referredAgentCode
+    ): ServiceResponse {
+        $url = config('vars.tdms_api_url') . "/upgradeToAgent";
+
+        $params = [
+            'lastName' => $user->last_name,
+            'firstName' => $user->first_name,
+            'emailAddress' => $user->email,
+            'currencyId' => self::CURRENCY_ID_AUD,
+            'subSystemType' => self::SUB_SYSTEM_TYPE_CASHBACK,
+            'token' => self::tokenFromUser($user),
+        ];
+
+        if ($referredAgentCode && $referredAgentCode !== config(key: 'vars.default_agent_branch_code')) {
+            $params['referredBranch'] = $referredAgentCode;
+        }
+
+        $response = Http::asJson()
+            ->timeout(120)
+            ->withToken($agentToken)
+            ->post($url, $params);
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error upgrading User to Agent',
+                extra: array_merge($params, ["responseData" => $response->json()])
+            );
+
+            throw new ServiceException(
+                message: 'Error upgrading User to Agent',
+                data: $response->json(),
+                code: $response->status()
+            );
+        }
+
+        $responseData = $response->json();
+
+        if (count($responseData['error'] ?? []) > 0) {
+            $messages = array_map(fn($item) => $item['message'], $responseData['error'] ?? []);
+
+            return ServiceResponse::badRequest(
+                message: implode(". ", $messages),
+                data: $responseData,
+            );
+        }
+
+        return ServiceResponse::success($responseData);
+    }
+
+    private static function tokenFromUser(User $user): string
+    {
+        return 'ft_'
+            . $user->first_name
+            . '@'
+            . self::CURRENCY_ID_AUD
+            . now()->format('Ym')
+        ;
     }
 }

@@ -9,6 +9,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
+/**
+ * @property-read string $uuid
+ * @property string|null $first_name
+ * @property string|null $last_name
+ * @property string $email
+ * @property string|null $verified_email
+ * @property string|null $password
+ * @property bool $is_email_verified
+ * @property string $sso_type
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property bool $is_ops
+ * @property string $profile_status
+ * @property string|null $date_of_birth
+ * @property string|null $phone_number
+ * @property string|null $post_code
+ * @property string|null $country_code
+ * @property string|null $title
+ * @property string|null $deletion_date
+ * @property bool $is_temporarily_deleted
+ * @property bool $is_permanently_deleted
+ * @property string|null $nickname
+ * @property string|null $last_login
+ */
 class User extends Authenticatable
 {
     use HasFactory;

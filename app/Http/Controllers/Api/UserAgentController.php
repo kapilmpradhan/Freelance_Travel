@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\UserAgent;
+use App\Services\TdmsService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
 use App\Services\UserAgentService;
@@ -20,7 +24,7 @@ class UserAgentController extends BaseController
         $data = $request->all();
         $validate = Validator::make($data, ['username' => 'required|email', 'password' => 'required|string']);
         if ($validate->fails()) {
-            return $this->sendError('Error occured', $validate->errors(), 400);
+            return $this->sendError('Error occurred', $validate->errors(), 400);
         }
 
         $addUserAgentResponse = UserAgentService::addUserAgent(
@@ -97,5 +101,57 @@ class UserAgentController extends BaseController
         $unkinkAgentResponse = UserAgentService::unlinkAgent($agent);
 
         return $this->sendResponseFromService($unkinkAgentResponse);
+    }
+
+    public function upgradeToAgent(Request $request, TdmsService $tdmsService): JsonResponse
+    {
+        $user = $request->user; /** @var User $user */
+
+        $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($user->uuid);
+
+        if ($getAgentResponse->isError()) {
+            return $this->sendResponseFromService($getAgentResponse);
+        }
+
+        $responseData = $getAgentResponse->data;
+
+        // need to lookup order history for this user and find where they've done the most
+        $orderHistoryResponse = TdmsService::customerOrderHistory(
+            $responseData->access_token,
+            $user->email,
+            now()->subMonths(config('vars.agent_upgrade_order_months_history'))
+        );
+
+        $topBranchCode = null;
+
+        if (count($orderHistoryResponse->data) >= 0) {
+            $orderHistory = collect($orderHistoryResponse->data)
+                ->reject(fn ($order) => $order['salesBranchCode'] === config('vars.default_agent_branch_code'))
+                ->groupBy('salesBranchCode')
+                ->map(fn (Collection $orders, $branchCode) => $orders->sum('totalAmountExcludeCCFee'));
+            $totalsByBranch = $orderHistory->sortDesc();
+            $topBranchCode = $totalsByBranch->keys()->first();
+        }
+
+        $upgradeToAgentResponse = $tdmsService->upgradeToAgent(
+            $user,
+            $responseData->access_token,
+            $topBranchCode
+        );
+
+        if ($upgradeToAgentResponse->isError()) {
+            return $this->sendResponseFromService($upgradeToAgentResponse);
+        }
+
+        $data = $upgradeToAgentResponse->data;
+
+        $addUserAgentResponse = UserAgentService::addUserAgent(
+            userId: $user->uuid,
+            username: $data['emailAddress'],
+            password: $data['password'],
+            branchCode: $data['agentCode']
+        );
+
+        return $this->sendResponseFromService($addUserAgentResponse);
     }
 }

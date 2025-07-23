@@ -10,7 +10,7 @@ class UserResource
     {
         $userAgent = new UserAgent();
         $activeAgent = $userAgent->getActiveAgent($data->uuid);
-        $hasUserAgent = $activeAgent ? true : false;
+        $hasUserAgent = (bool)$activeAgent;
 
         $returnData =  [
             'id' => $data->uuid,

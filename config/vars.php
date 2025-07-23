@@ -40,5 +40,7 @@ return [
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
 
-    'discount_percentage' => (int) env('DISCOUNT_PERCENTAGE', 0)
+    'discount_percentage' => (int) env('DISCOUNT_PERCENTAGE', 0),
+
+    'agent_upgrade_order_months_history' => env('AGENT_UPGRADE_ORDER_MONTHS_HISTORY', 6),
 ];
