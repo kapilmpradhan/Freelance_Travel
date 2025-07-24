@@ -298,7 +298,7 @@ class TdmsService
         ];
 
         if ($sinceDate !== null) {
-            $params['sinceDate'] = $sinceDate->toDateString();
+            $params['since'] = $sinceDate->toDateString();
         }
 
         try {
