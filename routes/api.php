@@ -78,7 +78,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'm
     Route::post('/send/notification/topic', [AdminController::class, 'sendNotificationToTopic']);
 });
 
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount', 'middleware' => 'auth.ifToken'], function () {
     Route::get('/active', [DiscountController::class, 'getDiscount']);
 });
 

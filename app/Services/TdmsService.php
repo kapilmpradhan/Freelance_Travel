@@ -332,7 +332,7 @@ class TdmsService
 
     public static function validateOrderData($agentToken, $bookingReference, $orderData): ServiceResponse
     {
-        $url = config('vars.tdms_api_url') . "/validateCart/{$bookingReference}";
+        $url = config('vars.tdms_api_url') . "/validateCart";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',

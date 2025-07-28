@@ -3,12 +3,8 @@ name: Freelance travel job handler deployment
 on:
   workflow_dispatch:
     inputs:
-      image_name:
-        description: 'Docker image name'
-        required: false
-        default: 'truenarydev/ft-api'
-      image_tag:
-        description: 'Docker image tag'
+      version:
+        description: 'Version of the application to deploy'
         required: false
         default: 'latest'
       environment:
@@ -18,8 +14,8 @@ on:
 
 env:
       NETWORK_NAME: ${{vars.NETWORK_NAME}}
-      APP_DOCKER_IMAGE_NAME: ${{ github.event.inputs.image_name }}
-      APP_DOCKER_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+      DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
+      VERSION: ${{ github.event.inputs.version }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}

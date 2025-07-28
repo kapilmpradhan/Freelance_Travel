@@ -447,6 +447,20 @@ class CartItemService
             }
 
             foreach ($cartItems as $cartItem) {
+                $bookingData = $cartItem->booking_data;
+                if ($bookingData) {
+                    $redeemers = [];
+                    foreach ($bookingData as $data) {
+                        if (isset($data['redeemers'])) {
+                            $cartItemRedeemers = $data['redeemers'];
+                            $redeemers = array_merge($redeemers, $cartItemRedeemers);
+                        }
+                    }
+
+                    CartCustomerDetail::whereIn('id', $redeemers)
+                        ->where('is_primary', false)
+                        ->update(['quote_id' => $quote->id]);
+                }
                 $cartItem->quote_id = $quote->id;
                 $cartItem->save();
             }
@@ -535,6 +549,7 @@ class CartItemService
             $cartItem->delete();
         }
 
+        $type->isCart = true;
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             userId: $userId,
             itemType: $type
@@ -611,6 +626,18 @@ class CartItemService
         foreach ($quoteItems as $quoteItem) {
             $quoteItem->delete();
         }
+
+        $type->isQuote = true;
+        $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+            userId: $userId,
+            itemType: $type
+        );
+        $commission = $commissionResponse->data;
+        if ($commission) {
+            $commission->percentage = null;
+            $commission->save();
+        }
+
         return ServiceResponse::success();
     }
 

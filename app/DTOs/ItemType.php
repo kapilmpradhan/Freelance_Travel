@@ -16,6 +16,7 @@ class ItemType
     public $isDirect = false;
     public $isProduct = false;
     public $isDry = false;
+    public $forDiscount = false;
 
     public function __construct(
         string $type,
@@ -84,5 +85,12 @@ class ItemType
         $dry->isDry = true;
         $dry->data = $data;
         return $dry;
+    }
+
+    public static function discount()
+    {
+        $itemType = new ItemType('discount');
+        $itemType->forDiscount = true;
+        return $itemType;
     }
 }

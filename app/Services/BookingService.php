@@ -24,6 +24,7 @@ use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
+use Illuminate\Support\Facades\Redis;
 
 class BookingService
 {
@@ -123,10 +124,10 @@ class BookingService
         return $redeemers;
     }
 
-    public static function buildRedeemersDataV2($cartItems, $userId, $isDry = false)
+    public static function buildRedeemersDataV2($cartItems, $userId, $forDiscount = false)
     {
         $userRedeemers = CartCustomerDetail::where('user_id', $userId)->get();
-        if ($isDry) {
+        if ($forDiscount) {
             $fakeRedeemer = CartCustomerDetail::factory(count: 1)->make()->first();
         }
 
@@ -140,7 +141,7 @@ class BookingService
                             : null;
 
             foreach ($bookingDatas as $bookingData) {
-                if (!$isDry) {
+                if (!$forDiscount) {
                     $redeemerIds = $bookingData['redeemers'] ?? [];
                 } else {
                     $redeemerIds = [$fakeRedeemer->id];
@@ -154,7 +155,7 @@ class BookingService
                 $isPrimaryRedeemer = true;
                 foreach ($redeemerIds as $redeemerId) {
                     // Order data for redeemers
-                    if (!$isDry) {
+                    if (!$forDiscount) {
                         $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
                     } else {
                         $userRedeemer = $fakeRedeemer;
@@ -331,16 +332,17 @@ class BookingService
         UserAgent $userAgent,
         string $userId,
         bool $processAsQuote,
-        string $bookingReference,
-        string $paymentMethodCode,
+        string|null $bookingReference,
+        string|null $paymentMethodCode,
         Collection $cartItems,
         array $customers,
-        bool $isDry = false
+        bool $isDry = false,
+        $itemType = null
     ): array {
         $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $isDry);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->forDiscount);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -425,7 +427,7 @@ class BookingService
         }
         $agent = $getAgentResponse->data; /** @var UserAgent $agent */
 
-        if ($itemType->isDry) {
+        if ($itemType->forDiscount) {
             $cartItemData = $itemType->data;
             $cartItems = CartItemFactory::withProvidedData($cartItemData);
         } elseif ($itemType->isDirect) {
@@ -442,24 +444,40 @@ class BookingService
             return ServiceResponse::badRequest('No items available');
         }
 
-        $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
-        if (is_null($onlinePaymentMethod)) {
-            throw new ServiceException('Missing online payment method');
+        if ($itemType->forDiscount) {
+            $bookingReference = null;
+            $onlinePaymentMethod = null;
+        } else {
+            $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
+            if (is_null($onlinePaymentMethod)) {
+                throw new ServiceException('Missing online payment method');
+            }
+
+            $bookingReference = TdmsService::getBookingRefrence($agent->access_token);
+            $webAppReturnUrl = $onlinePaymentMethod['paymentReturnUrl'] . '/' . config(
+                'vars.web_order_check_url',
+                'order/check',
+            ) . "?bookingReference={$bookingReference}";
+            Logger::debug("web app return url: {$webAppReturnUrl}");
         }
 
-        $newBookingReference = TdmsService::getBookingRefrence($agent->access_token);
-        $webAppReturnUrl = $onlinePaymentMethod['paymentReturnUrl'] . '/' . config(
-            'vars.web_order_check_url',
-            'order/check',
-        ) . "?bookingReference={$newBookingReference}";
-        Logger::debug("web app return url: {$webAppReturnUrl}");
+        foreach ($cartItems as $cartItem) {
+            $updateItemAvailabilityResponse = CartItemServiceV2::updateAvailabilityBeforeOrder(
+                agentToken: $agent->access_token,
+                cartItem: $cartItem
+            );
+
+            if ($updateItemAvailabilityResponse->isError()) {
+                return $updateItemAvailabilityResponse;
+            }
+        }
 
         $orderRequestData = self::buildOrderRequestData(
             userAgent: $agent,
             userId: $userId,
             processAsQuote: $processAsQuote,
-            bookingReference: $newBookingReference,
-            paymentMethodCode: $onlinePaymentMethod['code'],
+            bookingReference: $bookingReference,
+            paymentMethodCode: $onlinePaymentMethod ? $onlinePaymentMethod['code'] : null,
             cartItems: $cartItems,
             customers: $customers,
             isDry: $itemType->isDry
@@ -478,28 +496,12 @@ class BookingService
 
                 $validatedItemsData = $validateOrderDataResponse->data;
 
+
                 $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
                 $totalRrp = $orderRequestData['totalCharged'];
-                $commissionPercentage = round(((int) $commission / (int) $totalRrp) * 100, 2);
+                $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
 
-                if (!$itemType->isDry) {
-                    $userOrderCommission = UserOrderCommission::firstOrCreate([
-                            'user_id' => $userId,
-                            'quote_id' => $itemType->typeId,
-                            'is_cart' => $itemType->isCart,
-                            'is_direct_purchase' => $itemType->isDirect,
-                            'agent_branch' => $agent->branch_code,
-                            'user_order_id' => null,
-                        ]);
-
-                    $userOrderCommission->percentage = $commissionPercentage;
-                    $userOrderCommission->save();
-                }
-
-                $discount = DiscountService::calcuateOverallDiscount($commissionPercentage);
-                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
-
-                if ($itemType->isDry) {
+                if ($itemType->forDiscount) {
                     return ServiceResponse::success(
                         message: 'Order data validated successfully',
                         data: [
@@ -508,6 +510,14 @@ class BookingService
                         ]
                     );
                 }
+
+                $discount = DiscountService::calcuateOverallDiscount(
+                    commissionPercentage: $commissionPercentage,
+                    user: User::find($userId)
+                );
+                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+                $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
+
                 $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
                     if ($item['status'] === 'Available') {

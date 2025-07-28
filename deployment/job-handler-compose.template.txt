@@ -1,6 +1,6 @@
 services:
   job-handler:
-    image: $APP_DOCKER_IMAGE_NAME:$APP_DOCKER_IMAGE_TAG
+    image: $DOCKER_IMAGE_NAME:$VERSION
     container_name: freelance-travel-job-handler
     platform: linux/amd64
     entrypoint: ./cron-setup.sh

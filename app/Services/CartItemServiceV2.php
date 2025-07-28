@@ -26,30 +26,39 @@ class CartItemServiceV2
         $userAgent = $userAgentResponse->data;
         $defaultAgentAccessToken = $userAgent->access_token;
 
-        $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-        if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
-            return ServiceResponse::notFound(
-                message: 'Product not found',
-                data: ['tdmsProductId' => $tdmsProductId]
+        $productDetails = null;
+        if ($itemType->forDiscount) {
+            $product = Product::where('tdms_product_id', $tdmsProductId)->first();
+            $productDetails = $product->json;
+            $productLastUpdate = $product->tdms_product_last_update_date;
+        }
+
+        if (is_null($productDetails)) {
+            $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
+            if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
+                return ServiceResponse::notFound(
+                    message: 'Product not found',
+                    data: ['tdmsProductId' => $tdmsProductId]
+                );
+            }
+            $productDetails = $productDetailsResponse['results'][0];
+
+            $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
+                $defaultAgentAccessToken,
+                [$tdmsProductId],
+            );
+            if (!$productLastUpdate) {
+                throw new ServiceException(
+                    message: 'Product last update not found',
+                );
+            }
+            $productLastUpdate = $productLastUpdate[$tdmsProductId];
+
+            CartItemService::cacheProduct(
+                product: $productDetails,
+                checkTime: $productLastUpdate,
             );
         }
-        $productDetails = $productDetailsResponse['results'][0];
-
-        $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
-            $defaultAgentAccessToken,
-            [$tdmsProductId],
-        );
-        if (!$productLastUpdate) {
-            throw new ServiceException(
-                message: 'Product last update not found',
-            );
-        }
-        $productLastUpdate = $productLastUpdate[$tdmsProductId];
-
-        CartItemService::cacheProduct(
-            product: $productDetails,
-            checkTime: $productLastUpdate,
-        );
 
         $result = [];
         $existingUserCartItems = CartItem::userCartItems($userId);
@@ -66,7 +75,7 @@ class CartItemServiceV2
                 return $detail['bookingDate'];
             }, $quantityDetails);
 
-            if (!$itemType->isDry) {
+            if (!$itemType->isDry && !$itemType->forDiscount) {
                 $sameItemsOnSameDate = $existingUserCartItems->where('product_price_details_id', $productPriceDetailsId)
                                     ->whereIn('booking_date', $bookingDates);
 
@@ -95,21 +104,23 @@ class CartItemServiceV2
                 }
             }
 
-            $bookingDetailsResponse = ProductService::getBookingDetails(
-                agentToken: $defaultAgentAccessToken,
-                productPricesDetailsId: $productPriceDetails['productPricesDetailsId'],
-            );
+            if (!$itemType->forDiscount) {
+                $bookingDetailsResponse = ProductService::getBookingDetails(
+                    agentToken: $defaultAgentAccessToken,
+                    productPricesDetailsId: $productPriceDetails['productPricesDetailsId'],
+                );
 
-            if ($bookingDetailsResponse->isError()) {
-                if ($bookingDetailsResponse->responseCode == 404) {
-                    return ServiceResponse::notFound('Booking details not found');
+                if ($bookingDetailsResponse->isError()) {
+                    if ($bookingDetailsResponse->responseCode == 404) {
+                        return ServiceResponse::notFound('Booking details not found');
+                    }
+
+                    $errorMessage = 'Failed to load booking details';
+                    Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
+                    throw new ServiceException(message: $errorMessage);
                 }
-
-                $errorMessage = 'Failed to load booking details';
-                Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
-                throw new ServiceException(message: $errorMessage);
+                $bookingDetails = $bookingDetailsResponse->data;
             }
-            $bookingDetails = $bookingDetailsResponse->data;
 
             foreach ($quantityDetails as $details) {
                 $quantityIndex = 0;
@@ -207,7 +218,7 @@ class CartItemServiceV2
                     product: $productDetails,
                     productPriceDetailsId: $productPriceDetailsId,
                     productLastUpdate: $productLastUpdate,
-                    productBookingDetails: $bookingDetails,
+                    productBookingDetails: $bookingDetails ?? [],
                     productAvailabilities: $productAvailabilities[0],
                     bookingData: $bookingData,
                     quantity: $quantity,
@@ -344,11 +355,21 @@ class CartItemServiceV2
                     orderItemsData: $orderItemsData
                 );
 
-                if ($itemType->isDry) {
+                if ($itemType->isDry || $itemType->forDiscount) {
                     foreach ($cartItemsData as &$cartItemData) {
                         $cartItemData['product'] = $cachedProduct->toArray();
                     }
                     return $cartItemsData;
+                } else {
+                    $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+                        $userId,
+                        $itemType
+                    );
+                    if ($commissionResponse->isSuccess()) {
+                        $commission = $commissionResponse->data;
+                        $commission->percentage = null;
+                        $commission->save();
+                    }
                 }
 
                 foreach ($cartItemsData as $cartItemData) {
@@ -394,5 +415,58 @@ class CartItemServiceV2
         DB::commit();
 
         return ServiceResponse::success('Cart items updated successfully');
+    }
+
+    public static function updateAvailabilityBeforeOrder($agentToken, $cartItem)
+    {
+        $productDetails = Product::where('tdms_product_id', $cartItem->tdms_product_id)
+            ->where('version', $cartItem->product_version)
+            ->first();
+
+        $product = $productDetails->json;
+        if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
+            $farePrices = $product['faresprices'];
+
+            // Find fareTypeId for the given productPricesDetailsId
+            $fareTypeId = null;
+            foreach ($farePrices as $fare) {
+                if ($fare["productPricesDetailsId"] === $cartItem->product_price_details_id) {
+                    $fareTypeId = $fare["fareTypeId"];
+                    break;
+                }
+            }
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
+                agentToken: $agentToken,
+                fareTypeId: $fareTypeId,
+                productId: $product['productId'],
+                startDate: $cartItem->booking_date,
+                endDate: Carbon::parse($cartItem->booking_date)->addDays(1)->toDateString()
+            );
+
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found for cart item: ' . $cartItem->id,
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
+        } else {
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                $agentToken,
+                $cartItem->product_price_details_id,
+                $cartItem->time_id,
+                $cartItem->booking_date,
+                1,
+            );
+        }
+
+        if (empty($productAvailabilities)) {
+            return ServiceResponse::notFound(
+                message: 'Product availability not found for cart item: ' . $cartItem->id,
+            );
+        }
+
+        $cartItem->availability = $productAvailabilities[0];
+        return ServiceResponse::success();
     }
 }

@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Discount;
+use Illuminate\Http\Request;
 use App\Services\DiscountService;
 use App\Services\ServiceException;
 use Illuminate\Support\Facades\Validator;
 
 class DiscountController extends BaseController
 {
-    public function getDiscount()
+    public function getDiscount(Request $request)
     {
-        $discountResponse = DiscountService::getActiveDiscountData();
+        $user = $request->user;
+        $discountResponse = DiscountService::getActiveDiscountData($user);
         return $this->sendResponseFromService($discountResponse);
     }
 
