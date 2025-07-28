@@ -363,7 +363,11 @@ class BookingService
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
 
-        if ($userAgent->referral_source_id && $userAgent->created_at->isAfter(now()->subMonths(config('vars.referral_source_id_period_months')))) {
+        if (
+            $userAgent->referral_source_id
+            && $userAgent->created_at
+                ->isAfter(now()->subMonths(config('vars.referral_source_id_period_months')))
+        ) {
             $orderData['referralSourceId'] = $userAgent->referral_source_id;
         }
 
