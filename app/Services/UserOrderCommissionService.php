@@ -28,7 +28,7 @@ class UserOrderCommissionService
         return ServiceResponse::notFound();
     }
 
-    public static function getOrSetCommissionOfUserCartOrQuote($userId, $itemType)
+    public static function getOrSetCommissionOfUserCartOrQuote($userId, ItemType $itemType): ServiceResponse
     {
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             $userId,
@@ -49,6 +49,7 @@ class UserOrderCommissionService
         $orderCommissionResponse = BookingService::postOrder(
             userId: $userId,
             intent: 'pay-now',
+            pointsApplied: null,
             itemType: $itemType
         );
 
@@ -57,8 +58,11 @@ class UserOrderCommissionService
         }
 
         $commissionData = $orderCommissionResponse->data;
+        $pointsAvailable = $commissionData
+            ? self::pointsFromCommission((float) $commissionData['commission'])
+            : null;
 
-        UserOrderCommission::updateOrCreate(
+        UserOrderCommission::query()->updateOrCreate(
             [
                 'user_id' => $userId,
                 'user_order_id' => null,
@@ -68,11 +72,15 @@ class UserOrderCommissionService
                 'is_direct_purchase' => $itemType->isDirect
             ],
             [
-                'percentage' => $commissionData['commission']
+                'percentage' => $commissionData['commission'],
+                'points_available' => $pointsAvailable,
             ]
         );
 
-        return ServiceResponse::success(['commission' => $commissionData['commission']]);
+        return ServiceResponse::success([
+            'commission' => $commissionData['commission'],
+            'pointsAvailable' => $pointsAvailable,
+        ]);
     }
 
     public static function getCommissionForDry($userId, ItemType $itemType): ServiceResponse
@@ -99,6 +107,7 @@ class UserOrderCommissionService
         $orderCommissionResponse = BookingService::postOrder(
             userId: $userId,
             intent: 'pay-now',
+            pointsApplied: null,
             itemType: $itemType
         );
 
@@ -108,6 +117,14 @@ class UserOrderCommissionService
 
         $commissionData = $orderCommissionResponse->data;
 
-        return ServiceResponse::success(['commission' => $commissionData['commission']]);
+        return ServiceResponse::success([
+            'commission' => $commissionData['commission'],
+            'pointsAvailable' => self::pointsFromCommission((float) $commissionData['commission']),
+        ]);
+    }
+
+    public static function pointsFromCommission(float $commission): int
+    {
+        return (int) round($commission * app('vars.points_multiplier'));
     }
 }

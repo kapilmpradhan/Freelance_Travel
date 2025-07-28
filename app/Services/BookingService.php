@@ -334,6 +334,7 @@ class BookingService
         bool $processAsQuote,
         string|null $bookingReference,
         string|null $paymentMethodCode,
+        ?int $pointsApplied,
         Collection $cartItems,
         array $customers,
         bool $forDiscount = false
@@ -362,6 +363,10 @@ class BookingService
         // maintain alphabetical order
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
+
+        if ($pointsApplied) {
+            $orderData["cashbackApplied"] = $pointsApplied;
+        }
 
         if (
             $userAgent->referral_source_id
@@ -420,6 +425,7 @@ class BookingService
     public static function basePostOrder(
         string $userId,
         string $intent,
+        ?int $pointsApplied,
         ItemType $itemType,
         bool $processAsQuote = true,
         array $customers = []
@@ -481,6 +487,7 @@ class BookingService
             processAsQuote: $processAsQuote,
             bookingReference: $bookingReference,
             paymentMethodCode: $onlinePaymentMethod ? $onlinePaymentMethod['code'] : null,
+            pointsApplied: $pointsApplied,
             cartItems: $cartItems,
             customers: $customers,
             forDiscount: $itemType->forDiscount
@@ -503,14 +510,16 @@ class BookingService
                 $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
                 $totalRrp = $orderRequestData['totalCharged'];
                 $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
+                $pointsAvailable = UserOrderCommissionService::pointsFromCommission((float) $commission);
 
                 if ($itemType->forDiscount) {
                     return ServiceResponse::success(
-                        message: 'Order data validated successfully',
                         data: [
                             'branch' => $agent->branch_code,
-                            'commission' => $commissionPercentage
-                        ]
+                            'commission' => $commissionPercentage,
+                            'pointsAvailable' => $pointsAvailable,
+                        ],
+                        message: 'Order data validated successfully'
                     );
                 }
 
@@ -660,12 +669,14 @@ class BookingService
     public static function postOrder(
         string $userId,
         string $intent,
+        ?int $pointsApplied,
         ItemType $itemType,
         bool $processAsQuote = true
     ): ?ServiceResponse {
         return self::basePostOrder(
             userId: $userId,
             intent: $intent,
+            pointsApplied: $pointsApplied,
             itemType: $itemType,
             processAsQuote: $processAsQuote
         );
