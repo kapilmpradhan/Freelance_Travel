@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  * @property bool $is_deleted
  * @property string $branch_code
+ * @property int|null $referral_source_id
  */
 class UserAgent extends Model
 {
@@ -54,6 +55,10 @@ class UserAgent extends Model
         'trading_name',
         'is_active',
         'is_deleted'
+    ];
+
+    protected $casts = [
+        'referral_source_id' => 'integer',
     ];
 
     protected $hidden = ['password'];

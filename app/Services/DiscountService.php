@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Discount;
+use App\Models\UserAgent;
 use App\Models\UserOrderCommission;
 use Exception;
 
@@ -47,7 +48,7 @@ class DiscountService
             if ($getAgentResponse->isError()) {
                 return $getAgentResponse;
             }
-            $agent = $getAgentResponse->data;
+            $agent = $getAgentResponse->data; /** @var UserAgent $agent */
 
             if (!$orderCommission) {
                 $orderCommission = UserOrderCommission::create([
@@ -71,13 +72,14 @@ class DiscountService
             // This is a dry run to calculate the commission percentage
             $itemType->isDry = true;
             $orderRequestData = BookingService::buildOrderRequestData(
+                userAgent: $agent,
                 userId: $userId,
                 processAsQuote: true,
                 bookingReference: $bookingReference,
                 paymentMethodCode: $onlinePaymentMethod['code'],
                 cartItems: $items,
                 customers: [],
-                itemType: $itemType
+                isDry: $itemType->isDry
             );
 
             $validateOrderDataResponse = TdmsService::validateOrderData(

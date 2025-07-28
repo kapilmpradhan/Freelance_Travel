@@ -318,7 +318,7 @@ class CartItemServiceV2
                     if ($addToQuote->isNew) {
                         $quote = Quote::create([
                             'user_id' => $userId,
-                            'title' => $addToQuote->title,
+                            'title' => $addToQuote->title
                         ]);
                     } else {
                         $quote = Quote::where('id', $addToQuote->quoteId)->first();

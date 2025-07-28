@@ -8,6 +8,8 @@ use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
 use App\Events\CompleteOrderEvent;
+use App\Models\UserAgent;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
@@ -20,8 +22,6 @@ use App\Models\Quote;
 use App\Models\User;
 use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
-use App\Services\TdmsService;
-use App\Services\UserAgentService;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
 
@@ -328,19 +328,19 @@ class BookingService
     }
 
     public static function buildOrderRequestData(
+        UserAgent $userAgent,
         string $userId,
         bool $processAsQuote,
         string $bookingReference,
         string $paymentMethodCode,
-        $cartItems,
-        $customers,
-        $isDry = false,
-        $itemType = null
-    ) {
+        Collection $cartItems,
+        array $customers,
+        bool $isDry = false
+    ): array {
         $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->isDry);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $isDry);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -361,6 +361,10 @@ class BookingService
         // maintain alphabetical order
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
+
+        if ($userAgent->referral_source_id && $userAgent->created_at->isAfter(now()->subMonths(config('vars.referral_source_id_period_months')))) {
+            $orderData['referralSourceId'] = $userAgent->referral_source_id;
+        }
 
         Logger::debug('Order request data', $orderData);
 
@@ -419,7 +423,7 @@ class BookingService
         if ($getAgentResponse->isError()) {
             return $getAgentResponse;
         }
-        $agent = $getAgentResponse->data;
+        $agent = $getAgentResponse->data; /** @var UserAgent $agent */
 
         if ($itemType->isDry) {
             $cartItemData = $itemType->data;
@@ -451,13 +455,14 @@ class BookingService
         Logger::debug("web app return url: {$webAppReturnUrl}");
 
         $orderRequestData = self::buildOrderRequestData(
+            userAgent: $agent,
             userId: $userId,
             processAsQuote: $processAsQuote,
             bookingReference: $newBookingReference,
             paymentMethodCode: $onlinePaymentMethod['code'],
             cartItems: $cartItems,
             customers: $customers,
-            itemType: $itemType
+            isDry: $itemType->isDry
         );
 
         if (OrderDataValidationFeature::isEnabled()) {
@@ -644,15 +649,13 @@ class BookingService
         string $intent,
         ItemType $itemType,
         bool $processAsQuote = true
-    ) {
-        $basePostOrderResponse = self::basePostOrder(
+    ): ?ServiceResponse {
+        return self::basePostOrder(
             userId: $userId,
             intent: $intent,
-            processAsQuote: $processAsQuote,
-            itemType: $itemType
+            itemType: $itemType,
+            processAsQuote: $processAsQuote
         );
-
-        return $basePostOrderResponse;
     }
 
     public static function completeOrder(string $bookingReference)
