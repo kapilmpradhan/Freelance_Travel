@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\ItemType;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Discount;
@@ -38,7 +39,7 @@ class DiscountService
         );
     }
 
-    public static function getOrderCommission($itemType, $userId)
+    public static function getOrderCommission(ItemType $itemType, $userId): ServiceResponse
     {
         $items = CartItem::userItems($userId, $itemType);
         if (count($items) == 0) {
@@ -75,7 +76,7 @@ class DiscountService
             }
 
             // This is a dry run to calculate the commission percentage
-            $itemType->isDry = true;
+            $itemType->forDiscount = true;
             $orderRequestData = BookingService::buildOrderRequestData(
                 userAgent: $agent,
                 userId: $userId,
@@ -84,7 +85,7 @@ class DiscountService
                 paymentMethodCode: $onlinePaymentMethod['code'],
                 cartItems: $items,
                 customers: [],
-                isDry: $itemType->isDry
+                forDiscount: $itemType->forDiscount
             );
 
             $validateOrderDataResponse = TdmsService::validateOrderData(
@@ -143,7 +144,7 @@ class DiscountService
         return $applicableDiscount;
     }
 
-    public static function getItemsDiscount($itemType, $userId)
+    public static function getItemsDiscount(ItemType $itemType, $userId): ServiceResponse
     {
         $activeDiscount = Discount::where('is_active', true)->first();
         if (!$activeDiscount || $activeDiscount->percentage == 0) {

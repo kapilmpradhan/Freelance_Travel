@@ -336,13 +336,12 @@ class BookingService
         string|null $paymentMethodCode,
         Collection $cartItems,
         array $customers,
-        bool $isDry = false,
-        $itemType = null
+        bool $forDiscount = false
     ): array {
         $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->forDiscount);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $forDiscount);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -480,7 +479,7 @@ class BookingService
             paymentMethodCode: $onlinePaymentMethod ? $onlinePaymentMethod['code'] : null,
             cartItems: $cartItems,
             customers: $customers,
-            isDry: $itemType->isDry
+            forDiscount: $itemType->forDiscount
         );
 
         if (OrderDataValidationFeature::isEnabled()) {

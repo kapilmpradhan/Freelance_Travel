@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\ItemType;
 use App\Models\CartItem;
 use App\Models\UserOrderCommission;
 
@@ -48,7 +49,6 @@ class UserOrderCommissionService
         $orderCommissionResponse = BookingService::postOrder(
             userId: $userId,
             intent: 'pay-now',
-            processAsQuote: true,
             itemType: $itemType
         );
 
@@ -75,19 +75,18 @@ class UserOrderCommissionService
         return ServiceResponse::success(['commission' => $commissionData['commission']]);
     }
 
-    public static function getCommissionForDry($userId, $itemType)
+    public static function getCommissionForDry($userId, ItemType $itemType): ServiceResponse
     {
         $overallCartData = [];
         foreach ($itemType->data as $data) {
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $userId,
                 tdmsProductId: $data['tdmsProductId'],
-                productPricesDetails: $data['productPricesDetails'],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                addToQuote: null,
-                itemType: $itemType
+                itemType: $itemType,
+                productPricesDetails: $data['productPricesDetails']
             );
 
             if (!$saveItemsResponse->isSuccess()) {
@@ -100,7 +99,6 @@ class UserOrderCommissionService
         $orderCommissionResponse = BookingService::postOrder(
             userId: $userId,
             intent: 'pay-now',
-            processAsQuote: true,
             itemType: $itemType
         );
 
