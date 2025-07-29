@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
  * @property bool $is_permanently_deleted
  * @property string|null $nickname
  * @property string|null $last_login
+ * @property bool $is_points_displayed
  */
 class User extends Authenticatable
 {
@@ -59,7 +60,8 @@ class User extends Authenticatable
         'deletion_date',
         'last_login',
         'is_temporarily_deleted',
-        'is_permanently_deleted'
+        'is_permanently_deleted',
+        'is_points_displayed',
     ];
     protected $casts = [
         'is_email_verified' => 'boolean',

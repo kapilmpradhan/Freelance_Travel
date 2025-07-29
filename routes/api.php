@@ -66,6 +66,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('detail/change-password', [UserController::class, 'changePassword']);
     Route::post('/apple/new-email/add', [AppleLoginController::class, 'getRealEmailOTP']);
     Route::post('/apple/new-email/verify', [AppleLoginController::class, 'verifyRealEmailOTP']);
+    Route::post('/points/show-hide', [UserController::class, 'showHidePoints']);
     Route::post('/fcm/token/add', [UserController::class, 'addFcmToken']);
     Route::delete('/fcm/token/{fcmToken}', [UserController::class, 'removeFcmToken']);
 });

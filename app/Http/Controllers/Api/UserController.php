@@ -178,7 +178,6 @@ class UserController extends BaseController
             return $this->sendError('Account unauthenticated');
         }
 
-
         $account_data = $userResource->userDetail($user);
         return $this->sendResponse('Account details', $account_data);
     }
@@ -287,5 +286,14 @@ class UserController extends BaseController
         }
 
         return $this->sendResponse('Success');
+    }
+
+    public function showHidePoints(Request $request)
+    {
+        $user = $request->user;
+        $user->is_points_displayed = !$user->is_points_displayed;
+        $user->save();
+
+        return $this->sendResponse('Points visibility toggled');
     }
 }
