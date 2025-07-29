@@ -76,7 +76,7 @@ class RedeemerService
             'last_name' => $user->last_name,
             'date_of_birth' => $user->date_of_birth,
             'email' => $user->email,
-            'postal_code' => $user->postal_code,
+            'postal_code' => $user->post_code,
             'phone_number' => $user->phone_number
         ]);
         return ServiceResponse::success($primaryRedeemer);
