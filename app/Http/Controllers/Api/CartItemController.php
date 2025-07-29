@@ -687,7 +687,10 @@ class CartItemController extends BaseController
     public function submitOrder(Request $request): JsonResponse
     {
         $data = $request->all();
-        $validate = Validator::make($data, ["paymentType" => "required|in:email-quote,pay-now"]);
+        $validate = Validator::make($data, [
+            "paymentType" => "required|in:email-quote,pay-now",
+            "pointsApplied" => "nullable|integer"
+        ]);
 
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
@@ -696,6 +699,7 @@ class CartItemController extends BaseController
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
+                pointsApplied: $data['pointsApplied'] ?? null,
                 itemType: ItemType::cart()
             );
             return $this->sendResponseFromService($postOrderResponse);
@@ -708,10 +712,20 @@ class CartItemController extends BaseController
 
     public function submitQuoteOrder(Request $request, string $quoteId): JsonResponse
     {
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            "pointsApplied" => "nullable|integer"
+        ]);
+
+        if ($validate->fails()) {
+            return $this->sendError("Place order failed", $validate->errors());
+        }
+
         try {
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: 'pay-now',
+                pointsApplied: $data['pointsApplied'] ?? null,
                 itemType: ItemType::quote($quoteId)
             );
             return $this->sendResponseFromService($postOrderResponse);
@@ -775,6 +789,7 @@ class CartItemController extends BaseController
             $postOrderResponse = BookingService::postOrder(
                 userId: $user->uuid,
                 intent: 'pay-now',
+                pointsApplied: $data['pointsApplied'] ?? null,
                 itemType: ItemType::direct()
             );
 
@@ -958,15 +973,14 @@ class CartItemController extends BaseController
             );
         }
 
-        $commissionPercentage = $commissionResponse->data['commission'];
-
         return $this->sendResponse(
             title: 'Applicable discount',
             data: [
                 'applicableDiscount' => round(DiscountService::calcuateOverallDiscount(
-                    commissionPercentage: $commissionPercentage,
+                    commissionPercentage: $commissionResponse->data['commission'],
                     user: $request->user
-                ), 2)
+                ), 2),
+                'pointsAvailable' => $commissionResponse->data['pointsAvailable'],
             ]
         );
     }
