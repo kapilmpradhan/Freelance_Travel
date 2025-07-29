@@ -3,15 +3,14 @@
 namespace App\Providers;
 
 use App\Events\CompleteOrderEvent;
-use App\Events\OrderComplete;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 use App\Events\OrderPosted;
 use App\Listeners\CleanCartItems;
 use App\Listeners\EmailCompleteOrder;
 use App\Listeners\EmailQuote;
+use App\Listeners\PointsEarnedNotification;
 use App\Listeners\SetBookingNotificationData;
 
 class EventServiceProvider extends ServiceProvider
@@ -31,7 +30,8 @@ class EventServiceProvider extends ServiceProvider
         ],
         CompleteOrderEvent::class => [
             EmailCompleteOrder::class,
-            SetBookingNotificationData::class
+            SetBookingNotificationData::class,
+            PointsEarnedNotification::class
         ]
     ];
 

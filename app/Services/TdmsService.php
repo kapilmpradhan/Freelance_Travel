@@ -676,7 +676,7 @@ class TdmsService
         $responseData = $response->json();
 
         if (count($responseData['error'] ?? []) > 0) {
-            $messages = array_map(fn($item) => $item['message'], $responseData['error'] ?? []);
+            $messages = array_map(fn ($item) => $item['message'], $responseData['error'] ?? []);
 
             return ServiceResponse::badRequest(
                 message: implode(". ", $messages),
@@ -685,6 +685,36 @@ class TdmsService
         }
 
         return ServiceResponse::success($responseData);
+    }
+
+
+    public static function getCommissionReport(
+        string $bookingReference,
+        string $agentToken
+    ): ServiceResponse {
+        $url = config('vars.tdms_api_url') . "/report/commissionReport";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$agentToken}"
+        ])->post($url);
+
+        if ($response->successful()) {
+            return ServiceResponse::success($response->json());
+        }
+
+        Logger::error(
+            message: 'Error fetching commission report',
+            extra: [
+                'bookingReference' => $bookingReference,
+                'responseData' => $response->json()
+            ]
+        );
+
+        return ServiceResponse::badRequest(
+            message: 'Failed to fetch commission report',
+            data: $response->json()
+        );
     }
 
     private static function tokenFromUser(User $user): string

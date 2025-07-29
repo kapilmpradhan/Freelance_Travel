@@ -11,6 +11,7 @@ return [
     'booking_notification_template_id' => env('BREVO_BOOKING_NOTIFICATION_TEMPLATE_ID'),
     'order_complete_template_id' => env('BREVO_ORDER_COMPLETE_TEMPLATE_ID'),
     'account_deletion_template_id' => env('BREVO_ACCOUNT_DELETION_TEMPLATE_ID'),
+    'points_earned_template_id' => env('BREVO_POINTS_EARNED_NOTIFICATION_TEMPLATE_ID'),
 
     'sso_type_email' => env('SSO_TYPE_EMAIL'),
     'sso_type_google' => env('SSO_TYPE_GOOGLE'),
