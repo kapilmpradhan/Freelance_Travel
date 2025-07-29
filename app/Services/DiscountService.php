@@ -39,8 +39,11 @@ class DiscountService
         );
     }
 
-    public static function getOrderCommission(ItemType $itemType, $userId): ServiceResponse
-    {
+    public static function getOrderCommission(
+        ItemType $itemType,
+        $userId,
+        ?int $pointsApplied = null
+    ): ServiceResponse {
         $items = CartItem::userItems($userId, $itemType);
         if (count($items) == 0) {
             return ServiceResponse::notFound('No items available');
@@ -83,6 +86,7 @@ class DiscountService
                 processAsQuote: true,
                 bookingReference: $bookingReference,
                 paymentMethodCode: $onlinePaymentMethod['code'],
+                pointsApplied: $pointsApplied,
                 cartItems: $items,
                 customers: [],
                 forDiscount: $itemType->forDiscount
@@ -144,8 +148,11 @@ class DiscountService
         return $applicableDiscount;
     }
 
-    public static function getItemsDiscount(ItemType $itemType, $userId): ServiceResponse
-    {
+    public static function getItemsDiscount(
+        ItemType $itemType,
+        $userId,
+        ?int $pointsApplied = null
+    ): ServiceResponse {
         $activeDiscount = Discount::where('is_active', true)->first();
         if (!$activeDiscount || $activeDiscount->percentage == 0) {
             return ServiceResponse::success(
@@ -153,7 +160,7 @@ class DiscountService
             );
         }
 
-        $orderCommissionResponse = self::getOrderCommission($itemType, $userId);
+        $orderCommissionResponse = self::getOrderCommission($itemType, $userId, $pointsApplied);
         if ($orderCommissionResponse->isError()) {
             return $orderCommissionResponse;
         }

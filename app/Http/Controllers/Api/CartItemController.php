@@ -919,6 +919,7 @@ class CartItemController extends BaseController
         $isCart = $request->query('isCart') == 1;
         $quoteId = $request->query('quoteId');
         $isDirect = $request->query('isDirect') == 1;
+        $pointsApplied = $request->query('pointsApplied');
 
 
         if ($isCart) {
@@ -933,7 +934,8 @@ class CartItemController extends BaseController
 
         $orderDiscountResponse = DiscountService::getItemsDiscount(
             itemType: $itemType,
-            userId: $userId
+            userId: $userId,
+            pointsApplied: $pointsApplied
         );
 
         return $this->sendResponseFromService($orderDiscountResponse);
