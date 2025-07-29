@@ -330,7 +330,7 @@ class TdmsService
         return ServiceResponse::badRequest(message: 'Internal server error');
     }
 
-    public static function validateOrderData($agentToken, $bookingReference, $orderData)
+    public static function validateOrderData($agentToken, $bookingReference, $orderData): ServiceResponse
     {
         $url = config('vars.tdms_api_url') . "/validateCart";
 

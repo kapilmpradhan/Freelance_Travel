@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\DTOs\ItemType;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -247,9 +248,10 @@ class CartItem extends Model
         return $this->create($data);
     }
 
-    public static function userItems($userId, ItemType $itemType)
+    public static function userItems($userId, ItemType $itemType): Collection
     {
-        return CartItem::where('user_id', $userId)
+        return CartItem::query()
+            ->where('user_id', $userId)
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))

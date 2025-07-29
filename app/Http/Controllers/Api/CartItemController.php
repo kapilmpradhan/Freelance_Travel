@@ -7,6 +7,7 @@ use Exception;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\DTOs\AddToQuote;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 
 class CartItemController extends BaseController
 {
-    public function addItemToCart(Request $request, CartItem $cartItem)
+    public function addItemToCart(Request $request, CartItem $cartItem): JsonResponse
     {
         $data = $request->all();
         $data['user_id'] = $request->user->uuid;
@@ -46,7 +47,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsToCart(Request $request)
+    public function addItemsToCart(Request $request): JsonResponse
     {
         $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsRule());
@@ -63,11 +64,10 @@ class CartItemController extends BaseController
                 tdmsProductId: $data['tdmsProductId'],
                 productPricesDetailsId: $data['productPricesDetailsId'],
                 timeId: $data['timeId'] ?? null,
+                bookingData: $data['bookingData'] ?? [],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                bookingData: $data['bookingData'] ?? [],
-                addToQuote: null,
                 itemType: ItemType::cart(),
                 isDryRun: $isDryRun,
             );
@@ -79,7 +79,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsToCartV2(Request $request)
+    public function addItemsToCartV2(Request $request): JsonResponse
     {
         $data = $request->all();
         $validator = Validator::make($data, CartItem::saveItemsV2Rule());
@@ -93,12 +93,11 @@ class CartItemController extends BaseController
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $request->user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
-                productPricesDetails: $data['productPricesDetails'],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                addToQuote: null,
                 itemType: $isDryRun ? ItemType::dry() : ItemType::cart(),
+                productPricesDetails: $data['productPricesDetails'],
                 isDryRun: $isDryRun,
             );
             return $this->sendResponseFromService($saveItemsResponse);
@@ -109,7 +108,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsInNewQuote(Request $request)
+    public function addItemsInNewQuote(Request $request): JsonResponse
     {
         $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsInNewQuote());
@@ -134,12 +133,12 @@ class CartItemController extends BaseController
                 tdmsProductId: $data['tdmsProductId'],
                 productPricesDetailsId: $data['productPricesDetailsId'],
                 timeId: $data['timeId'] ?? null,
+                bookingData: $data['bookingData'] ?? [],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                bookingData: $data['bookingData'] ?? [],
-                addToQuote: $addToQuote,
-                itemType: ItemType::quote($addToQuote->quoteId)
+                itemType: ItemType::quote($addToQuote->quoteId),
+                addToQuote: $addToQuote
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -149,7 +148,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsInNewQuoteV2(Request $request)
+    public function addItemsInNewQuoteV2(Request $request): JsonResponse
     {
         $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsInNewQuoteV2());
@@ -175,9 +174,9 @@ class CartItemController extends BaseController
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                addToQuote: $addToQuote,
                 itemType: ItemType::quote($addToQuote->quoteId),
-                productPricesDetails: $data['productPricesDetails']
+                productPricesDetails: $data['productPricesDetails'],
+                addToQuote: $addToQuote
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -187,7 +186,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsInExistingQuote(Request $request, string $quoteId)
+    public function addItemsInExistingQuote(Request $request, string $quoteId): JsonResponse
     {
         $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsRule());
@@ -202,12 +201,12 @@ class CartItemController extends BaseController
                 tdmsProductId: $data['tdmsProductId'],
                 productPricesDetailsId: $data['productPricesDetailsId'],
                 timeId: $data['timeId'] ?? null,
+                bookingData: $data['bookingData'] ?? [],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                bookingData: $data['bookingData'] ?? [],
-                addToQuote: AddToQuote::existing(quoteId: $quoteId),
-                itemType: ItemType::quote($quoteId)
+                itemType: ItemType::quote($quoteId),
+                addToQuote: AddToQuote::existing(quoteId: $quoteId)
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -217,7 +216,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addItemsInExistingQuoteV2(Request $request, string $quoteId)
+    public function addItemsInExistingQuoteV2(Request $request, string $quoteId): JsonResponse
     {
         $data = $request->all();
         $validated = Validator::make($data, CartItem::saveItemsV2Rule());
@@ -233,9 +232,9 @@ class CartItemController extends BaseController
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
+                itemType: ItemType::quote($quoteId),
                 productPricesDetails: $data['productPricesDetails'],
-                addToQuote: AddToQuote::existing(quoteId: $quoteId),
-                itemType: ItemType::quote($quoteId)
+                addToQuote: AddToQuote::existing(quoteId: $quoteId)
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -245,7 +244,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addExistingCartItemsToQuote(Request $request, string $quoteId = null)
+    public function addExistingCartItemsToQuote(Request $request, string $quoteId = null): JsonResponse
     {
         if ($quoteId === null) {
             $data = $request->all();
@@ -269,7 +268,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function setCustomers(Request $request)
+    public function setCustomers(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         $data = json_decode($request->getContent(), associative: true);
@@ -293,7 +292,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getCustomers(Request $request)
+    public function getCustomers(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -306,7 +305,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getQuotes(Request $request)
+    public function getQuotes(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -319,7 +318,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function setQuoteCustomers(Request $request, string $quoteId)
+    public function setQuoteCustomers(Request $request, string $quoteId): JsonResponse
     {
         $userId = $request->user->uuid;
         $data = json_decode($request->getContent(), associative: true);
@@ -343,7 +342,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getQuoteCustomers(Request $request, string $quoteId)
+    public function getQuoteCustomers(Request $request, string $quoteId): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -359,7 +358,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getItemsInCart(Request $request)
+    public function getItemsInCart(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -372,7 +371,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getItemsInQuote(Request $request, string $quoteId)
+    public function getItemsInQuote(Request $request, string $quoteId): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -388,7 +387,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getQuoteDetails(Request $request, string $quoteId)
+    public function getQuoteDetails(Request $request, string $quoteId): JsonResponse
     {
         $data = ['quoteId' => $quoteId];
         $validator = Validator::make($data, ['quoteId' => 'integer|required']);
@@ -405,7 +404,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function setBookingData(Request $request, int $cartItemId)
+    public function setBookingData(Request $request, int $cartItemId): JsonResponse
     {
         $userId = $request->user->uuid;
         $data = $request->all();
@@ -430,7 +429,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function setBookingDataV2(Request $request)
+    public function setBookingDataV2(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         $quoteId = $request->query('quoteId');
@@ -547,7 +546,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function removeItemFromCart(Request $request, int $cartItemId)
+    public function removeItemFromCart(Request $request, int $cartItemId): JsonResponse
     {
         $userId = $request->user->uuid;
 
@@ -564,7 +563,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function removeItemsFromCart(Request $request)
+    public function removeItemsFromCart(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         $isCart = $request->query('isCart') == 1;
@@ -597,7 +596,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function removeQuote(Request $request, int $quoteId)
+    public function removeQuote(Request $request, int $quoteId): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -613,7 +612,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function removeItemsFromQuote(Request $request)
+    public function removeItemsFromQuote(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         $quoteId = $request->query('quoteId');
@@ -650,7 +649,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getCartItems(Request $request)
+    public function getCartItems(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
 
@@ -664,7 +663,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function removeCartItem(Request $request, $cartItemId)
+    public function removeCartItem(Request $request, $cartItemId): JsonResponse
     {
         try {
             $cartItem = CartItem::where('user_id', $request->user->uuid)
@@ -685,7 +684,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function submitOrder(Request $request)
+    public function submitOrder(Request $request): JsonResponse
     {
         $data = $request->all();
         $validate = Validator::make($data, ["paymentType" => "required|in:email-quote,pay-now"]);
@@ -697,7 +696,6 @@ class CartItemController extends BaseController
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
-                processAsQuote: true,
                 itemType: ItemType::cart()
             );
             return $this->sendResponseFromService($postOrderResponse);
@@ -708,13 +706,12 @@ class CartItemController extends BaseController
         }
     }
 
-    public function submitQuoteOrder(Request $request, string $quoteId)
+    public function submitQuoteOrder(Request $request, string $quoteId): JsonResponse
     {
         try {
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: 'pay-now',
-                processAsQuote: true,
                 itemType: ItemType::quote($quoteId)
             );
             return $this->sendResponseFromService($postOrderResponse);
@@ -729,7 +726,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function directPurchaseV2(Request $request)
+    public function directPurchaseV2(Request $request): JsonResponse
     {
         $user = $request->user();
         $data = $request->all();
@@ -755,10 +752,9 @@ class CartItemController extends BaseController
                 tdmsProductId: $data['tdmsProductId'],
                 startDate: $data['startDate'],
                 days: $data['days'],
-                productPricesDetails: $data['productPricesDetails'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                addToQuote: null,
-                itemType: ItemType::direct()
+                itemType: ItemType::direct(),
+                productPricesDetails: $data['productPricesDetails']
             );
 
             if (!$saveItemsResponse->isSuccess()) {
@@ -779,7 +775,6 @@ class CartItemController extends BaseController
             $postOrderResponse = BookingService::postOrder(
                 userId: $user->uuid,
                 intent: 'pay-now',
-                processAsQuote: true,
                 itemType: ItemType::direct()
             );
 
@@ -799,7 +794,7 @@ class CartItemController extends BaseController
         return $this->sendResponseFromService($postOrderResponse);
     }
 
-    public function completeOrder(Request $request)
+    public function completeOrder(Request $request): JsonResponse
     {
         $params = $request->query();
         $validate = Validator::make($params, [
@@ -819,7 +814,7 @@ class CartItemController extends BaseController
         return $this->sendResponseFromService($completeBookingResponse);
     }
 
-    public function getBookings(Request $request)
+    public function getBookings(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -863,7 +858,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getCartDetailsByBookingReference(Request $request, $bookingReference)
+    public function getCartDetailsByBookingReference(Request $request, $bookingReference): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -879,7 +874,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function getCustomerOrderDetail(Request $request, $bookingReference)
+    public function getCustomerOrderDetail(Request $request, $bookingReference): JsonResponse
     {
         $userId = $request->user->uuid;
         try {
@@ -896,14 +891,14 @@ class CartItemController extends BaseController
         }
     }
 
-    public function categories(Request $request)
+    public function categories(Request $request): JsonResponse
     {
         $getProductCategories = ProductCategoryService::getCategories();
 
         return $this->sendResponseFromService($getProductCategories);
     }
 
-    public function getDiscountPercentage(Request $request)
+    public function getDiscountPercentage(Request $request): JsonResponse
     {
         $userId = $request->user->uuid;
         $isCart = $request->query('isCart') == 1;
@@ -929,7 +924,7 @@ class CartItemController extends BaseController
         return $this->sendResponseFromService($orderDiscountResponse);
     }
 
-    public function getDiscountPercentageV2(Request $request)
+    public function getDiscountPercentageV2(Request $request): JsonResponse
     {
         $datas = json_decode($request->getContent(), true) ?? [];
 

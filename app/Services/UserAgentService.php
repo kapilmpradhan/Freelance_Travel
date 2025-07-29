@@ -96,8 +96,13 @@ class UserAgentService
         return substr($bookingReferenceResponse, 0, 3);
     }
 
-    public static function addUserAgent($userId, $username, $password, string $branchCode = null): ServiceResponse
-    {
+    public static function addUserAgent(
+        $userId,
+        $username,
+        $password,
+        ?string $branchCode,
+        ?int $referralSourceId
+    ): ServiceResponse {
         $agentDetail = TdmsService::getAgentToken($username, $password);
         if (!$agentDetail) {
             return ServiceResponse::badRequest('Invalid agent credential');
@@ -119,6 +124,7 @@ class UserAgentService
             $agentDetail['type'] = 'integration';
             $agentDetail['is_active'] = true;
             $agentDetail['branch_code'] = $branchCode;
+            $agentDetail['referral_source_id'] = $referralSourceId;
 
             $userAgent = UserAgent::create($agentDetail);
             $userAgentData = AgentResource::userAgentDetails($userAgent);
@@ -130,7 +136,7 @@ class UserAgentService
         }
     }
 
-    public static function updateUserAgent($agent, $username, $password)
+    public static function updateUserAgent(UserAgent $agent, string $username, string $password): ServiceResponse
     {
         $newAgentDetail = TdmsService::getAgentToken($username, $password);
 

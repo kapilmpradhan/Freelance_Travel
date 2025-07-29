@@ -8,6 +8,8 @@ use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
 use App\Events\CompleteOrderEvent;
+use App\Models\UserAgent;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
@@ -20,8 +22,6 @@ use App\Models\Quote;
 use App\Models\User;
 use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
-use App\Services\TdmsService;
-use App\Services\UserAgentService;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
 use Illuminate\Support\Facades\Redis;
@@ -329,19 +329,19 @@ class BookingService
     }
 
     public static function buildOrderRequestData(
+        UserAgent $userAgent,
         string $userId,
         bool $processAsQuote,
         string|null $bookingReference,
         string|null $paymentMethodCode,
-        $cartItems,
-        $customers,
-        $isDry = false,
-        $itemType = null
-    ) {
+        Collection $cartItems,
+        array $customers,
+        bool $forDiscount = false
+    ): array {
         $totalChargeAmount = self::getTotalChargeAmount($cartItems);
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType->forDiscount);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $forDiscount);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -362,6 +362,14 @@ class BookingService
         // maintain alphabetical order
         $orderData['bookingReference'] = $bookingReference;
         $orderData['paymentMethod'] = $paymentMethodCode;
+
+        if (
+            $userAgent->referral_source_id
+            && $userAgent->created_at
+                ->isAfter(now()->subMonths(config('vars.referral_source_id_period_months')))
+        ) {
+            $orderData['referralSourceId'] = $userAgent->referral_source_id;
+        }
 
         Logger::debug('Order request data', $orderData);
 
@@ -420,7 +428,7 @@ class BookingService
         if ($getAgentResponse->isError()) {
             return $getAgentResponse;
         }
-        $agent = $getAgentResponse->data;
+        $agent = $getAgentResponse->data; /** @var UserAgent $agent */
 
         if ($itemType->forDiscount) {
             $cartItemData = $itemType->data;
@@ -468,13 +476,14 @@ class BookingService
         }
 
         $orderRequestData = self::buildOrderRequestData(
+            userAgent: $agent,
             userId: $userId,
             processAsQuote: $processAsQuote,
             bookingReference: $bookingReference,
             paymentMethodCode: $onlinePaymentMethod ? $onlinePaymentMethod['code'] : null,
             cartItems: $cartItems,
             customers: $customers,
-            itemType: $itemType
+            forDiscount: $itemType->forDiscount
         );
 
         if (OrderDataValidationFeature::isEnabled()) {
@@ -653,15 +662,13 @@ class BookingService
         string $intent,
         ItemType $itemType,
         bool $processAsQuote = true
-    ) {
-        $basePostOrderResponse = self::basePostOrder(
+    ): ?ServiceResponse {
+        return self::basePostOrder(
             userId: $userId,
             intent: $intent,
-            processAsQuote: $processAsQuote,
-            itemType: $itemType
+            itemType: $itemType,
+            processAsQuote: $processAsQuote
         );
-
-        return $basePostOrderResponse;
     }
 
     public static function completeOrder(string $bookingReference)

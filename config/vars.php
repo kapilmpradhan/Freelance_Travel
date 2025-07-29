@@ -43,4 +43,5 @@ return [
     'discount_percentage' => (int) env('DISCOUNT_PERCENTAGE', 0),
 
     'agent_upgrade_order_months_history' => env('AGENT_UPGRADE_ORDER_MONTHS_HISTORY', 6),
+    'referral_source_id_period_months' => env('REFERRAL_SOURCE_ID_PERIOD_MONTHS', 6),
 ];

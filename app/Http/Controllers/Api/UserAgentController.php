@@ -30,7 +30,9 @@ class UserAgentController extends BaseController
         $addUserAgentResponse = UserAgentService::addUserAgent(
             userId: $userId,
             username: $data['username'],
-            password: $data['password']
+            password: $data['password'],
+            branchCode: null,
+            referralSourceId: null
         );
 
         return $this->sendResponseFromService($addUserAgentResponse);
@@ -149,7 +151,8 @@ class UserAgentController extends BaseController
             userId: $user->uuid,
             username: $data['emailAddress'],
             password: $data['password'],
-            branchCode: $data['agentCode']
+            branchCode: $data['agentCode'],
+            referralSourceId: $data['referralSourceId'] ?? null
         );
 
         return $this->sendResponseFromService($addUserAgentResponse);
