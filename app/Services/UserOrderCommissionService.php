@@ -98,7 +98,7 @@ class UserOrderCommissionService
             );
 
             if (!$saveItemsResponse->isSuccess()) {
-                return ServiceResponse::success(['commission' => 0, 'pointsAvailable' => 0]);
+                return ServiceResponse::success(['commission' => 0]);
             }
             $overallCartData = array_merge($overallCartData, $saveItemsResponse->data);
         }
@@ -112,7 +112,7 @@ class UserOrderCommissionService
         );
 
         if ($orderCommissionResponse->isError()) {
-            return ServiceResponse::success(['commission' => 0, 'pointsAvailable' => 0]);
+            return ServiceResponse::success(['commission' => 0]);
         }
 
         $commissionData = $orderCommissionResponse->data;

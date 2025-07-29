@@ -982,7 +982,7 @@ class CartItemController extends BaseController
                     commissionPercentage: $commissionResponse->data['commission'],
                     user: $request->user
                 ), 2),
-                'pointsAvailable' => $commissionResponse->data['pointsAvailable'],
+                'pointsAvailable' => $commissionResponse->data['pointsAvailable'] ?? 0,
             ]
         );
     }
