@@ -8,7 +8,7 @@ use App\Models\UserOrderCommission;
 
 class UserOrderCommissionService
 {
-    public static function getUserOrderCommissionByItemType($userId, $itemType)
+    public static function getUserOrderCommissionByItemType($userId, ItemType $itemType): ServiceResponse
     {
         $userOrderCommission = UserOrderCommission::where('user_id', $userId)
                                     ->where('is_cart', $itemType->isCart)
@@ -37,7 +37,12 @@ class UserOrderCommissionService
         $commission = $commissionResponse->data;
         if ($commissionResponse->isSuccess() && $commission->percentage) {
             $commissionPercentage = $commissionResponse->data->percentage;
-            return ServiceResponse::success(['commission' => $commissionPercentage]);
+            $pointsAvailable = $commissionResponse->data->points_available;
+
+            return ServiceResponse::success([
+                'commission' => $commissionPercentage,
+                'pointsAvailable' => $pointsAvailable,
+            ]);
         }
 
         $items = CartItem::userItems($userId, $itemType);
@@ -54,13 +59,14 @@ class UserOrderCommissionService
         );
 
         if ($orderCommissionResponse->isError()) {
-            return ServiceResponse::success(['commission' => 0]);
+            return ServiceResponse::success([
+                'commission' => 0,
+                'pointsAvailable' => 0
+            ]);
         }
 
         $commissionData = $orderCommissionResponse->data;
-        $pointsAvailable = $commissionData
-            ? self::pointsFromCommission((float) $commissionData['commission'])
-            : null;
+        $pointsAvailable = $commissionData['pointsAvailable'];
 
         UserOrderCommission::query()->updateOrCreate(
             [
@@ -119,7 +125,7 @@ class UserOrderCommissionService
 
         return ServiceResponse::success([
             'commission' => $commissionData['commission'],
-            'pointsAvailable' => self::pointsFromCommission((float) $commissionData['commission']),
+            'pointsAvailable' => $commissionData['pointsAvailable'],
         ]);
     }
 

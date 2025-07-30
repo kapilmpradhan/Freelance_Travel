@@ -50,7 +50,7 @@ class DiscountService
         }
 
         $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
-        $orderCommission = $orderCommissionResponse->data;
+        $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
 
         if (!$orderCommission || is_null($orderCommission->percentage)) {
             $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
@@ -112,6 +112,9 @@ class DiscountService
             $commissionPercentage = round($commission / $totalRrp * 100, 2);
 
             $orderCommission->percentage = $commissionPercentage;
+            $orderCommission->points_available = UserOrderCommissionService::pointsFromCommission(
+                (float) $commission
+            );
             $orderCommission->save();
         }
         return ServiceResponse::success($orderCommission);

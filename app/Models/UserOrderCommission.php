@@ -5,6 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read int $id
+ * @property string $user_id
+ * @property int|null $user_order_id
+ * @property string|null $agent_branch
+ * @property bool $is_cart
+ * @property string|null $quote_id
+ * @property bool $is_direct_purchase
+ * @property float|null $percentage
+ * @property int|null $points_available
+ * @property string|null $created_at
+ * @property string|null $updated_at
+ */
 class UserOrderCommission extends Model
 {
     use HasFactory;

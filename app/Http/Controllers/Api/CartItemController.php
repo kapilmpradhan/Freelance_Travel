@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\ItemType;
+use App\Models\UserOrderCommission;
 use Exception;
 use App\Logging\Logger;
 use App\Models\CartItem;
@@ -533,8 +534,9 @@ class CartItemController extends BaseController
             );
             $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
             if ($orderCommissionResponse->isSuccess()) {
-                $orderCommission = $orderCommissionResponse->data;
+                $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
                 $orderCommission->percentage = null;
+                $orderCommission->points_available = null;
                 $orderCommission->save();
             }
 
