@@ -56,6 +56,7 @@ class RedeemerService
             'last_name' => $redeemerData['lastName'],
             'date_of_birth' => $redeemerData['dateOfBirth'],
             'email' => $redeemerData['email'],
+            'country_code' => $redeemerData['countryCode'],
             'postal_code' => $redeemerData['postalCode'],
             'phone_number' => $redeemerData['phoneNumber'],
             'quote_id' => $itemType->isQuote ? $itemType->typeId : null,
