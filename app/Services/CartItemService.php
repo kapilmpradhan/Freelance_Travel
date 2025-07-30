@@ -554,9 +554,10 @@ class CartItemService
             userId: $userId,
             itemType: $type
         );
-        $commission = $commissionResponse->data;
+        $commission = $commissionResponse->data; /** @var UserOrderCommission $commission */
         if ($commission) {
             $commission->percentage = null;
+            $commission->points_available = null;
             $commission->save();
         }
 
@@ -632,9 +633,10 @@ class CartItemService
             userId: $userId,
             itemType: $type
         );
-        $commission = $commissionResponse->data;
+        $commission = $commissionResponse->data; /** @var UserOrderCommission $commission */
         if ($commission) {
             $commission->percentage = null;
+            $commission->points_available = null;
             $commission->save();
         }
 

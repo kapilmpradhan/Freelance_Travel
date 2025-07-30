@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\UserOrderCommission;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\DTOs\AddToQuote;
@@ -366,8 +367,9 @@ class CartItemServiceV2
                         $itemType
                     );
                     if ($commissionResponse->isSuccess()) {
-                        $commission = $commissionResponse->data;
+                        $commission = $commissionResponse->data; /** @var UserOrderCommission $commission */
                         $commission->percentage = null;
+                        $commission->points_available = null;
                         $commission->save();
                     }
                 }
