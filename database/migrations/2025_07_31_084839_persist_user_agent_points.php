@@ -23,6 +23,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('user_agents', function (Blueprint $table) {
+            $table->dropColumn([
+                'points_balance',
+                'points_available',
+                'points_multiplier',
+            ]);
+        });
     }
 };
