@@ -113,7 +113,8 @@ class DiscountService
 
             $orderCommission->percentage = $commissionPercentage;
             $orderCommission->points_available = UserOrderCommissionService::pointsFromCommission(
-                (float) $commission
+                (float) $commission,
+                $agent->points_multiplier
             );
             $orderCommission->save();
         }

@@ -510,7 +510,10 @@ class BookingService
                 $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
                 $totalRrp = $orderRequestData['totalCharged'];
                 $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
-                $pointsAvailable = UserOrderCommissionService::pointsFromCommission((float) $commission);
+                $pointsAvailable = UserOrderCommissionService::pointsFromCommission(
+                    (float) $commission,
+                    $agent->points_multiplier
+                );
 
                 if ($itemType->forDiscount) {
                     return ServiceResponse::success(

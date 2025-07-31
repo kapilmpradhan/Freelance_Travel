@@ -15,15 +15,21 @@ class UserAgentService
             !$agent->access_token
             || $agent->updated_at->diffInHours(Carbon::now()) > 21
         ) {
-            $new_token = TdmsService::getAgentToken(
+            $response = TdmsService::getAgentToken(
                 username: $agent->email,
                 password: $agent->password,
             );
 
-            if (!$new_token) {
+            if ($response->isError() || !$response->data) {
                 return null;
             }
-            $agent->update(["access_token" => $new_token['access_token']]);
+
+            $agent->update([
+                "access_token" => $response->data['access_token'],
+                "points_balance" => $response->data['pointsBalance'],
+                "points_available" => $response->data['availableBalance'],
+                "points_multiplier" => $response->data['pointsMultiplier'],
+            ]);
             $agent->refresh();
         }
 
@@ -51,9 +57,8 @@ class UserAgentService
         return ServiceResponse::success(["access_token" => $refreshedAgent->access_token]);
     }
 
-    public static function getUserAgentToken($userId, UserAgent $userAgent)
+    public static function getUserAgentToken(UserAgent $userAgent): ServiceResponse
     {
-
         $refreshedAgent = self::refreshAgent($userAgent);
         if (!$refreshedAgent) {
             return ServiceResponse::badRequest(
@@ -103,10 +108,12 @@ class UserAgentService
         ?string $branchCode,
         ?int $referralSourceId
     ): ServiceResponse {
-        $agentDetail = TdmsService::getAgentToken($username, $password);
-        if (!$agentDetail) {
+        $response = TdmsService::getAgentToken($username, $password);
+        if ($response->isError() || !$response->data) {
             return ServiceResponse::badRequest('Invalid agent credential');
         }
+
+        $agentDetail = $response->data;
 
         if (!$branchCode) {
             $branchCode = self::getBranchCodeOfAgent($agentDetail['access_token']);
@@ -138,12 +145,13 @@ class UserAgentService
 
     public static function updateUserAgent(UserAgent $agent, string $username, string $password): ServiceResponse
     {
-        $newAgentDetail = TdmsService::getAgentToken($username, $password);
+        $response = TdmsService::getAgentToken($username, $password);
 
-        if (!$newAgentDetail) {
+        if ($response->isError() || !$response->data) {
             return ServiceResponse::badRequest('Invalid credentials.');
         }
 
+        $newAgentDetail = $response->data;
         $newBranchCode = UserAgentService::getBranchCodeOfAgent($newAgentDetail['access_token']);
         if (!$newBranchCode) {
             return ServiceResponse::badRequest('Could not get branch code. Unable to update agent.');
