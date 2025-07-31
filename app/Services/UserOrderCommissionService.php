@@ -132,6 +132,5 @@ class UserOrderCommissionService
     public static function pointsFromCommission(float $commission, int $pointsMultiplier): int
     {
         return (int) round($commission * $pointsMultiplier);
-        //config('vars.points_multiplier')
     }
 }
