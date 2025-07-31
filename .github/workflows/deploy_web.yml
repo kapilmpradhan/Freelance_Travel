@@ -64,7 +64,7 @@ jobs:
         working-directory: freelance-website
 
       - name: Build Frontend
-        run: npm run build:${{ github.event.inputs.environment }}
+        run: npm run build:freelance:${{ github.event.inputs.environment }}
         working-directory: freelance-website
       
       # Configure AWS credentials
