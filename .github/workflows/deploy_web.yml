@@ -51,7 +51,7 @@ jobs:
       - name: Setup index html
         run: |
           cd freelance-website
-          envsubst < public/index.tpl.html > public/index.html
+          envsubst < public-freelance/index.tpl.html > public-freelance/index.html
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
