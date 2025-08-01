@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Models\UserAgent;
 use App\Services\TdmsService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -82,14 +83,73 @@ class UserAgentController extends BaseController
             return $this->sendError('No agent integrated');
         }
 
-        $getUserAgentResponse = UserAgentService::getUserAgentToken($userId, $agent);
+        $getUserAgentResponse = UserAgentService::getUserAgentToken($agent);
         return $this->sendResponseFromService($getUserAgentResponse);
+    }
+
+    public function getAndUpdateUserAgentPoints(Request $request, UserAgent $userAgent): JsonResponse
+    {
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+        if (!$agent) {
+            return $this->sendError('No agent integrated');
+        }
+
+        $getUserAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
+
+        if ($getUserAgentResponse->isError()) {
+            return $this->sendResponseFromService($getUserAgentResponse);
+        }
+
+        $userAgent = $getUserAgentResponse->data; /** @var UserAgent $userAgent */
+        return $this->sendResponseFromService(TdmsService::getAgentDetails($userAgent->access_token));
     }
 
     public function getDefaultAgentToken(Request $request)
     {
         $getdefaultAgentTokenResponse = UserAgentService::getDefaultAgentToken();
         return $this->sendResponseFromService($getdefaultAgentTokenResponse);
+    }
+
+    public function getCommissionReport(
+        Request $request,
+        UserAgent $userAgent,
+        TdmsService $tdmsService
+    ): JsonResponse {
+        $userId = $request->user->uuid;
+        $agent = $userAgent->getActiveAgent($userId);
+
+        if (!$agent) {
+            return $this->sendError('Have not yet upgraded to a points agent.');
+        }
+
+        $data = $request->all();
+        $validate = Validator::make($data, [
+            'startDate' => 'required|date_format:Y-m-d',
+            'endDate' => 'required|date_format:Y-m-d',
+            'onlyAvailablePoints' => 'nullable|boolean',
+            'untilTodayOnly' => 'nullable|boolean',
+        ]);
+
+        if ($validate->fails()) {
+            return $this->sendError('Error occurred', $validate->errors());
+        }
+
+        $getUserAgentResponse = UserAgentService::getUserAgentToken($agent);
+
+        if ($getUserAgentResponse->isError()) {
+            return $this->sendResponseFromService($getUserAgentResponse);
+        }
+
+        $commissionReportResponse = $tdmsService->getCommissionReport(
+            $getUserAgentResponse->data['access_token'],
+            new Carbon($data['startDate']),
+            new Carbon($data['endDate']),
+            $data['onlyAvailablePoints'] ?? false,
+            $data['untilTodayOnly'] ?? false,
+        );
+
+        return $this->sendResponseFromService($commissionReportResponse);
     }
 
     public function unlinkUserAgent(Request $request, UserAgent $userAgent)

@@ -13,8 +13,11 @@ class TdmsService
     private const CURRENCY_ID_AUD = 297;
     private const SUB_SYSTEM_TYPE_CASHBACK = 'FIT';
 
-    public static function getAgentToken(string $username, string $password, string $userId = null)
-    {
+    public static function getAgentToken(
+        string $username,
+        string $password,
+        string $userId = null
+    ): ServiceResponse {
         $url = config('vars.tdms_api_url') . '/agentToken';
 
         $data = [
@@ -28,19 +31,32 @@ class TdmsService
         ->withBody(json_encode($data))
         ->post($url);
 
-        $statusCode = $response->status();
-        if ($statusCode !== 200) {
+        if (!$response->ok()) {
             Logger::error("Failed to get agent token", extra: [
                 'userId' => $userId,
                 'username' => $username,
                 'password' => $password,
-                'responseStatusCode' => $statusCode,
+                'responseStatusCode' => $response->status(),
             ]);
-            return null;
+            return ServiceResponse::badRequest('Failed to get Agent details');
         }
 
-        $data = json_decode($response, true);
-        return $data;
+        return ServiceResponse::success($response->json());
+    }
+
+    public static function getAgentDetails(string $agentToken): ServiceResponse
+    {
+        $url = config('vars.tdms_api_url') . '/agentDetails';
+        $response = Http::asJson()
+            ->withToken($agentToken)
+            ->get($url);
+
+        if ($response->failed()) {
+            Logger::error("Failed to get Agent details");
+            return ServiceResponse::badRequest('Failed to get Agent details');
+        }
+
+        return ServiceResponse::success($response->json());
     }
 
     public static function getCustomerLastOrderBranch($customerEmail)
@@ -687,34 +703,51 @@ class TdmsService
         return ServiceResponse::success($responseData);
     }
 
-
     public static function getCommissionReport(
-        string $bookingReference,
-        string $agentToken
+        string $agentToken,
+        Carbon $startDate,
+        Carbon $endDate,
+        bool $onlyAvailablePoints = true,
+        bool $untilTodayOnly = false
     ): ServiceResponse {
         $url = config('vars.tdms_api_url') . "/report/commissionReport";
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$agentToken}"
-        ])->post($url);
+        $params = [
+            'startDate' => $startDate->format('Y-M-d'),
+            'endDate' => $endDate->format('Y-M-d'),
+            'onlyAvailable' => $onlyAvailablePoints,
+            'upTodayDateOnly' => $untilTodayOnly,
+        ];
 
-        if ($response->successful()) {
-            return ServiceResponse::success($response->json());
+        $response = Http::asJson()
+            ->withToken($agentToken)
+            ->post($url, $params);
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error fetching commission report',
+                extra: array_merge($params, ["responseData" => $response->json()])
+            );
+
+            throw new ServiceException(
+                message: 'Error fetching commission report - ' . $agentToken,
+                data: $response->json(),
+                code: $response->status()
+            );
         }
 
-        Logger::error(
-            message: 'Error fetching commission report',
-            extra: [
-                'bookingReference' => $bookingReference,
-                'responseData' => $response->json()
-            ]
-        );
+        $responseData = $response->json();
 
-        return ServiceResponse::badRequest(
-            message: 'Failed to fetch commission report',
-            data: $response->json()
-        );
+        if (count($responseData['error'] ?? []) > 0) {
+            $messages = array_map(fn($item) => $item['message'], $responseData['error'] ?? []);
+
+            return ServiceResponse::badRequest(
+                message: implode(". ", $messages),
+                data: $responseData,
+            );
+        }
+
+        return ServiceResponse::success($responseData);
     }
 
     private static function tokenFromUser(User $user): string

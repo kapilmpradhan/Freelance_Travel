@@ -30,6 +30,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_deleted
  * @property string $branch_code
  * @property int|null $referral_source_id
+ * @property int|null $points_balance
+ * @property int|null $points_available
+ * @property int|null $points_multiplier
  */
 class UserAgent extends Model
 {
@@ -54,7 +57,10 @@ class UserAgent extends Model
         'business_number',
         'trading_name',
         'is_active',
-        'is_deleted'
+        'is_deleted',
+        'points_balance',
+        'points_available',
+        'points_multiplier',
     ];
 
     protected $casts = [

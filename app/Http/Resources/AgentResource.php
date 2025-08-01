@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\UserAgent;
+
 class AgentResource
 {
     public static function agentOverview($agent)
@@ -23,7 +25,7 @@ class AgentResource
         return $all;
     }
 
-    public static function userAgentDetails($agent)
+    public static function userAgentDetails(UserAgent $agent): array
     {
         $agent = $agent->toArray();
         unset($agent['access_token'], $agent['is_active'], $agent['is_deleted']);

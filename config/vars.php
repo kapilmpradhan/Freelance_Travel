@@ -53,5 +53,4 @@ return [
 
     'agent_upgrade_order_months_history' => env('AGENT_UPGRADE_ORDER_MONTHS_HISTORY', 6),
     'referral_source_id_period_months' => env('REFERRAL_SOURCE_ID_PERIOD_MONTHS', 6),
-    'points_multiplier' => env('POINTS_MULTIPLIER', 1000),
 ];
