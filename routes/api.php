@@ -144,9 +144,9 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'product'],
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
     Route::get('integration', [UserAgentController::class, 'getUserAgent']);
     Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);
+    Route::get('integration/commissionReport', [UserAgentController::class, 'getCommissionReport']);
     Route::post('integration/points', [UserAgentController::class, 'getAndUpdateUserAgentPoints']);
     Route::post('integration', [UserAgentController::class, 'addUserAgent']);
-    Route::post('integration/commissionReport', [UserAgentController::class, 'getCommissionReport']);
     Route::post('integration/upgradeToAgent', [UserAgentController::class, 'upgradeToAgent']);
     Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
     Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);

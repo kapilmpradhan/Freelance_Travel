@@ -149,7 +149,7 @@ class UserAgentController extends BaseController
             $data['untilTodayOnly'] ?? false,
         );
 
-        return $this->sendResponse("Commission report", $commissionReportResponse->data);
+        return $this->sendResponseFromService($commissionReportResponse);
     }
 
     public function unlinkUserAgent(Request $request, UserAgent $userAgent)
