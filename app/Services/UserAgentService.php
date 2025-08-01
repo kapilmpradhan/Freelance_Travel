@@ -31,9 +31,9 @@ class UserAgentService
         return $agent;
     }
 
-    public static function getDefaultAgentToken($agentBranchCode = null)
+    public static function getDefaultAgentToken()
     {
-        if ($agentBranchCode && strtolower($agentBranchCode) == strtolower(AgentBranchCode::PETERPANS)) {
+        if (app('platform') ?? null == AgentBranchCode::PETERPANS) {
             $branchCode = config('vars.ptx_agent_branch_code');
             $email = config('vars.ptx_agent_email');
             $password = config('vars.ptx_agent_password');

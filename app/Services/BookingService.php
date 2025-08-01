@@ -430,7 +430,7 @@ class BookingService
         bool $processAsQuote = true,
         array $customers = []
     ) {
-        $getAgentResponse = UserAgentService::getUserAgentByBranch($itemType->agentBranchCode, $userId);
+        $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         if ($getAgentResponse->isError()) {
             return $getAgentResponse;
         }

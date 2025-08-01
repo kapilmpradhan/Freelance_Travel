@@ -23,7 +23,7 @@ class CartItemServiceV2
         $itemType = null,
         $isDryRun = false
     ): ServiceResponse {
-        $userAgentResponse = UserAgentService::getDefaultAgentToken($itemType->agentBranchCode);
+        $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         $defaultAgentAccessToken = $userAgentResponse->data['access_token'];
 
         $productDetails = null;
