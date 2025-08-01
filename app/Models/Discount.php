@@ -19,6 +19,7 @@ class Discount extends Model
         'is_active',
         'is_test',
         'is_deleted',
+        'platform',
     ];
 
     public static function addDiscountRule()
@@ -46,7 +47,8 @@ class Discount extends Model
 
     public static function getNonDeletedDiscounts()
     {
-        return self::where('is_deleted', false)->get();
+        return self::where('is_deleted', false)
+            ->where('platform', app('platform'))->get();
     }
 
     public static function getActiveDiscount()

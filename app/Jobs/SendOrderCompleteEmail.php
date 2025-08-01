@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Services\IEmailService;
 use App\Logging\Logger;
+use App\Services\BrevoEmailService;
 
 class SendOrderCompleteEmail implements ShouldQueue
 {
@@ -19,10 +20,12 @@ class SendOrderCompleteEmail implements ShouldQueue
     use SerializesModels;
 
     protected $data;
+    protected $platform;
 
-    public function __construct($data)
+    public function __construct($data, $platform)
     {
         $this->data = $data;
+        $this->platform = $platform;
     }
 
     /**
@@ -30,10 +33,11 @@ class SendOrderCompleteEmail implements ShouldQueue
      */
     public function handle(IEmailService $emailService)
     {
+        $sender = BrevoEmailService::platformSenderDetail($this->platform);
+        $this->data['platform'] = $sender['name'];
+
         $customerData = [
-            'sender' => [
-                'email' => config('vars.mail_from_address')
-            ],
+            'sender' => $sender,
             'to' => [
                 [
                     'email' => $this->data['redeemers'][0]['emailAddress']

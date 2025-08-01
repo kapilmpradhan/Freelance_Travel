@@ -4,8 +4,12 @@ return [
     'queue_connection' => env('QUEUE_CONNECTION'),
 
     'brevo_mail_api_key' => env('BREVO_MAIL_API_KEY'),
+    'mail_from_name' => env('MAIL_FROM_NAME', 'Freelance Travel'),
     'mail_from_address' => env('MAIL_FROM_ADDRESS'),
     'notification_to_freelance_email_address' => env('NOTIFICATION_TO_FREELANCE_EMAIL_ADDRESS'),
+    'peterpans_mail_from_name' => env('PETERPANS_MAIL_FROM_NAME', 'Peterpans'),
+    'peterpans_mail_from_address' => env('PETERPANS_MAIL_FROM_ADDRESS'),
+    'notification_to_peterpans_email_address' => env('NOTIFICATION_TO_PETERPANS_EMAIL_ADDRESS'),
     'verify_email_template_id' => env('BREVO_VERIFY_EMAIL_TEMPLATE_ID'),
     'forgot_password_template_id' => env('BREVO_FORGOT_PASSWORD_TEMPLATE_ID'),
     'booking_notification_template_id' => env('BREVO_BOOKING_NOTIFICATION_TEMPLATE_ID'),
@@ -38,6 +42,10 @@ return [
     'default_agent_password' => env('DEFAULT_AGENT_PASSWORD'),
     'default_agent_token_username' => env('DEFAULT_AGENT_EMAIL'),
     'default_agent_token_password' => env('DEFAULT_AGENT_PASSWORD'),
+
+    'ptx_agent_branch_code' => env('PETERPANS_AGENT_BRANCH_CODE'),
+    'ptx_agent_email' => env('PETERPANS_AGENT_EMAIL'),
+    'ptx_agent_password' => env('PETERPANS_AGENT_PASSWORD'),
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
 

@@ -4,6 +4,7 @@ namespace App\DTOs;
 
 class ItemType
 {
+    public $agentBranchCode;
     public $type;
     public $typeId;
     public $subTypeId;

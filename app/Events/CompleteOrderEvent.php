@@ -14,6 +14,7 @@ class CompleteOrderEvent
 
     public $userOrder;
     public $cartItems;
+    public $platform;
 
     /**
      * Create a new event instance.
@@ -22,5 +23,6 @@ class CompleteOrderEvent
     {
         $this->userOrder = $userOrder;
         $this->cartItems = $cartItems;
+        $this->platform = app('platform');
     }
 }

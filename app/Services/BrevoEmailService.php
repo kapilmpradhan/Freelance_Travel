@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use Illuminate\Support\Facades\Http;
 
@@ -28,5 +29,21 @@ class BrevoEmailService implements IEmailService
             Logger::error('Failed to send email. Error: ', $e);
             throw new ServiceException('Failed to send email.');
         }
+    }
+
+    public static function platformSenderDetail($platform)
+    {
+        if ($platform == AgentBranchCode::DEFAULT) {
+            $mailFromName = config('vars.mail_from_name');
+            $mailFromAddress = config('vars.mail_from_address');
+        } elseif ($platform == AgentBranchCode::PETERPANS) {
+            $mailFromName = config('vars.peterpans_mail_from_name');
+            $mailFromAddress = config('vars.peterpans_mail_from_address');
+        }
+
+        return [
+            'name' => $mailFromName,
+            'email' => $mailFromAddress
+        ];
     }
 }

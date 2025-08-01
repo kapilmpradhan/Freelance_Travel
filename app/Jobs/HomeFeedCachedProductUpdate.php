@@ -30,11 +30,18 @@ class HomeFeedCachedProductUpdate implements ShouldQueue
 
         foreach ($keys as $key) {
             Logger::info('Processing key: ' . $key);
-            $parts = explode(':', $key);
-            $countryId = explode('_', $parts[1])[1] ?? null;
-            $filterBy = explode('_', $parts[1])[2] ?? null;
 
-            $productFilter = HomeFeedProductFilter::fromJob($countryId, $filterBy);
+            // Extracting parts from the key to create a HomeFeedProductFilter
+            // Assuming the key format is 'home_feed_product:<agentBranchCode>_country_<countryId>_<filterBy>'
+            // Example: 'home_feed_product:FTX_country_20_experience'
+            // This will split the key into parts and reverse them to get the correct order
+            $parts = explode(':', $key);
+            $subParts = array_reverse(explode('_', $parts[1]));
+            $filterBy = $subParts[0] ?? null;
+            $countryId = $subParts[1] ?? null;
+            $agentBranchCode = $subParts[3] ?? null;
+
+            $productFilter = HomeFeedProductFilter::fromJob($agentBranchCode, $countryId, $filterBy);
 
             if ($countryId && $filterBy) {
                 ProductCategoryService::getProductByCategoriesWithLabelV2($productFilter, true);

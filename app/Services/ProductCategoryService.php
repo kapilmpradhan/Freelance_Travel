@@ -191,7 +191,7 @@ class ProductCategoryService
 
     public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter, $isJobRun = false)
     {
-        $agent = UserAgentService::getDefaultAgentToken();
+        $agent = UserAgentService::getDefaultAgentToken($productFilter->agentBranchCode);
         if ($agent->isError()) {
             return $agent;
         }

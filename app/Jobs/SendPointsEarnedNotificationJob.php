@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Logging\Logger;
 use App\Models\User;
+use App\Services\BrevoEmailService;
 use App\Services\FcmService;
 use App\Services\IEmailService;
 use App\Services\TdmsService;
@@ -22,10 +23,12 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
     use SerializesModels;
 
     protected $data;
+    protected $platform;
 
-    public function __construct($data)
+    public function __construct($data, $platform)
     {
         $this->data = $data;
+        $this->platform = $platform;
     }
 
     // Prepare mobile notification data
@@ -98,10 +101,9 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         }
 
         // Email notification data
+        $sender = BrevoEmailService::platformSenderDetail($this->platform);
         $customerData = [
-            'sender' => [
-                'email' => config('vars.mail_from_address')
-            ],
+            'sender' => $sender,
             'to' => [
                 [
                     'email' => $user->email
@@ -112,6 +114,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
                 'bookingReference' => $bookingReference,
                 'earnedPoints' => $requiredReport['amount'],
                 'availableDate' => $requiredReport['availableDate'],
+                'platform' => $sender['name'],
             ]
         ];
 

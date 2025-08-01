@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use App\Models\UserAgent;
 use Carbon\Carbon;
@@ -30,14 +31,24 @@ class UserAgentService
         return $agent;
     }
 
-    public static function getDefaultAgentToken()
+    public static function getDefaultAgentToken($agentBranchCode = null)
     {
-        $defaultAgent = UserAgent::where('email', config('vars.default_agent_email'))->first();
+        if ($agentBranchCode && strtolower($agentBranchCode) == strtolower(AgentBranchCode::PETERPANS)) {
+            $branchCode = config('vars.ptx_agent_branch_code');
+            $email = config('vars.ptx_agent_email');
+            $password = config('vars.ptx_agent_password');
+        } else {
+            $branchCode = config('vars.default_agent_branch_code');
+            $email = config('vars.default_agent_email');
+            $password = config('vars.default_agent_password');
+        }
+
+        $defaultAgent = UserAgent::where('email', $email)->first();
         if (!$defaultAgent) {
             $defaultAgent = UserAgent::create([
-                "branch_code" => config('vars.default_agent_branch_code'),
-                "email" => config('vars.default_agent_email'),
-                "password" => config('vars.default_agent_password')
+                "branch_code" => $branchCode,
+                "email" => $email,
+                "password" => $password
             ]);
         }
 
@@ -170,6 +181,21 @@ class UserAgentService
     public static function getUserAgentById($userAgentId)
     {
         $userAgent = UserAgent::where('id', $userAgentId)->first();
+        if (!$userAgent) {
+            return ServiceResponse::badRequest(
+                message: "Agent not found"
+            );
+        }
+
+        $refreshedAgent = UserAgentService::refreshAgent($userAgent);
+        return ServiceResponse::success(
+            data: $refreshedAgent
+        );
+    }
+
+    public static function getUserAgentByBranch($agentBranchCode)
+    {
+        $userAgent = UserAgent::where('branch_code', $agentBranchCode)->first();
         if (!$userAgent) {
             return ServiceResponse::badRequest(
                 message: "Agent not found"

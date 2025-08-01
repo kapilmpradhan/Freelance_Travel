@@ -28,7 +28,7 @@ class EmailCompleteOrder
         $userOrderId = $event->userOrder->id;
         $userOrder = UserOrder::where('id', $userOrderId)->first()->request_data;
 
-        SendOrderCompleteEmail::dispatch($userOrder);
+        SendOrderCompleteEmail::dispatch($userOrder, app('platform'));
 
         Logger::debug("[{$className}] Dispatched job to send complete order mail");
     }

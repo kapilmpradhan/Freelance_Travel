@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,10 +19,12 @@ class SendAccountDeletionEmail implements ShouldQueue
     use SerializesModels;
 
     protected $user;
+    protected $platform;
 
-    public function __construct($user)
+    public function __construct($user, $platform)
     {
         $this->user = $user;
+        $this->platform = $platform;
     }
 
     /**
@@ -29,19 +32,31 @@ class SendAccountDeletionEmail implements ShouldQueue
      */
     public function handle(IEmailService $emailService)
     {
+        if ($this->platform == AgentBranchCode::DEFAULT) {
+            $mailFromName = config('vars.mail_from_name');
+            $mailFromAddress = config('vars.mail_from_address');
+            $supportEmail = config('vars.notification_to_freelance_email_address');
+        } elseif ($this->platform == AgentBranchCode::PETERPANS) {
+            $mailFromName = config('vars.peterpans_mail_from_name');
+            $mailFromAddress = config('vars.peterpans_mail_from_address');
+            $supportEmail = config('vars.notification_to_freelance_email_address');
+        }
+
         $emailData = [
             'sender' => [
-                'email' => config('vars.mail_from_address')
+                'name' => $mailFromName,
+                'email' => $mailFromAddress
             ],
             'to' => [
                     ['email' => $this->user->email],
-                    ['email' => config('vars.notification_to_freelance_email_address')]
+                    ['email' => $supportEmail]
                 ],
             'templateId' => (int) config('vars.account_deletion_template_id'),
             'params' => [
                 'firstName' => $this->user->first_name ?? 'user',
                 'email' => $this->user->email,
-                'supportEmail' => config('vars.mail_from_address')
+                'supportEmail' => $supportEmail,
+                'platform' => $mailFromName
             ]
         ];
 

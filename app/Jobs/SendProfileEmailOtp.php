@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\IEmailService;
 use App\Services\OtpService;
 use App\Logging\Logger;
+use App\Services\BrevoEmailService;
 
 class SendProfileEmailOtp implements ShouldQueue
 {
@@ -21,10 +22,12 @@ class SendProfileEmailOtp implements ShouldQueue
     use SerializesModels;
 
     protected $userId;
+    protected $platform;
 
-    public function __construct($userId)
+    public function __construct($userId, $platform)
     {
         $this->userId = $userId;
+        $this->platform = $platform;
     }
 
     /**
@@ -46,10 +49,10 @@ class SendProfileEmailOtp implements ShouldQueue
                 }
                 $email = $user->verified_email;
             }
+
+            $sender = BrevoEmailService::platformSenderDetail($this->platform);
             $data = [
-                'sender' => [
-                    'email' => config('vars.mail_from_address')
-                ],
+                'sender' => $sender,
                 'to' => [
                     [
                         'email' => $email
@@ -60,6 +63,7 @@ class SendProfileEmailOtp implements ShouldQueue
                     'firstName' => $user->first_name,
                     'otp' => $otp['otpDetails']->otp,
                     'year' => date('Y'),
+                    'platform' => $sender['name']
                 ]
             ];
 

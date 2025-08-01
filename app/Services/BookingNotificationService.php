@@ -11,7 +11,7 @@ use Exception;
 
 class BookingNotificationService
 {
-    public static function addBookingDataToNotification($cartItems, $userOrder)
+    public static function addBookingDataToNotification($cartItems, $userOrder, $platform)
     {
         foreach ($cartItems as $cartItem) {
             $userId = $cartItem->user_id;
@@ -51,6 +51,7 @@ class BookingNotificationService
                     'booking_date' => $bookingDate,
                     'booking_time' => $bookingTime,
                     'notify_to_email' => $user->email,
+                    'platform' => $platform,
                     'is_completed' => false
                 ]);
 
@@ -67,6 +68,7 @@ class BookingNotificationService
                     'booking_date' => $bookingDate,
                     'booking_time' => $bookingTime,
                     'notify_to_email' => $user->email,
+                    'platform' => $platform,
                     'is_completed' => false
                 ]);
 
@@ -108,6 +110,7 @@ class BookingNotificationService
                     'booking_date' => $bookingNotification->booking_date,
                     'booking_time' =>  Carbon::parse($bookingNotification->booking_time ?? '7:00')->format('H:i:s'),
                     'notify_to_email' => $bookingNotification->notify_to_email,
+                    'platform' => $bookingNotification->platform,
                     'is_notified' => false
                 ]
             );

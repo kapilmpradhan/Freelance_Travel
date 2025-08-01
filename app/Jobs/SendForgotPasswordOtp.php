@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
+use App\Services\BrevoEmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,11 +20,13 @@ class SendForgotPasswordOtp implements ShouldQueue
 
     protected $user;
     protected $otp;
+    protected $platform;
 
-    public function __construct($user, $otp)
+    public function __construct($user, $otp, $platform)
     {
         $this->user = $user;
         $this->otp = $otp;
+        $this->platform = $platform;
     }
 
     /**
@@ -32,10 +36,13 @@ class SendForgotPasswordOtp implements ShouldQueue
     {
         try {
             // Prepare the data for sending via the Brevo API
+            $sender = BrevoEmailService::platformSenderDetail($this->platform);
+            $supportEmail = $this->platform == AgentBranchCode::PETERPANS
+                ? config('vars.notification_to_peterpans_email_address')
+                : config('vars.notification_to_freelance_email_address');
+
             $data = [
-                'sender' => [
-                    'email' => config('vars.mail_from_address')
-                ],
+                'sender' => $sender,
                 'to' => [
                     [
                         'email' => $this->user->email,
@@ -45,6 +52,8 @@ class SendForgotPasswordOtp implements ShouldQueue
                 'params' => [
                     'firstName' => $this->user->first_name,
                     'otp' => $this->otp,
+                    'platform' => $sender['name'],
+                    'supportEmail' => $supportEmail,
                 ],
             ];
 

@@ -30,7 +30,7 @@ class UserController extends BaseController
 
         $data['sso_type'] = 'email'; // Add email sso to the array
         $new_user = $user->storeUser($data);
-        SendProfileEmailOtp::dispatch($new_user->uuid);
+        SendProfileEmailOtp::dispatch($new_user->uuid, app('platform'));
         $return_data = $userResource->userDetail($new_user);
 
         return $this->sendResponse('successfully', $return_data);
@@ -238,6 +238,7 @@ class UserController extends BaseController
     public function deleteUserTemporarily(Request $request)
     {
         $user = $request->user();
+
         $deleteResponse = UserService::deleteUserTemporarily($user);
         return $this->sendResponseFromService($deleteResponse);
     }

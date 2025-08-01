@@ -50,7 +50,7 @@ class UserService
         $user->deletion_date = Carbon::now();
         $user->save();
 
-        SendAccountDeletionEmail::dispatch($user);
+        SendAccountDeletionEmail::dispatch($user, app('platform'));
 
         return ServiceResponse::success();
     }
@@ -72,10 +72,12 @@ class UserService
         FirebaseFcmToken::create([
             'user_id' => $user->uuid,
             'token' => $token,
-            'client_user_agent' => $clientUserAgent
+            'client_user_agent' => $clientUserAgent,
+            'platform' => app('platform')
         ]);
 
         SubscribeToFCMTopic::dispatch($token, 'all');
+        SubscribeToFCMTopic::dispatch($token, app('platform'));
 
         return ServiceResponse::success();
     }
@@ -87,6 +89,7 @@ class UserService
                                 ->first();
 
         UnsubscribeFromFCMTopic::dispatch($token->token, 'all');
+        UnsubscribeFromFCMTopic::dispatch($token->token, app('platform'));
 
         $token->delete();
         return ServiceResponse::success();

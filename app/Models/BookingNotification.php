@@ -16,6 +16,7 @@ class BookingNotification extends Model
         'booking_date',
         'booking_time',
         'notify_to_email',
-        'is_completed'
+        'is_completed',
+        'platform'
     ];
 }

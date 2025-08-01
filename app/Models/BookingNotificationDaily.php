@@ -16,6 +16,7 @@ class BookingNotificationDaily extends Model
         'cart_item_id',
         'booking_time',
         'notify_to_email',
-        'is_notified'
+        'is_notified',
+        'platform'
     ];
 }

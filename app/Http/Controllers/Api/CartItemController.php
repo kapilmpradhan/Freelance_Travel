@@ -83,6 +83,7 @@ class CartItemController extends BaseController
     public function addItemsToCartV2(Request $request): JsonResponse
     {
         $data = $request->all();
+        $agentBranchCode = $request->agentBranchCode;
         $validator = Validator::make($data, CartItem::saveItemsV2Rule());
 
         if ($validator->fails()) {
@@ -90,6 +91,8 @@ class CartItemController extends BaseController
         }
         try {
             $isDryRun = $request->query('dry') == 1;
+            $itemType = $isDryRun ? ItemType::dry($data) : ItemType::cart();
+            $itemType->agentBranchCode = $agentBranchCode;
 
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $request->user->uuid,
@@ -97,8 +100,9 @@ class CartItemController extends BaseController
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: $isDryRun ? ItemType::dry() : ItemType::cart(),
                 productPricesDetails: $data['productPricesDetails'],
+                addToQuote: null,
+                itemType: $itemType,
                 isDryRun: $isDryRun,
             );
             return $this->sendResponseFromService($saveItemsResponse);
@@ -169,15 +173,18 @@ class CartItemController extends BaseController
 
         $addToQuote = AddToQuote::new(title: $data['quoteTitle']);
         try {
+            $itemType = ItemType::quote($addToQuote->quoteId);
+            $itemType->agentBranchCode = $request->agentBranchCode;
+
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $request->user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::quote($addToQuote->quoteId),
-                productPricesDetails: $data['productPricesDetails'],
-                addToQuote: $addToQuote
+                addToQuote: $addToQuote,
+                itemType: $itemType,
+                productPricesDetails: $data['productPricesDetails']
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -227,15 +234,18 @@ class CartItemController extends BaseController
         }
 
         try {
+            $itemType = ItemType::quote($quoteId);
+            $itemType->agentBranchCode = $request->agentBranchCode;
+
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $request->user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::quote($quoteId),
                 productPricesDetails: $data['productPricesDetails'],
-                addToQuote: AddToQuote::existing(quoteId: $quoteId)
+                addToQuote: AddToQuote::existing(quoteId: $quoteId),
+                itemType: $itemType
             );
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
@@ -697,12 +707,16 @@ class CartItemController extends BaseController
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
         }
+        $itemType = ItemType::cart();
+        $itemType->agentBranchCode = $request->agentBranchCode;
+
         try {
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
                 pointsApplied: $data['pointsApplied'] ?? null,
-                itemType: ItemType::cart()
+                processAsQuote: true,
+                itemType: $itemType
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
@@ -724,11 +738,14 @@ class CartItemController extends BaseController
         }
 
         try {
+            $itemType = ItemType::quote($quoteId);
+            $itemType->agentBranchCode = $request->agentBranchCode;
             $postOrderResponse = BookingService::postOrder(
                 userId: $request->user->uuid,
                 intent: 'pay-now',
                 pointsApplied: $data['pointsApplied'] ?? null,
-                itemType: ItemType::quote($quoteId)
+                processAsQuote: true,
+                itemType: $itemType
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
@@ -763,14 +780,18 @@ class CartItemController extends BaseController
 
         DB::beginTransaction();
         try {
+            $itemType = ItemType::direct();
+            $itemType->agentBranchCode = $request->agentBranchCode;
+
             $saveItemsResponse = CartItemServiceV2::saveItems(
                 userId: $user->uuid,
                 tdmsProductId: $data['tdmsProductId'],
                 startDate: $data['startDate'],
                 days: $data['days'],
                 selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::direct(),
-                productPricesDetails: $data['productPricesDetails']
+                productPricesDetails: $data['productPricesDetails'],
+                addToQuote: null,
+                itemType: $itemType
             );
 
             if (!$saveItemsResponse->isSuccess()) {
@@ -788,11 +809,15 @@ class CartItemController extends BaseController
         DB::commit();
 
         try {
+            $itemType = ItemType::direct();
+            $itemType->agentBranchCode = $request->agentBranchCode;
+
             $postOrderResponse = BookingService::postOrder(
                 userId: $user->uuid,
                 intent: 'pay-now',
                 pointsApplied: $data['pointsApplied'] ?? null,
-                itemType: ItemType::direct()
+                processAsQuote: true,
+                itemType: $itemType
             );
 
             if (!$postOrderResponse->isSuccess()) {

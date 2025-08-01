@@ -24,7 +24,7 @@ class PointsEarnedNotification
         $className = get_class($this);
         Logger::debug("[{$className}] Received order created event");
 
-        SendPointsEarnedNotificationJob::dispatch($event->userOrder);
+        SendPointsEarnedNotificationJob::dispatch($event->userOrder, app('platform'));
 
         Logger::debug("[{$className}] Dispatched job to send complete order mail");
     }

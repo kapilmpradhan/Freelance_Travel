@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use App\Models\BookingNotification;
 use App\Models\Product;
 use Exception;
@@ -16,6 +17,7 @@ use App\Models\BookingNotificationDaily;
 use App\Models\CartItem;
 use App\Models\User;
 use App\Models\UserOrder;
+use App\Services\BrevoEmailService;
 use App\Services\FcmService;
 use App\Services\ServiceException;
 
@@ -123,7 +125,9 @@ class SendBookingNotification implements ShouldQueue
                     $userOrder = UserOrder::where('id', $notification->user_order_id)->first();
                     $bookingReference = $userOrder->booking_reference;
 
+                    $sender = BrevoEmailService::platformSenderDetail($notification->platform);
                     $messageVersion = [
+                            'sender' => $sender,
                             'to' => [
                                 [
                                     'email' => $notification->notify_to_email,
@@ -134,6 +138,9 @@ class SendBookingNotification implements ShouldQueue
                                 'productName' => $product->json['name'],
                                 'bookingDate' => $booking->booking_date,
                                 'bookingTime' => $notification->booking_time,
+                                'supportEmail' => $notification->platform == AgentBranchCode::DEFAULT
+                                    ? config('vars.mail_from_address')
+                                    : config('vars.peterpans_mail_from_address')
                             ]
                         ];
 

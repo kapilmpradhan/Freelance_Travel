@@ -23,9 +23,8 @@ class CartItemServiceV2
         $itemType = null,
         $isDryRun = false
     ): ServiceResponse {
-        $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
-        $userAgent = $userAgentResponse->data;
-        $defaultAgentAccessToken = $userAgent->access_token;
+        $userAgentResponse = UserAgentService::getDefaultAgentToken($itemType->agentBranchCode);
+        $defaultAgentAccessToken = $userAgentResponse->data['access_token'];
 
         $productDetails = null;
         if ($itemType->forDiscount) {

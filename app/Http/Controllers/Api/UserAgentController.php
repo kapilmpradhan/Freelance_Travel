@@ -88,7 +88,7 @@ class UserAgentController extends BaseController
 
     public function getDefaultAgentToken(Request $request)
     {
-        $getdefaultAgentTokenResponse = UserAgentService::getDefaultAgentToken();
+        $getdefaultAgentTokenResponse = UserAgentService::getDefaultAgentToken($request->agentBranchCode);
         return $this->sendResponseFromService($getdefaultAgentTokenResponse);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\ItemType;
+use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Discount;
@@ -18,7 +19,9 @@ class DiscountService
         if ($user && Feature::for($user)->active('tester')) {
             $activeDiscount = Discount::where('is_test', true)->first();
         } else {
-            $activeDiscount = Discount::where('is_active', true)->first();
+            $activeDiscount = Discount::where('is_active', true)
+                ->where('platform', app('platform'))
+                ->first();
         }
         if (!$activeDiscount) {
             $data = [
@@ -129,7 +132,11 @@ class DiscountService
         if (Feature::for($user)->active('tester')) {
             $activeDiscount = Discount::where('is_test', true)->first();
         } else {
-            $activeDiscount = Discount::where('is_active', true)->first();
+            $activeDiscount = Discount::where('is_active', true)
+                ->where(
+                    'platform',
+                    app('platform')
+                )->first();
         }
 
         if (!$activeDiscount || $activeDiscount->percentage == 0) {
@@ -171,7 +178,7 @@ class DiscountService
         $agentBranch = $orderCommissionResponse->data->agent_branch;
 
         // TODO: Hard-coded branch code to FTX for now. Will update later!!
-        if ($agentBranch !== 'FTX') {
+        if ($agentBranch !== AgentBranchCode::DEFAULT) {
             return ServiceResponse::success(data: ['discount' => 0]);
         }
 
@@ -214,6 +221,7 @@ class DiscountService
     public static function addDiscount(array $data)
     {
         try {
+            $data['platform'] = app('platform');
             $discount = Discount::create($data);
         } catch (Exception $e) {
             Logger::error(

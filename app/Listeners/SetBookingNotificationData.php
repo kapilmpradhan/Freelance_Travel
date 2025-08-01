@@ -26,7 +26,8 @@ class SetBookingNotificationData implements ShouldQueue
 
         $addBookingDataResponse = BookingNotificationService::addBookingDataToNotification(
             cartItems: $event->cartItems,
-            userOrder: $event->userOrder
+            userOrder: $event->userOrder,
+            platform: $event->platform
         );
 
         if ($addBookingDataResponse->success()) {
