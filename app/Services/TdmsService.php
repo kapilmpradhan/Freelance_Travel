@@ -739,7 +739,7 @@ class TdmsService
         $responseData = $response->json();
 
         if (count($responseData['error'] ?? []) > 0) {
-            $messages = array_map(fn($item) => $item['message'], $responseData['error'] ?? []);
+            $messages = array_map(fn ($item) => $item['message'], $responseData['error'] ?? []);
 
             return ServiceResponse::badRequest(
                 message: implode(". ", $messages),

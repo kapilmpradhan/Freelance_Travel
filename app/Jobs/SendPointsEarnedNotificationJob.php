@@ -9,6 +9,7 @@ use App\Services\FcmService;
 use App\Services\IEmailService;
 use App\Services\TdmsService;
 use App\Services\UserAgentService;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -78,8 +79,9 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $agentToken = $agentResponse->data->access_token;
 
         $getCommissionReportResponse = TdmsService::getCommissionReport(
-            bookingReference: $bookingReference,
-            agentToken: $agentToken
+            agentToken: $agentToken,
+            startDate: Carbon::now()->subdays(2),
+            endDate: Carbon::now()
         );
 
         if (!$getCommissionReportResponse) {
