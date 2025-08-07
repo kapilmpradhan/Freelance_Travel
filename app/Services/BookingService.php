@@ -31,7 +31,7 @@ class BookingService
         Collection $cartItems,
         ?float $pointsDollarsApplied
     ): float {
-        $totalChartAmount = $cartItems->sum(function ($cartItem) {
+        $totalChargeAmount = $cartItems->sum(function ($cartItem) {
             $rrp = $cartItem->availability['productPricingData']['RRP']
                 ?? $cartItem->availability['FarePrice']['RRP'];
 
@@ -39,10 +39,10 @@ class BookingService
         });
 
         if ($pointsDollarsApplied) {
-            $totalChartAmount -= $pointsDollarsApplied;
+            $totalChargeAmount -= $pointsDollarsApplied;
         }
 
-        return $totalChartAmount;
+        return $totalChargeAmount;
     }
 
     public static function getTotalNumberOfItems($cartItems)
