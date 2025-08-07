@@ -8,40 +8,41 @@ use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
 use App\Events\CompleteOrderEvent;
-use App\Models\UserAgent;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
 use App\Jobs\CacheProductJob;
 use App\Logging\Logger;
-use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\User;
+use App\Models\UserAgent;
 use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
-    public static function getTotalChargeAmount($cartItems)
-    {
-        $totalAmount = 0;
+    public static function getTotalChargeAmount(
+        Collection $cartItems,
+        ?float $pointsDollarsApplied
+    ): float {
+        $totalChartAmount = $cartItems->sum(function ($cartItem) {
+            $rrp = $cartItem->availability['productPricingData']['RRP']
+                ?? $cartItem->availability['FarePrice']['RRP'];
 
-        foreach ($cartItems as $cartItem) {
-            if (isset($cartItem->availability['productPricingData']['RRP'])) {
-                $totalAmount += $cartItem->availability['productPricingData']['RRP'] * $cartItem->booking_quantity;
-            } else {
-                $totalAmount += $cartItem->availability['FarePrice']['RRP'] * $cartItem->booking_quantity;
-            }
+            return $rrp * $cartItem->booking_quantity;
+        });
+
+        if ($pointsDollarsApplied) {
+            $totalChartAmount -= $pointsDollarsApplied;
         }
 
-
-        return $totalAmount;
+        return $totalChartAmount;
     }
 
     public static function getTotalNumberOfItems($cartItems)
@@ -339,7 +340,10 @@ class BookingService
         array $customers,
         bool $forDiscount = false
     ): array {
-        $totalChargeAmount = self::getTotalChargeAmount($cartItems);
+        $totalChargeAmount = self::getTotalChargeAmount(
+            $cartItems,
+            UserOrderCommissionService::pointsToDollars($pointsApplied, $userAgent->points_multiplier)
+        );
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
             $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $forDiscount);
