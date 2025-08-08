@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\DTOs\UserAgentDTO;
 use Closure;
 use App\Services\JwtService;
 use App\Services\ResponseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 
 class JwtAuthenticate
@@ -46,6 +48,7 @@ class JwtAuthenticate
         Auth::login($validated_data['user']);
 
         $request->merge(['user' => $validated_data['user']]);
+        App::instance('agentData', UserAgentDTO::getUserAgent($request->user, app('platform')));
 
         return $next($request);
     }

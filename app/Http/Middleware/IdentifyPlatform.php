@@ -16,12 +16,14 @@ class IdentifyPlatform
     {
         $url = $request->url();
         if (str_contains($url, 'api/peterpans')) {
-            App::instance('platform', AgentBranchCode::PETERPANS);
+            $platform = AgentBranchCode::PETERPANS;
             $request->merge(['agentBranchCode' => AgentBranchCode::PETERPANS]);
         } else {
-            App::instance('platform', AgentBranchCode::DEFAULT);
+            $platform = AgentBranchCode::DEFAULT;
             $request->merge(['agentBranchCode' => AgentBranchCode::DEFAULT]);
         }
+
+        App::instance('platform', $platform);
         return $next($request);
     }
 }
