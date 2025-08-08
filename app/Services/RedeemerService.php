@@ -35,15 +35,15 @@ class RedeemerService
         });
 
         // Filter for same email redeemers
-        $sameEmailRedeemers = $userRedeemers->filter(function ($redeemer) use ($redeemerData) {
-            return $redeemer->email === $redeemerData['email'];
-        });
+        // $sameEmailRedeemers = $userRedeemers->filter(function ($redeemer) use ($redeemerData) {
+        //     return $redeemer->email === $redeemerData['email'];
+        // });
 
-        if ($sameEmailRedeemers->count() > 0) {
-            return ServiceResponse::badRequest(
-                message: 'A redeemer with this email already exists.'
-            );
-        }
+        // if ($sameEmailRedeemers->count() > 0) {
+        //     return ServiceResponse::badRequest(
+        //         message: 'A redeemer with this email already exists.'
+        //     );
+        // }
 
         if ($sameNameRedeemers->count() > 0) {
             $redeemerData['lastName'] .= $sameNameRedeemers->count();
