@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\DB;
 class BookingService
 {
     public static function getTotalChargeAmount(
-        Collection $cartItems,
+        Collection $cartItems
     ): float {
         $totalChargeAmount = $cartItems->sum(function ($cartItem) {
             $rrp = $cartItem->availability['productPricingData']['RRP']
@@ -148,126 +148,120 @@ class BookingService
                         'bookingData' => $bookingData
                     ], code: 400);
                 }
-                $isPrimaryRedeemer = true;
-                foreach ($redeemerIds as $redeemerId) {
-                    // Order data for redeemers
-                    if (!$forDiscount) {
-                        $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
-                    } else {
-                        $userRedeemer = $fakeRedeemer;
-                    }
 
-                    $isNewRedeemer = true;
-                    $newRedeemer = new RedeemerOrderData(
-                        redeemerId: $userRedeemer->id,
-                        title: $userRedeemer->title,
-                        email: $userRedeemer->email,
-                        firstName: $userRedeemer->first_name,
-                        lastName: $userRedeemer->last_name,
-                        phoneNumber: $userRedeemer->phone_number,
-                        countryCode: $userRedeemer->country_code,
-                        dateOfBirth: $userRedeemer->date_of_birth,
-                        postalCode: $userRedeemer->postal_code,
-                    );
+                $redeemerId = $redeemerIds[0];
+                if (!$forDiscount) {
+                    $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
+                } else {
+                    $userRedeemer = $fakeRedeemer;
+                }
+
+                $isNewRedeemer = true;
+                $newRedeemer = new RedeemerOrderData(
+                    redeemerId: $userRedeemer->id,
+                    title: $userRedeemer->title,
+                    email: $userRedeemer->email,
+                    firstName: $userRedeemer->first_name,
+                    lastName: $userRedeemer->last_name,
+                    phoneNumber: $userRedeemer->phone_number,
+                    countryCode: $userRedeemer->country_code,
+                    dateOfBirth: $userRedeemer->date_of_birth,
+                    postalCode: $userRedeemer->postal_code,
+                );
+                foreach ($redeemers as $redeemer) {
+                    if ($redeemer->redeemerId == $userRedeemer->id) {
+                        $isNewRedeemer = false;
+                        break;
+                    }
+                }
+
+                if ($isNewRedeemer) {
+                    $redeemers[] = $newRedeemer;
+                }
+
+                // Order data for redeemer products
+                $isNewProduct = true;
+                $newProduct = new RedeemerProductsOrderData(
+                    redeemerId: $redeemerId,
+                    productPricesDetailsId: strVal($cartItem->product_price_details_id),
+                    datePriceCacheId: $datePriceCacheId,
+                    redeemerQuantity: 0
+                );
+
+                foreach ($products as $product) {
+                    if (
+                        $product->productPricesDetailsId == $newProduct->productPricesDetailsId
+                        && $product->redeemerId == $newProduct->redeemerId
+                        && $product->datePriceCacheId == $newProduct->datePriceCacheId
+                    ) {
+                        $isNewProduct = false;
+                        break;
+                    }
+                }
+
+                if ($isNewProduct) {
+                    $products[] = $newProduct;
                     foreach ($redeemers as $redeemer) {
-                        if ($redeemer->redeemerId == $userRedeemer->id) {
-                            $isNewRedeemer = false;
-                            break;
+                        if ($redeemer->redeemerId == $newProduct->redeemerId) {
+                            $redeemer->products[] = $newProduct;
                         }
                     }
+                }
 
-                    if ($isNewRedeemer) {
-                        $redeemers[] = $newRedeemer;
-                    }
-
-                    // Order data for redeemer products
-                    $isNewProduct = true;
-                    $newProduct = new RedeemerProductsOrderData(
-                        redeemerId: $redeemerId,
-                        productPricesDetailsId: strVal($cartItem->product_price_details_id),
-                        datePriceCacheId: $datePriceCacheId,
-                        redeemerQuantity: 0
-                    );
-
-                    foreach ($products as $product) {
-                        if (
-                            $product->productPricesDetailsId == $newProduct->productPricesDetailsId
-                            && $product->redeemerId == $newProduct->redeemerId
-                            && $product->redeemerId == $newProduct->redeemerId
-                            && $product->datePriceCacheId == $newProduct->datePriceCacheId
-                        ) {
-                            $isNewProduct = false;
-                            break;
-                        }
-                    }
-
-                    if ($isNewProduct) {
-                        $products[] = $newProduct;
-                        foreach ($redeemers as $redeemer) {
-                            if ($redeemer->redeemerId == $newProduct->redeemerId) {
-                                $redeemer->products[] = $newProduct;
-                            }
-                        }
-                    }
-
-                    // Order data for redeemer product bookings
-                    $bookingComment = isset($bookingData['bookingComment'])
-                                    ? $bookingData['bookingComment']
+                // Order data for redeemer product bookings
+                $bookingComment = isset($bookingData['bookingComment'])
+                                ? $bookingData['bookingComment']
+                                : null;
+                $bookingDetailsComment = isset($bookingData['bookingDetailsComment'])
+                                    ? $bookingData['bookingDetailsComment']
                                     : null;
-                    $bookingDetailsComment = isset($bookingData['bookingDetailsComment'])
-                                        ? $bookingData['bookingDetailsComment']
-                                        : null;
-                    $timeId = isset($bookingData['timeId'])
-                                        ? $bookingData['timeId']
-                                        : null;
-                    $commences = isset($bookingData['commences'])
-                                        ? $bookingData['commences']
-                                        : null;
-                    $pickupId = isset($bookingData['pickupId'])
-                                        ? $bookingData['pickupId']
-                                        : null;
-                    $pickupLocation = isset($bookingData['pickupLocation'])
-                                        ? $bookingData['pickupLocation']
-                                        : null;
-                    $dropoffId = isset($bookingData['dropoffId'])
-                                        ? $bookingData['dropoffId']
-                                        : null;
-                    $dropoffLocation = isset($bookingData['dropoffLocation'])
-                                        ? $bookingData['dropoffLocation']
-                                        : null;
-                    $optionalData = isset($bookingData['optionalData'])
-                                        ? $bookingData['optionalData']
-                                        : null;
+                $timeId = isset($bookingData['timeId'])
+                                    ? $bookingData['timeId']
+                                    : null;
+                $commences = isset($bookingData['commences'])
+                                    ? $bookingData['commences']
+                                    : null;
+                $pickupId = isset($bookingData['pickupId'])
+                                    ? $bookingData['pickupId']
+                                    : null;
+                $pickupLocation = isset($bookingData['pickupLocation'])
+                                    ? $bookingData['pickupLocation']
+                                    : null;
+                $dropoffId = isset($bookingData['dropoffId'])
+                                    ? $bookingData['dropoffId']
+                                    : null;
+                $dropoffLocation = isset($bookingData['dropoffLocation'])
+                                    ? $bookingData['dropoffLocation']
+                                    : null;
+                $optionalData = isset($bookingData['optionalData'])
+                                    ? $bookingData['optionalData']
+                                    : null;
 
-                    $newBooking = new RedeemerBookingsOrderData(
-                        redeemerId: $redeemerId,
-                        productPricesDetailsId: $cartItem->product_price_details_id,
-                        bookingComment: $bookingComment,
-                        bookingDetailsComment: $bookingDetailsComment,
-                        travelDate: $cartItem->booking_date,
-                        timeId: $timeId,
-                        commences: $commences,
-                        pickupId: $pickupId,
-                        pickupLocation: $pickupLocation,
-                        dropoffId: $dropoffId,
-                        dropoffLocation: $dropoffLocation,
-                        datePriceCacheId: $datePriceCacheId,
-                        optionalData: $optionalData
-                    );
+                $newBooking = new RedeemerBookingsOrderData(
+                    redeemerId: $redeemerId,
+                    productPricesDetailsId: $cartItem->product_price_details_id,
+                    bookingComment: $bookingComment,
+                    bookingDetailsComment: $bookingDetailsComment,
+                    travelDate: $cartItem->booking_date,
+                    timeId: $timeId,
+                    commences: $commences,
+                    pickupId: $pickupId,
+                    pickupLocation: $pickupLocation,
+                    dropoffId: $dropoffId,
+                    dropoffLocation: $dropoffLocation,
+                    datePriceCacheId: $datePriceCacheId,
+                    optionalData: $optionalData
+                );
 
-                    foreach ($products as $product) {
-                        if (
-                            $product->productPricesDetailsId == $newBooking->productPricesDetailsId
-                            && $product->redeemerId == $newBooking->redeemerId
-                            && $product->datePriceCacheId == $newBooking->datePriceCacheId
-                        ) {
-                            $product->redeemerQuantity = $isPrimaryRedeemer
-                                                ? $product->redeemerQuantity + 1
-                                                : $product->redeemerQuantity;
-                            $product->bookings[] = $newBooking;
-                        }
+                foreach ($products as $product) {
+                    if (
+                        $product->productPricesDetailsId == $newBooking->productPricesDetailsId
+                        && $product->redeemerId == $newBooking->redeemerId
+                        && $product->datePriceCacheId == $newBooking->datePriceCacheId
+                    ) {
+                        $product->redeemerQuantity = $product->redeemerQuantity + 1;
+                        $product->bookings[] = $newBooking;
                     }
-                    $isPrimaryRedeemer = false;
                 }
             }
         }
