@@ -48,7 +48,7 @@ class JwtAuthenticate
         Auth::login($validated_data['user']);
 
         $request->merge(['user' => $validated_data['user']]);
-        App::instance('agentData', UserAgentDTO::getUserAgent($request->user, app('platform')));
+        App::instance('agentType', UserAgentDTO::getUserAgent($request->user, app('platform')));
 
         return $next($request);
     }

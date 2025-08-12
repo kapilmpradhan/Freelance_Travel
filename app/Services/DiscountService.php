@@ -134,10 +134,8 @@ class DiscountService
             $activeDiscount = Discount::where('is_test', true)->first();
         } else {
             $activeDiscount = Discount::where('is_active', true)
-                ->where(
-                    'platform',
-                    app('platform')
-                )->first();
+                ->where('platform', app('platform'))
+                ->first();
         }
 
         if (!$activeDiscount || $activeDiscount->percentage == 0) {

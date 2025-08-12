@@ -534,8 +534,11 @@ class BookingService
                     commissionPercentage: $commissionPercentage,
                     user: User::find($userId)
                 );
-                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
-                $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
+                $agentType = app('agentType');
+                if ($agentType->isDefaultAgent) {
+                    $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+                    $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
+                }
 
                 $overallStatus = [];
                 foreach ($validatedItemsData as $item) {
