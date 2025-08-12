@@ -29,7 +29,6 @@ class BookingService
 {
     public static function getTotalChargeAmount(
         Collection $cartItems,
-        ?float $pointsDollarsApplied
     ): float {
         $totalChargeAmount = $cartItems->sum(function ($cartItem) {
             $rrp = $cartItem->availability['productPricingData']['RRP']
@@ -37,10 +36,6 @@ class BookingService
 
             return $rrp * $cartItem->booking_quantity;
         });
-
-        if ($pointsDollarsApplied) {
-            $totalChargeAmount -= $pointsDollarsApplied;
-        }
 
         return $totalChargeAmount;
     }
@@ -341,8 +336,7 @@ class BookingService
         bool $forDiscount = false
     ): array {
         $totalChargeAmount = self::getTotalChargeAmount(
-            $cartItems,
-            UserOrderCommissionService::pointsToDollars($pointsApplied, $userAgent->points_multiplier)
+            $cartItems
         );
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
@@ -608,6 +602,11 @@ class BookingService
         $orderResponseData = $placeOrderResponse->data;
         if ($placeOrderResponse->isError()) {
             throw new ServiceException($orderResponseData['message']);
+        }
+
+        if ($agentType->isPointsAgent) {
+            $pointsToDollar = UserOrderCommissionService::pointsToDollars($pointsApplied, $agent->points_multiplier);
+            $paymentAmount -= $pointsToDollar;
         }
 
         $getPaymentGatewayUriResponse = TdmsService::getPaymentGatewayUri(

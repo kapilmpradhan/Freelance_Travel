@@ -35,7 +35,7 @@ class UserOrderCommissionService
             $itemType
         );
         $commission = $commissionResponse->data;
-        if ($commissionResponse->isSuccess() && $commission->percentage) {
+        if ($commissionResponse->isSuccess() && $commission->percentage && $commission->points_available) {
             $commissionPercentage = $commissionResponse->data->percentage;
             $pointsAvailable = $commissionResponse->data->points_available;
 
