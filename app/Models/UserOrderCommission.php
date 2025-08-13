@@ -31,6 +31,7 @@ class UserOrderCommission extends Model
         'quote_id',
         'is_direct_purchase',
         'percentage',
+        'points_available',
     ];
 
     protected $casts = [

@@ -102,6 +102,16 @@ class UserAgentController extends BaseController
         }
 
         $userAgent = $getUserAgentResponse->data; /** @var UserAgent $userAgent */
+
+        $agentDetailsResponse = TdmsService::getAgentDetails($userAgent->access_token);
+        if ($agentDetailsResponse->isError()) {
+            return $this->sendResponseFromService($agentDetailsResponse);
+        }
+
+        UserAgentService::updateUserAgentPoints(
+            agent: $userAgent,
+            data: $agentDetailsResponse->data
+        );
         return $this->sendResponseFromService(TdmsService::getAgentDetails($userAgent->access_token));
     }
 

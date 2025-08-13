@@ -7,6 +7,7 @@ use App\Logging\Logger;
 use App\Models\UserAgent;
 use Carbon\Carbon;
 use App\Http\Resources\AgentResource;
+use Exception;
 
 class UserAgentService
 {
@@ -214,5 +215,22 @@ class UserAgentService
         return ServiceResponse::success(
             data: $refreshedAgent
         );
+    }
+
+    public static function updateUserAgentPoints($agent, $data)
+    {
+        try {
+            $agent->points_balance = $data['pointsBalance'];
+            $agent->points_available = $data['availableBalance'];
+            $agent->points_multiplier = $data['pointsMultiplier'];
+            $agent->save();
+
+            return ServiceResponse::success(
+                message: "Agent details updated successfully",
+                data: $agent
+            );
+        } catch (Exception $e) {
+            Logger::error('Error updating user agent points', $e);
+        }
     }
 }
