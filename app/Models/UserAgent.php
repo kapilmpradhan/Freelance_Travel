@@ -67,6 +67,7 @@ class UserAgent extends Model
 
     protected $casts = [
         'referral_source_id' => 'integer',
+        'token_updated_at' => 'datetime'
     ];
 
     protected $hidden = ['password'];
