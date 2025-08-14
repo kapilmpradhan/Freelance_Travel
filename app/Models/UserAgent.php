@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $email
  * @property string|null $password
  * @property string|null $access_token
+ * @property Carbon|null $token_updated_at
  * @property string $status
  * @property int|null $expires_in
  * @property string|null $token_type
@@ -48,6 +49,7 @@ class UserAgent extends Model
         'branch_code',
         'status',
         'access_token',
+        'token_updated_at',
         'expires_in',
         'token_type',
         'scope',

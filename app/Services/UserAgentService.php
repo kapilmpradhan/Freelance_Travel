@@ -14,8 +14,9 @@ class UserAgentService
     public static function refreshAgent(UserAgent $agent): ?UserAgent
     {
         if (
-            !$agent->access_token
-            || $agent->updated_at->diffInHours(Carbon::now()) > 21
+            !$agent->access_token ||
+            !$agent->token_updated_at ||
+            $agent->token_updated_at->diffInHours(Carbon::now()) > 21
         ) {
             $response = TdmsService::getAgentToken(
                 username: $agent->email,
@@ -31,6 +32,7 @@ class UserAgentService
                 "points_balance" => $response->data['pointsBalance'],
                 "points_available" => $response->data['availableBalance'],
                 "points_multiplier" => $response->data['pointsMultiplier'],
+                "token_updated_at" => Carbon::now()
             ]);
             $agent->refresh();
         }
