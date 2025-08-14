@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AgentBranchCode;
 use App\Models\User;
 use App\Services\AppleService;
 use App\Services\JwtService;
@@ -11,15 +12,20 @@ use App\Http\Controllers\Api\BaseController;
 use Illuminate\Support\Facades\Validator;
 use App\Services\OtpService;
 use App\Jobs\SendProfileEmailOtp;
-use App\Jobs\UserProfileAgentJob;
 
 class AppleLoginController extends BaseController
 {
     public function appleAuthCallback(Request $request)
     {
         $body = http_build_query($request->all());
+        if (app('platform' == AgentBranchCode::DEFAULT)) {
+            $package = Config::get('services.apple.client_id');
+        } elseif (app('platform' == AgentBranchCode::PETERPANS)) {
+            $package = Config::get('services.apple.peterpans_client_id');
+        }
+
         $redirectUrl = "intent://callback?{$body}#Intent;" .
-               "package=" . Config::get('services.apple.client_id') . ";" .
+               "package=" . $package . ";" .
                "scheme=signinwithapple;end";
         return redirect()->away($redirectUrl);
     }

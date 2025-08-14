@@ -46,6 +46,7 @@ env:
       APPLE_CLIENT_IDS: ${{ vars.APPLE_CLIENT_IDS }}
       GOOGLE_CLIENT_IDS: ${{ vars.GOOGLE_CLIENT_IDS }}
       APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
+      PETERPANS_APPLE_CLIENT_ID: ${{ vars.PETERPANS_APPLE_CLIENT_ID }}
       MAIL_MAILER: ${{ vars.MAIL_MAILER }}
       MAIL_HOST: ${{ vars.MAIL_HOST }}
       MAIL_PORT: ${{ vars.MAIL_PORT }}

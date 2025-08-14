@@ -38,5 +38,6 @@ return [
 
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID'),
+        'peterpans_client_id' => env('PETERPANS_APPLE_CLIENT_ID')
     ],
 ];
