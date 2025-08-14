@@ -112,6 +112,17 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount',
     Route::get('/active', [DiscountController::class, 'getDiscount']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'middleware' => 'auth.jwt'], function () {
+    Route::get('integration', [UserAgentController::class, 'getUserAgent']);
+    Route::get('integration/token', [UserAgentController::class, 'getUserAgentToken']);
+    Route::get('integration/commissionReport', [UserAgentController::class, 'getCommissionReport']);
+    Route::post('integration/points', [UserAgentController::class, 'getAndUpdateUserAgentPoints']);
+    Route::post('integration', [UserAgentController::class, 'addUserAgent']);
+    Route::post('integration/upgradeToAgent', [UserAgentController::class, 'upgradeToAgent']);
+    Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
+    Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'middleware' => 'admin'], function () {
     Route::post('/discount/add', [DiscountController::class, 'addNewDiscount']);
     Route::get('/discount/all', [DiscountController::class, 'getAllDiscounts']);
