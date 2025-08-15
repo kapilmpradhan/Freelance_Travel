@@ -305,13 +305,16 @@ class TdmsService
 
     public static function customerOrderHistory(
         string $agentToken,
-        string $customerEmail,
+        string|null $customerEmail = null,
         ?Carbon $sinceDate = null
     ): ServiceResponse {
         $params = [
-            "searchOnlyStatus" => "Order",
-            "email" => $customerEmail
+            "searchOnlyStatus" => "Order"
         ];
+
+        if ($customerEmail) {
+            $params['email'] = $customerEmail;
+        }
 
         if ($sinceDate !== null) {
             $params['since'] = $sinceDate->toDateString();

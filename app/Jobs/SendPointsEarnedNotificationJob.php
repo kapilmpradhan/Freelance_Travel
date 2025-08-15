@@ -81,7 +81,8 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $getCommissionReportResponse = TdmsService::getCommissionReport(
             agentToken: $agentToken,
             startDate: Carbon::now()->subdays(2),
-            endDate: Carbon::now()
+            endDate: Carbon::now(),
+            onlyAvailablePoints: false
         );
 
         if (!$getCommissionReportResponse) {
@@ -106,6 +107,10 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             $remainingPoints = $requiredReport['amount'] - $requiredReport['claimDetails'][0]['claimedAmount'];
         } else {
             $remainingPoints = $requiredReport['amount'];
+        }
+
+        if ($remainingPoints <= 0) {
+            return;
         }
 
         // Email notification data
