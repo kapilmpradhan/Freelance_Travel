@@ -102,6 +102,12 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             return;
         }
 
+        if (!empty($requiredReport['claimDetails'])) {
+            $remainingPoints = $requiredReport['amount'] - $requiredReport['claimDetails'][0]['claimedAmount'];
+        } else {
+            $remainingPoints = $requiredReport['amount'];
+        }
+
         // Email notification data
         $sender = BrevoEmailService::platformSenderDetail($this->platform);
         $customerData = [
@@ -114,7 +120,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             'templateId' => (int) config('vars.points_earned_template_id'),
             'params' => [
                 'bookingReference' => $bookingReference,
-                'earnedPoints' => $requiredReport['amount'],
+                'earnedPoints' => $remainingPoints,
                 'availableDate' => $requiredReport['availableDate'],
                 'platform' => $sender['name'],
             ]
