@@ -603,24 +603,33 @@ class BookingService
             $paymentAmount -= $pointsToDollar;
         }
 
-        $getPaymentGatewayUriResponse = TdmsService::getPaymentGatewayUri(
-            agentToken: $agent->access_token,
-            bookingReference: $bookingReference,
-            paymentAmount: $paymentAmount,
-            returnUrl: $webAppReturnUrl,
-        );
-        if ($getPaymentGatewayUriResponse['success'] === false) {
-            throw new ServiceException(
-                message: 'Failed to get payment uri',
-                data: [
-                    'requestData' => [
-                        'paymentAmount' => $paymentAmount,
-                        'paymentMethod' => $onlinePaymentMethod['name'],
-                    ],
-                    'responseData' => $getPaymentGatewayUriResponse,
-                ],
+        if ($paymentAmount > 0) {
+            $getPaymentGatewayUriResponse = TdmsService::getPaymentGatewayUri(
+                agentToken: $agent->access_token,
+                bookingReference: $bookingReference,
+                paymentAmount: $paymentAmount,
+                returnUrl: $webAppReturnUrl,
             );
+            if ($getPaymentGatewayUriResponse['success'] === false) {
+                throw new ServiceException(
+                    message: 'Failed to get payment uri',
+                    data: [
+                        'requestData' => [
+                            'paymentAmount' => $paymentAmount,
+                            'paymentMethod' => $onlinePaymentMethod['name'],
+                        ],
+                        'responseData' => $getPaymentGatewayUriResponse,
+                    ],
+                );
+            }
+
+            $paymentUri = $getPaymentGatewayUriResponse['data']['quoteUrl'];
+            $isPaymentRequired = true;
+        } else {
+            $paymentUri = null;
+            $isPaymentRequired = false;
         }
+
 
         $emailData = [];
         if ($intent === 'email-quote') {
@@ -639,7 +648,7 @@ class BookingService
                 'redeemers' => $orderRequestData['redeemers'],
                 'agent' => $agentData,
                 'purchaseDate' => Carbon::now(),
-                'paymentLink' => $getPaymentGatewayUriResponse['data']['quoteUrl']
+                'paymentLink' => $paymentUri
             ];
         }
 
@@ -662,7 +671,8 @@ class BookingService
         if ($intent == 'pay-now') {
             return ServiceResponse::success(data: [
                 "bookingReference" => $bookingReference,
-                "payNow" => $getPaymentGatewayUriResponse['data']
+                "payNow" => $getPaymentGatewayUriResponse['data'],
+                'is_payment_required' => $isPaymentRequired
             ]);
         }
 
