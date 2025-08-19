@@ -42,7 +42,7 @@ class UserAgentService
 
     public static function getDefaultAgentToken()
     {
-        if (app('platform') ?? null == AgentBranchCode::PETERPANS) {
+        if (app()->bound('platform') && app('platform') == AgentBranchCode::PETERPANS) {
             $branchCode = config('vars.ptx_agent_branch_code');
             $email = config('vars.ptx_agent_email');
             $password = config('vars.ptx_agent_password');
