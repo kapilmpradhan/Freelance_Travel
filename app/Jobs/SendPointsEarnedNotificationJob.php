@@ -37,7 +37,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
     {
         $tokens = $user->fcmTokens();
 
-        $data = ['path' => "/pointHistory"];
+        $data = ['path' => "/pointDetail"];
 
         $notification = [
             'title' => 'Points Earned',
