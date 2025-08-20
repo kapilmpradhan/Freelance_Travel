@@ -19,6 +19,7 @@ class UserOrderCommissionService
                                     )
                                     ->where('is_direct_purchase', $itemType->isDirect)
                                     ->where('user_order_id', null)
+                                    ->where('agent_branch', app('agentType')->agent->branch_code)
                                     ->first();
 
         if ($userOrderCommission) {

@@ -465,6 +465,18 @@ class CartItemService
                 $cartItem->save();
             }
 
+            UserOrderCommission::updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'quote_id' => $quote->id
+                ],
+                [
+                    'agent_branch' => app('agentType')->agent->branch_code,
+                    'percentage' => null,
+                    'points_available' => null,
+                ]
+            );
+
             return ServiceResponse::success();
         } catch (Exception $e) {
             Logger::error('Failed to convert cart items to quote', $e);
