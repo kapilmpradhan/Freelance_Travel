@@ -662,16 +662,17 @@ class BookingService
             intent: $intent,
             emailData: $emailData,
             quoteId: $itemType->typeId,
-            paymentGateway: [
-                "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
-                "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']
-            ]
+            paymentGateway: $isPaymentRequired ?
+                [
+                    "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
+                    "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']
+                ] : null,
         ));
 
         if ($intent == 'pay-now') {
             return ServiceResponse::success(data: [
                 "bookingReference" => $bookingReference,
-                "payNow" => $getPaymentGatewayUriResponse['data'],
+                "payNow" => $isPaymentRequired ? $getPaymentGatewayUriResponse['data'] : null,
                 'is_payment_required' => $isPaymentRequired
             ]);
         }
