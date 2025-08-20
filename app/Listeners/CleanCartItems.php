@@ -7,7 +7,7 @@ use App\Events\OrderPosted;
 use App\Logging\Logger;
 use App\Services\CartItemService;
 
-class CleanCartItems implements ShouldQueue
+class CleanCartItems
 {
     /**
      * Create the event listener.
