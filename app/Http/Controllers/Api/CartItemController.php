@@ -701,7 +701,7 @@ class CartItemController extends BaseController
         $data = $request->all();
         $validate = Validator::make($data, [
             "paymentType" => "required|in:email-quote,pay-now",
-            "pointsApplied" => "nullable|integer"
+            "pointsApplied" => "nullable|numeric"
         ]);
 
         if ($validate->fails()) {
