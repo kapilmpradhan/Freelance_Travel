@@ -353,7 +353,7 @@ class TdmsService
     {
         $url = config('vars.tdms_api_url') . "/validateCart";
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(120)->withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer {$agentToken}"
         ])
