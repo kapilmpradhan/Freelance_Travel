@@ -240,7 +240,7 @@ class CartItem extends Model
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.redeemers'] = 'array|min:1';
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.optionalData'] = 'nullable|array';
 
-        $rule['pointsApplied'] = 'nullable|integer';
+        $rule['pointsApplied'] = 'nullable|numeric';
 
         return $rule;
     }

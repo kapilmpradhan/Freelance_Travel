@@ -730,7 +730,7 @@ class CartItemController extends BaseController
     {
         $data = $request->all();
         $validate = Validator::make($data, [
-            "pointsApplied" => "nullable|integer"
+            "pointsApplied" => "nullable|numeric"
         ]);
 
         if ($validate->fails()) {
