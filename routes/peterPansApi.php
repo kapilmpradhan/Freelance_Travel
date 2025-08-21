@@ -98,6 +98,11 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::get('', [CartItemController::class, 'getQuotes']);
 });
 
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {
+    Route::get('{bookingReference}/items', [CartItemController::class, 'getCartDetailsByBookingReference']);
+    Route::get('{bookingReference}/detail', [CartItemController::class, 'getCustomerOrderDetail']);
+});
+
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {
     Route::put('order/complete', [CartItemController::class, 'completeOrder']);
 });
