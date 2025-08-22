@@ -5,8 +5,6 @@ use App\Http\Controllers\Client\BookingController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
-use Laravel\Telescope\Telescope;
-use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,10 +16,6 @@ use Illuminate\Support\Facades\Auth;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Telescope::auth(function ($request) {
-    return Auth::check() && Auth::user()->is_ops;
-});
 
 
 Route::group(['namespace' => 'App\Http\Controllers\Client', 'prefix' => ""], function () {

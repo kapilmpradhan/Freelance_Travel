@@ -16,7 +16,6 @@
         "laravel/pennant": "^1.16",
         "laravel/sanctum": "^3.2",
         "laravel/socialite": "^5.16",
-        "laravel/telescope": "^5.9",
         "laravel/tinker": "^2.8",
         "league/csv": "^9.21",
         "monolog/monolog": "^3.8",
