@@ -825,6 +825,7 @@ class CartItemController extends BaseController
             }
             CartCustomerDetail::where('user_id', $user->uuid)
                             ->where('is_primary', false)
+                            ->where('is_direct_purchase', true)
                             ->where('is_deleted', false)
                             ->whereNull('user_order_id')
                             ->update(['is_deleted' => true]);
