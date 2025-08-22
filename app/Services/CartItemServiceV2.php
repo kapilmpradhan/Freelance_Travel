@@ -461,7 +461,7 @@ class CartItemServiceV2
             );
         }
 
-        if (empty($productAvailabilities)) {
+        if (empty($productAvailabilities) || isset($productAvailabilities['errors'])) {
             return ServiceResponse::notFound(
                 message: 'Product availability not found for cart item: ' . $cartItem->id,
             );
