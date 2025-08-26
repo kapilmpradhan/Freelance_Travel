@@ -132,7 +132,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         ];
 
         // Mobile notification data
-        $fcmNotificationData = $this->getFcmNotificationData($user, $requiredReport['amount']);
+        $fcmNotificationData = $this->getFcmNotificationData($user, $remainingPoints);
 
         // Send mobile notification
         $fcmService->sendNotification(
