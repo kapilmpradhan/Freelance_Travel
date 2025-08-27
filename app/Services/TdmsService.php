@@ -716,10 +716,8 @@ class TdmsService
         $url = config('vars.tdms_api_url') . "/report/commissionReport";
 
         $params = [
-            'startDate' => $startDate->format('Y-M-d'),
-            'endDate' => $endDate->format('Y-M-d'),
-            'onlyAvailable' => $onlyAvailablePoints,
-            'upTodayDateOnly' => $untilTodayOnly,
+            'onlyAvailable' => true,
+            'upTodayDateOnly' => false,
         ];
 
         $response = Http::asJson()

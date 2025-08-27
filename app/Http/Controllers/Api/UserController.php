@@ -42,7 +42,7 @@ class UserController extends BaseController
         if ($user->is_email_verified) {
             return $this->sendError('Email already verified');
         }
-        SendProfileEmailOtp::dispatch($user->uuid);
+        SendProfileEmailOtp::dispatch($user->uuid, app('platform'));
 
         return $this->sendResponse('Verification email sent');
     }
