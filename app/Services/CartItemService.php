@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\UpdateCartItemAvailabilityJob;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\DTOs\AddToQuote;
@@ -369,13 +370,71 @@ class CartItemService
         }
     }
 
+    public static function getItemAvailability($item, $product, $agent)
+    {
+        $productData = $product->json;
+        $productPricesDetailsId = $item->product_price_details_id;
+        $agentToken = $agent->access_token;
+
+        if ($productData['apiProviderId'] > 0 && $productData['groupFaresForAvailabilityCheck'] == true) {
+            $farePrices = $productData['faresprices'];
+
+            // Find fareTypeId for the given productPricesDetailsId
+            $fareTypeId = null;
+            foreach ($farePrices as $fare) {
+                if ($fare["productPricesDetailsId"] === $productPricesDetailsId) {
+                    $fareTypeId = $fare["fareTypeId"];
+                    break;
+                }
+            }
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
+                agentToken: $agentToken,
+                fareTypeId: $fareTypeId,
+                productId: $product->tdms_product_id,
+                startDate: $item->start_date,
+                endDate: Carbon::parse($item->start_date)->addDays($item->days)->toDateString()
+            );
+
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
+        } else {
+            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                $agentToken,
+                $productPricesDetailsId,
+                $item->time_id,
+                $item->startDate,
+                $item->days,
+            );
+        }
+
+        if (empty($productAvailabilities)) {
+            return ServiceResponse::notFound(
+                message: 'Product availability not found',
+            );
+        }
+
+        if ($item->selected_index >= count($productAvailabilities)) {
+            return ServiceResponse::badRequest(
+                message: 'Selected availability selectedIndex is out of bounds',
+            );
+        }
+
+        return ServiceResponse::success(data: $productAvailabilities[$item->selected_index]);
+    }
+
     public static function getItemsInCartOrQuote($userId, ItemType $itemType)
     {
         $cartItems = CartItem::userItems($userId, $itemType);
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds);
 
-        $cartItems->each(function ($cartItem) use ($products) {
+        $needUpdateItems = [];
+        $cartItems->each(function ($cartItem) use ($products, &$needUpdateItems) {
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
                                         ->where('version', $cartItem->product_version)
                                         ->first();
@@ -386,9 +445,27 @@ class CartItemService
                                         ->first();
                 $isProductLatest = false;
             }
+
+            $availabilityLastUpdatedAt = $cartItem->availability_last_updated_at;
+            if (
+                !$availabilityLastUpdatedAt ||
+                Carbon::parse($availabilityLastUpdatedAt)->isBefore(Carbon::now()->subMinutes(5))
+            ) {
+                $needUpdateItems[] = [
+                    "cartItem" => $cartItem,
+                    "product" => $product
+                ];
+
+                $cartItem->is_availability_latest = false;
+            } else {
+                $cartItem->is_availability_latest = true;
+            }
             $cartItem->product = $product;
             $cartItem->is_product_latest = $isProductLatest;
         });
+        if (!empty($needUpdateItems)) {
+            UpdateCartItemAvailabilityJob::dispatch($needUpdateItems, app('agentType')->agent);
+        }
         return ServiceResponse::success(data: $cartItems);
     }
 
