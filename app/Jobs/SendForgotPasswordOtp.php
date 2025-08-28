@@ -41,6 +41,10 @@ class SendForgotPasswordOtp implements ShouldQueue
                 ? config('vars.notification_to_peterpans_email_address')
                 : config('vars.notification_to_freelance_email_address');
 
+            $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+                ? 'peterpans_forgot_password_template_id'
+                : 'forgot_password_template_id';
+
             $data = [
                 'sender' => $sender,
                 'to' => [
@@ -48,7 +52,7 @@ class SendForgotPasswordOtp implements ShouldQueue
                         'email' => $this->user->email,
                     ]
                 ],
-                'templateId' => (int) config('vars.forgot_password_template_id'),
+                'templateId' => (int) config('vars.' . $templateIdVarName),
                 'params' => [
                     'firstName' => $this->user->first_name,
                     'otp' => $this->otp,

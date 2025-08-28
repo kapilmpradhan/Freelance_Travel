@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -56,6 +57,10 @@ class SendOrderCompleteEmail implements ShouldQueue
             return isset($order['bookingReference']) && $order['bookingReference'] === $bookingReference;
         })[0];
 
+        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+            ? 'peterpans_order_complete_template_id'
+            : 'order_complete_template_id';
+
         $this->data['totalCharged'] = round($requiredOrder['paidAmount'], 2);
         $customerData = [
             'sender' => $sender,
@@ -64,7 +69,7 @@ class SendOrderCompleteEmail implements ShouldQueue
                     'email' => $this->data['redeemers'][0]['emailAddress']
                 ]
             ],
-            'templateId' => (int) config('vars.order_complete_template_id'),
+            'templateId' => (int) config('vars.' . $templateIdVarName),
             'params' => $this->data
         ];
 

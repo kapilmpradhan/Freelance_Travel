@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use App\Models\User;
 use App\Services\BrevoEmailService;
@@ -40,8 +41,8 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $data = ['path' => "/pointDetail"];
 
         $notification = [
-            'title' => 'Points Earned',
-            'body' => "You just earned {$points} points."
+            'title' => 'Points will be earned',
+            'body' => "You will earn {$points} points from last order."
         ];
 
         $fcmNotificationData = [
@@ -115,6 +116,11 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
 
         // Email notification data
         $sender = BrevoEmailService::platformSenderDetail($this->platform);
+
+        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+            ? 'peterpans_points_earned_template_id'
+            : 'points_earned_template_id';
+
         $customerData = [
             'sender' => $sender,
             'to' => [
@@ -122,7 +128,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
                     'email' => $user->email
                 ]
             ],
-            'templateId' => (int) config('vars.points_earned_template_id'),
+            'templateId' => (int) config('vars.' . $templateIdVarName),
             'params' => [
                 'bookingReference' => $bookingReference,
                 'earnedPoints' => $remainingPoints,

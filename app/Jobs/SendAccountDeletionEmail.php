@@ -36,10 +36,12 @@ class SendAccountDeletionEmail implements ShouldQueue
             $mailFromName = config('vars.mail_from_name');
             $mailFromAddress = config('vars.mail_from_address');
             $supportEmail = config('vars.notification_to_freelance_email_address');
+            $templateId = config('vars.account_deletion_template_id');
         } elseif ($this->platform == AgentBranchCode::PETERPANS) {
             $mailFromName = config('vars.peterpans_mail_from_name');
             $mailFromAddress = config('vars.peterpans_mail_from_address');
             $supportEmail = config('vars.notification_to_freelance_email_address');
+            $templateId = config('vars.peterpans_account_deletion_template_id');
         }
 
         $emailData = [
@@ -51,7 +53,7 @@ class SendAccountDeletionEmail implements ShouldQueue
                     ['email' => $this->user->email],
                     ['email' => $supportEmail]
                 ],
-            'templateId' => (int) config('vars.account_deletion_template_id'),
+            'templateId' => (int) $templateId,
             'params' => [
                 'firstName' => $this->user->first_name ?? 'user',
                 'email' => $this->user->email,

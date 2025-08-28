@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -51,6 +52,11 @@ class SendProfileEmailOtp implements ShouldQueue
             }
 
             $sender = BrevoEmailService::platformSenderDetail($this->platform);
+
+            $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+                ? 'peterpans_verify_email_template_id'
+                : 'verify_email_template_id';
+
             $data = [
                 'sender' => $sender,
                 'to' => [
@@ -58,7 +64,7 @@ class SendProfileEmailOtp implements ShouldQueue
                         'email' => $email
                     ]
                 ],
-                'templateId' => (int) config('vars.verify_email_template_id'),
+                'templateId' => (int) config('vars.' . $templateIdVarName),
                 'params' => [
                     'firstName' => $user->first_name,
                     'otp' => $otp['otpDetails']->otp,

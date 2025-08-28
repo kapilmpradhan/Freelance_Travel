@@ -16,6 +16,12 @@ return [
     'order_complete_template_id' => env('BREVO_ORDER_COMPLETE_TEMPLATE_ID'),
     'account_deletion_template_id' => env('BREVO_ACCOUNT_DELETION_TEMPLATE_ID'),
     'points_earned_template_id' => env('BREVO_POINTS_EARNED_NOTIFICATION_TEMPLATE_ID'),
+    'peterpans_verify_email_template_id' => env('BREVO_PETERPANS_VERIFY_EMAIL_TEMPLATE_ID'),
+    'peterpans_forgot_password_template_id' => env('BREVO_PETERPANS_FORGOT_PASSWORD_TEMPLATE_ID'),
+    'peterpans_booking_notification_template_id' => env('BREVO_PETERPANS_BOOKING_NOTIFICATION_TEMPLATE_ID'),
+    'peterpans_order_complete_template_id' => env('BREVO_PETERPANS_ORDER_COMPLETE_TEMPLATE_ID'),
+    'peterpans_account_deletion_template_id' => env('BREVO_PETERPANS_ACCOUNT_DELETION_TEMPLATE_ID'),
+    'peterpans_points_earned_template_id' => env('BREVO_PETERPANS_POINTS_EARNED_NOTIFICATION_TEMPLATE_ID'),
 
     'sso_type_email' => env('SSO_TYPE_EMAIL'),
     'sso_type_google' => env('SSO_TYPE_GOOGLE'),
