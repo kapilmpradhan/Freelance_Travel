@@ -45,6 +45,10 @@ class SendForgotPasswordOtp implements ShouldQueue
                 ? 'peterpans_forgot_password_template_id'
                 : 'forgot_password_template_id';
 
+            $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+                ? 'peterpans_forgot_password_template_id'
+                : 'forgot_password_template_id';
+
             $data = [
                 'sender' => $sender,
                 'to' => [

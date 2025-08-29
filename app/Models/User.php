@@ -190,9 +190,12 @@ class User extends Authenticatable
                     ->first();
     }
 
-    public function fcmTokens()
+    public function fcmTokens(string|null $platform = null)
     {
-        return $this->hasMany(FirebaseFcmToken::class, 'user_id', 'uuid')->pluck('token')->toArray();
+        return $this->hasMany(FirebaseFcmToken::class, 'user_id', 'uuid')
+            ->when(!is_null($platform), function ($query) use ($platform) {
+                $query->where('platform', $platform);
+            })->pluck('token')->toArray();
     }
 
     public static function getAllUsers()

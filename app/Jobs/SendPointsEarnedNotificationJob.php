@@ -9,7 +9,6 @@ use App\Services\BrevoEmailService;
 use App\Services\FcmService;
 use App\Services\IEmailService;
 use App\Services\TdmsService;
-use App\Services\UserAgentService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,22 +25,27 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
 
     protected $data;
     protected $platform;
+    protected $agent;
 
-    public function __construct($data, $platform)
+    public function __construct($data, $platform, $agent)
     {
         $this->data = $data;
         $this->platform = $platform;
+        $this->agent = $agent;
     }
 
     // Prepare mobile notification data
     public function getFcmNotificationData($user, $points)
     {
-        $tokens = $user->fcmTokens();
+        $tokens = $user->fcmTokens($this->platform);
+        if (empty($tokens)) {
+            return null;
+        }
 
         $data = ['path' => "/pointDetail"];
 
         $notification = [
-            'title' => 'Points will be earned',
+            'title' => 'Points You Will Earn',
             'body' => "You will earn {$points} points from last order."
         ];
 
@@ -76,8 +80,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $userId = $this->data->user_id;
         $user = User::where('uuid', $userId)->first();
 
-        $agentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
-        $agentToken = $agentResponse->data->access_token;
+        $agentToken = $this->agent->access_token;
 
         $getCommissionReportResponse = TdmsService::getCommissionReport(
             agentToken: $agentToken,
@@ -104,13 +107,9 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             return;
         }
 
-        if (!empty($requiredReport['claimDetails'])) {
-            $remainingPoints = $requiredReport['amount'] - $requiredReport['claimDetails'][0]['claimedAmount'];
-        } else {
-            $remainingPoints = $requiredReport['amount'];
-        }
+        $balance = (float) $requiredReport['balance'];
 
-        if ($remainingPoints <= 0) {
+        if ($balance <= 0) {
             return;
         }
 
@@ -131,22 +130,23 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             'templateId' => (int) config('vars.' . $templateIdVarName),
             'params' => [
                 'bookingReference' => $bookingReference,
-                'earnedPoints' => $remainingPoints,
+                'earnedPoints' => $balance,
                 'availableDate' => $requiredReport['availableDate'],
                 'platform' => $sender['name'],
             ]
         ];
 
         // Mobile notification data
-        $fcmNotificationData = $this->getFcmNotificationData($user, $remainingPoints);
-
-        // Send mobile notification
-        $fcmService->sendNotification(
-            token: $fcmNotificationData['token'],
-            notification: $fcmNotificationData['notification'],
-            data: $fcmNotificationData['data'],
-            topic: $fcmNotificationData['topic']
-        );
+        $fcmNotificationData = $this->getFcmNotificationData($user, $balance);
+        if (!is_null($fcmNotificationData)) {
+            // Send mobile notification
+            $fcmService->sendNotification(
+                token: $fcmNotificationData['token'],
+                notification: $fcmNotificationData['notification'],
+                data: $fcmNotificationData['data'],
+                topic: $fcmNotificationData['topic']
+            );
+        }
 
         // Send email notification
         $emailService->sendMail($customerData);

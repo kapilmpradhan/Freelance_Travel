@@ -58,8 +58,9 @@ class UserService
     public static function checkIfFcmTokenExistsForUser($user, $token)
     {
         $fcmTokenExist = FirebaseFcmToken::where('user_id', $user->uuid)
-                                    ->where('token', $token)
-                                    ->exists();
+                            ->where('platform', app('platform'))
+                            ->where('token', $token)
+                            ->exists();
         if ($fcmTokenExist) {
             return ServiceResponse::success();
         }

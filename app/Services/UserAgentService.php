@@ -11,6 +11,17 @@ use Exception;
 
 class UserAgentService
 {
+    public static function getUserAgent($userId)
+    {
+        $agent = UserAgent::where('user_id', $userId)
+            ->first();
+        if ($agent) {
+            return ServiceResponse::success(self::refreshAgent($agent));
+        }
+
+        return ServiceResponse::notFound();
+    }
+
     public static function refreshAgent(UserAgent $agent): ?UserAgent
     {
         if (
