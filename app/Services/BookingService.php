@@ -469,6 +469,15 @@ class BookingService
             );
 
             if ($updateItemAvailabilityResponse->isError()) {
+                if ($itemType->forDiscount) {
+                    return ServiceResponse::success(
+                        data: [
+                            'branch' => $agent->branch_code,
+                            'commission' => 0,
+                            'pointsAvailable' => 0,
+                        ],
+                    );
+                }
                 return $updateItemAvailabilityResponse;
             }
         }

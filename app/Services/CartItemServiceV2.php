@@ -424,6 +424,12 @@ class CartItemServiceV2
             ->where('version', $cartItem->product_version)
             ->first();
 
+        if (!$productDetails) {
+            return ServiceResponse::notFound(
+                message: 'Product not found for cart item: ' . $cartItem->id,
+            );
+        }
+
         $product = $productDetails->json;
         if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
             $farePrices = $product['faresprices'];
