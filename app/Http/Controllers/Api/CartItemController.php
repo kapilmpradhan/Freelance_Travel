@@ -164,7 +164,7 @@ class CartItemController extends BaseController
 
         $validateQuoteTitle = Validator::make(
             ['quoteTitle' => $data['quoteTitle']],
-            ['quoteTitle' => 'required|string|max:200']
+            ['quoteTitle' => 'required|string|unique:quotes,title|max:200']
         );
 
         if ($validateQuoteTitle->fails()) {
