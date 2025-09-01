@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Enums\AgentBranchCode;
-use App\Services\BrevoEmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -35,7 +34,6 @@ class SendForgotPasswordOtp implements ShouldQueue
     public function handle(IEmailService $emailService)
     {
         try {
-
             $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
                 ? 'peterpans_forgot_password_template_id'
                 : 'forgot_password_template_id';
