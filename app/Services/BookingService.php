@@ -708,13 +708,17 @@ class BookingService
         ItemType $itemType,
         bool $processAsQuote = true
     ): ?ServiceResponse {
-        return self::basePostOrder(
-            userId: $userId,
-            intent: $intent,
-            pointsApplied: $pointsApplied,
-            itemType: $itemType,
-            processAsQuote: $processAsQuote
-        );
+        try {
+            return self::basePostOrder(
+                userId: $userId,
+                intent: $intent,
+                pointsApplied: $pointsApplied,
+                itemType: $itemType,
+                processAsQuote: $processAsQuote
+            );
+        } catch (ServiceException $e) {
+            throw $e;
+        }
     }
 
     public static function completeOrder(string $bookingReference)
