@@ -58,13 +58,13 @@ class SendNotificationToInactiveUsers implements ShouldQueue
 
             $discountData = $availableDiscount->data;
 
-            $notification = [
+            $data = [
                 'title' => $discountData['title'],
                 'body' => $discountData['description']
             ];
 
             $fcmService->sendNotification(
-                notification: $notification,
+                data: $data,
                 topic: 'inactive_users',
             );
 

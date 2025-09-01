@@ -40,16 +40,14 @@ class SendBookingNotification implements ShouldQueue
         $user = User::find($item->user_id);
         $tokens = $user->fcmTokens();
 
-        $data = ['path' => "/booking/{$bookingReference}/{$item->tdms_product_id}"];
-
-        $notification = [
+        $data = [
             'title' => 'Upcoming Booking Notification',
-            'body' => "You have an upcoming booking."
+            'body' => "You have an upcoming booking.",
+            'path' => "/booking/{$bookingReference}/{$item->tdms_product_id}"
         ];
 
         $fcmNotificationData = [
-            "notification" => $notification,
-            "data" => $data
+            "data" => $data,
         ];
 
         if (count($tokens) > 1) {
@@ -158,7 +156,6 @@ class SendBookingNotification implements ShouldQueue
                 foreach ($fcmNotificationData as $data) {
                     $fcmService->sendNotification(
                         token: $data['token'],
-                        notification: $data['notification'],
                         data: $data['data'],
                         topic: $data['topic']
                     );

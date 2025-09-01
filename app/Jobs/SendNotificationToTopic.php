@@ -41,15 +41,15 @@ class SendNotificationToTopic implements ShouldQueue
     public function handle(): void
     {
         Logger::info("Sending notification to topic '{$this->topic}'");
-        $notification = [
+        $data = [
             'title' => $this->title,
-            'body' => $this->description
+            'body' => $this->description,
+            'data' => $this->data ?? null
         ];
 
         $this->fcmService->sendNotification(
             topic: $this->topic,
-            notification: $notification,
-            data: $this->data ?? null
+            data: $data,
         );
 
         Logger::info("Notification sent successfully to topic '{$this->topic}'");

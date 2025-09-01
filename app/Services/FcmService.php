@@ -93,20 +93,16 @@ class FcmService
         }
     }
 
-    public function sendNotification($notification, $token = null, $data = null, $topic = null)
+    public function sendNotification($data, $token = null, $topic = null)
     {
         $projectId = config('firebase.project_id');
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
         $payload = [
             'message' => [
-                'notification' => $notification,
+                'data' => $data,
             ]
         ];
-
-        if ($data) {
-            $payload['message']['data'] = $data;
-        }
 
         if ($token) {
             $payload['message']['token'] = $token;

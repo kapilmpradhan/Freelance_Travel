@@ -42,16 +42,14 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             return null;
         }
 
-        $data = ['path' => "/pointDetail"];
-
-        $notification = [
+        $data = [
             'title' => 'Points You Will Earn',
-            'body' => "You will earn {$points} points from last order."
+            'body' => "You will earn {$points} points from last order.",
+            'path' => "/pointDetail"
         ];
 
         $fcmNotificationData = [
-            "notification" => $notification,
-            "data" => $data
+            "data" => $data,
         ];
 
         if (count($tokens) > 1) {
@@ -142,7 +140,6 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             // Send mobile notification
             $fcmService->sendNotification(
                 token: $fcmNotificationData['token'],
-                notification: $fcmNotificationData['notification'],
                 data: $fcmNotificationData['data'],
                 topic: $fcmNotificationData['topic']
             );
