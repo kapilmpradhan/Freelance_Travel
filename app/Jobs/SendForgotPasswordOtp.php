@@ -35,22 +35,12 @@ class SendForgotPasswordOtp implements ShouldQueue
     public function handle(IEmailService $emailService)
     {
         try {
-            // Prepare the data for sending via the Brevo API
-            $sender = BrevoEmailService::platformSenderDetail($this->platform);
-            $supportEmail = $this->platform == AgentBranchCode::PETERPANS
-                ? config('vars.notification_to_peterpans_email_address')
-                : config('vars.notification_to_freelance_email_address');
-
-            $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
-                ? 'peterpans_forgot_password_template_id'
-                : 'forgot_password_template_id';
 
             $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
                 ? 'peterpans_forgot_password_template_id'
                 : 'forgot_password_template_id';
 
             $data = [
-                'sender' => $sender,
                 'to' => [
                     [
                         'email' => $this->user->email,
@@ -59,9 +49,7 @@ class SendForgotPasswordOtp implements ShouldQueue
                 'templateId' => (int) config('vars.' . $templateIdVarName),
                 'params' => [
                     'firstName' => $this->user->first_name,
-                    'otp' => $this->otp,
-                    'platform' => $sender['name'],
-                    'supportEmail' => $supportEmail,
+                    'otp' => $this->otp
                 ],
             ];
 
