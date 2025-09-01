@@ -7,6 +7,7 @@ use App\DTOs\ProductOrderData;
 use App\DTOs\RedeemerBookingsOrderData;
 use App\DTOs\RedeemerOrderData;
 use App\DTOs\RedeemerProductsOrderData;
+use App\Enums\AgentBranchCode;
 use App\Events\CompleteOrderEvent;
 use App\Events\OrderPosted;
 use App\Features\OrderDataValidationFeature;
@@ -55,7 +56,18 @@ class BookingService
         $availablePaymentMethods = TdmsService::getPaymentMethods($agentToken);
 
         foreach ($availablePaymentMethods as $paymentMethod) {
-            if ($paymentMethod['supportsOnlinePayment']) {
+            $supportsOnlinePayment = $paymentMethod['supportsOnlinePayment'] ?? false;
+            $redirectUrl = $paymentMethod['paymentReturnUrl'] ?? null;
+
+            if (app('platform') == AgentBranchCode::PETERPANS) {
+                $platformName = AgentBranchCode::PETERPANS_NAME;
+            } elseif (app('platform') == AgentBranchCode::DEFAULT) {
+                $platformName = AgentBranchCode::DEFAULT_NAME;
+            } else {
+                return null;
+            }
+
+            if ($supportsOnlinePayment && str_contains($redirectUrl, strtolower($platformName))) {
                 return $paymentMethod;
             }
         }
