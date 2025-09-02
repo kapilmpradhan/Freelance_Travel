@@ -319,7 +319,9 @@ class ProductCategoryService
             $result = [];
             $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
             foreach ($productsByLabels as $label => $productIds) {
-                $products = Product::whereIn('tdms_product_id', $productIds)->get();
+                $products = Product::whereIn('tdms_product_id', $productIds)
+                                ->orderByRaw('FIELD(tdms_product_id, ' . implode(',', $productIds) . ')')
+                                ->get();
 
                 if ($productFilter->filterBy == 'destination') {
                     $destinationLabel = array_filter($regions, function ($region) use ($label) {

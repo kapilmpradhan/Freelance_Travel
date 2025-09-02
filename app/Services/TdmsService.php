@@ -476,7 +476,9 @@ class TdmsService
             $query = "$query$type=$ids";
         }
         $url = config('vars.tdms_api_url') .
-            "/products?countries={$countryId}&$query&records-start=$recordStart&records-length=$recordsLength";
+            "/products?countries={$countryId}" .
+            "&$query&records-start=$recordStart&records-length=$recordsLength" .
+            "&sortBy=ranking&sortDirection=asc";
 
         $retryCount = 0;
         while ($retryCount < 3) {
@@ -566,7 +568,10 @@ class TdmsService
 
     public static function getProductsByRegion($agentToken, $countryId, $regionId)
     {
-        $url = config('vars.tdms_api_url') . "/products?countries={$countryId}&regions={$regionId}";
+        $url = config('vars.tdms_api_url') .
+            "/products?countries={$countryId}" .
+            "&regions={$regionId}" .
+            "&sortBy=ranking&sortDirection=asc";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
