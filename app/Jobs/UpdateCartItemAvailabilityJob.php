@@ -44,7 +44,7 @@ class UpdateCartItemAvailabilityJob implements ShouldQueue
 
             $availabilityResponse = CartItemService::getItemAvailability($cartItem, $product, $this->agent);
             if ($availabilityResponse->isError()) {
-                Logger::error('Error updating availability for item: ' . $item->id);
+                Logger::error('Error updating availability for item: ' . $item['cartItem']->id);
             } else {
                 $cartItem->availability = $availabilityResponse->data;
                 $cartItem->availability_last_updated_at = Carbon::now();

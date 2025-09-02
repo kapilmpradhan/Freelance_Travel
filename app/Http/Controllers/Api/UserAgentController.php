@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
 use App\Services\UserAgentService;
+use Laravel\Pennant\Feature;
 
 class UserAgentController extends BaseController
 {
@@ -178,6 +179,10 @@ class UserAgentController extends BaseController
     public function upgradeToAgent(Request $request, TdmsService $tdmsService): JsonResponse
     {
         $user = $request->user; /** @var User $user */
+
+        if (Feature::for($user)->active('tester')) {
+            return $this->sendError('This test account cannot be upgraded to an agent.');
+        }
 
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($user->uuid);
 

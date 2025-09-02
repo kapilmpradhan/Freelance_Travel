@@ -23,6 +23,7 @@ use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
 use Carbon\Carbon;
 use Database\Factories\CartItemFactory;
+use Laravel\Pennant\Feature;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -709,6 +710,13 @@ class BookingService
         bool $processAsQuote = true
     ): ?ServiceResponse {
         try {
+            if (
+                config('app.env') == 'staging' &&
+                !Feature::for(User::find($userId))->active('tester') &&
+                !$itemType->forDiscount
+            ) {
+                return ServiceResponse::badRequest('Booking is enabled for testers only');
+            }
             return self::basePostOrder(
                 userId: $userId,
                 intent: $intent,
