@@ -12,6 +12,7 @@ use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
+use Google\Service\TrafficDirectorService\NullMatch;
 use Illuminate\Support\Str;
 
 class CartItemServiceV2
@@ -294,7 +295,7 @@ class CartItemServiceV2
         array $selectedAvailableIndices,
         ItemType $itemType,
         array $productPricesDetails,
-        AddToQuote $addToQuote = null,
+        AddToQuote|null $addToQuote = null,
         bool $isDryRun = false,
     ) {
         try {
@@ -391,7 +392,7 @@ class CartItemServiceV2
         }
     }
 
-    public static function updateItemBookingData($data)
+    public static function updateItemBookingDataV2($data)
     {
         $cartItemIds = array_map(function ($item) {
             return $item['cartItemId'];
@@ -399,6 +400,7 @@ class CartItemServiceV2
 
         $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
 
+        $isQuantityChanged = false;
         DB::beginTransaction();
         foreach ($data as $item) {
             $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
@@ -408,6 +410,11 @@ class CartItemServiceV2
                 $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
                 $bookingDatas[] = $bookingData;
             }
+
+            if ($cartItem->booking_quantity != $item['quantity']) {
+                $isQuantityChanged = true;
+            }
+
             $cartItem->update([
                 "booking_quantity" => $item['quantity'],
                 "booking_data" => $bookingDatas
@@ -415,7 +422,62 @@ class CartItemServiceV2
         };
         DB::commit();
 
-        return ServiceResponse::success('Cart items updated successfully');
+        return ServiceResponse::success(
+            message: 'Cart items updated successfully',
+            data: ['isQuantityChanged' => $isQuantityChanged]
+        );
+    }
+
+    public static function updateItemBookingData($data)
+    {
+        $cartItemIds = array_map(function ($item) {
+            return $item['cartItemId'];
+        }, $data);
+
+        $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
+
+        $isQuantityChanged = false;
+        DB::beginTransaction();
+        foreach ($data as $item) {
+            $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+
+            $bookingDatas = [];
+            $numpax = $item['quantity'] / count($item['bookingData']);
+            foreach ($item['bookingData'] as $bookingData) {
+                $redeemers = array_slice($bookingData['redeemers'] ?? [], 0, $numpax);
+                if (isset($bookingData['redeemers'])) {
+                    if ($numpax > 1 && count($redeemers) < $numpax) {
+                        while (count($redeemers) < $numpax) {
+                            $redeemers[] = $redeemers[0];
+                        }
+                    }
+                    foreach ($redeemers as $redeemer) {
+                        $bookingData['redeemers'] = [$redeemer];
+                        $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                        $bookingDatas[] = $bookingData;
+                    }
+                } else {
+                    $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                    $bookingData['redeemers'] = [$redeemers];
+                    $bookingDatas[] = $bookingData;
+                }
+            }
+
+            if ($cartItem->booking_quantity != $item['quantity']) {
+                $isQuantityChanged = true;
+            }
+
+            $cartItem->update([
+                "booking_quantity" => $item['quantity'],
+                "booking_data" => $bookingDatas
+            ]);
+        };
+        DB::commit();
+
+        return ServiceResponse::success(
+            message: 'Cart items updated successfully',
+            data: ['isQuantityChanged' => $isQuantityChanged]
+        );
     }
 
     public static function updateAvailabilityBeforeOrder($agentToken, $cartItem)

@@ -72,6 +72,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
     Route::get('items', [CartItemController::class, 'getItemsInCart']);
     Route::put('items/v2', [CartItemController::class, 'setBookingDataV2']);
+    Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('/remove/items', [CartItemController::class, 'removeItemsFromCart']);
     Route::get('redeemers', [RedeemerController::class, 'listRedeemers']);
     Route::post('redeemers', [RedeemerController::class, 'addRedeemer']);

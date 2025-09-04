@@ -191,7 +191,6 @@ class CartItem extends Model
             '*.cartItemId' => 'required|integer',
             '*.quantity' => 'required|integer',
             '*.bookingData' => 'required|array',
-            '*.bookingData.*.quantityIndex' => 'required|integer',
             '*.bookingData.*.timeId' => 'required|string',
             '*.bookingData.*.commences' => 'nullable|string',
             '*.bookingData.*.pickupId' => 'nullable|string',

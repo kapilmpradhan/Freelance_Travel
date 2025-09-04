@@ -255,7 +255,7 @@ class CartItemController extends BaseController
         }
     }
 
-    public function addExistingCartItemsToQuote(Request $request, string $quoteId = null): JsonResponse
+    public function addExistingCartItemsToQuote(Request $request, string|null $quoteId = null): JsonResponse
     {
         if ($quoteId === null) {
             $data = $request->all();
@@ -415,48 +415,23 @@ class CartItemController extends BaseController
         }
     }
 
-    public function setBookingData(Request $request, int $cartItemId): JsonResponse
+    public function setBookingData(Request $request): JsonResponse
     {
-        $userId = $request->user->uuid;
-        $data = $request->all();
-        $validator = Validator::make($data, CartItem::updateItemBookingDataRule());
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        try {
-            $updateItemBookingDataResponse = CartItemService::updateItemBookingData(
-                userId: $userId,
-                cartItemId: $cartItemId,
-                quantity: $validator->validated()['quantity'],
-                bookingData: $validator->validated()['bookingData'] ?? [],
-            );
-            return $this->sendResponseFromService($updateItemBookingDataResponse);
-        } catch (Exception $e) {
-            $errorMessage = 'Failed to set booking data';
-            Logger::error($errorMessage, $e);
-            return $this->sendError($errorMessage);
-        }
-    }
-
-    public function setBookingDataV2(Request $request): JsonResponse
-    {
-        $userId = $request->user->uuid;
+        $user = $request->user;
         $quoteId = $request->query('quoteId');
 
         if ($quoteId) {
             $itemType = ItemType::quote($quoteId);
-            $cartItems = CartItem::userQuoteItems($userId, $itemType);
+            $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
         } else {
             $itemType = ItemType::cart();
-            $cartItems = CartItem::userCartItems($userId);
+            $cartItems = CartItem::userCartItems($user->uuid);
         }
 
         $data = json_decode($request->getContent(), true);
         $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
 
-        $validator->after(function ($validator) use ($data, $userId, $quoteId, $itemType, $cartItems) {
+        $validator->after(function ($validator) use ($data, $user, $itemType, $cartItems) {
             $cartItemIds = $cartItems->pluck('id')->toArray();
             if (empty($cartItemIds)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
@@ -465,7 +440,7 @@ class CartItemController extends BaseController
             $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
             $products = Product::whereIn('tdms_product_id', $productIds);
 
-            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($user->uuid, $itemType);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
             foreach ($data as $item) {
@@ -498,25 +473,24 @@ class CartItemController extends BaseController
                     );
                 }
 
-
-                // Check if quantityIndex in order
-                $quantityIndices = array_column($item['bookingData'], 'quantityIndex');
-                $expectedIndices = range(1, count($quantityIndices));
-                if ($quantityIndices !== $expectedIndices) {
-                    $validator->errors()->add(
-                        $item['cartItemId'] . '.bookingData',
-                        'quantityIndex values must be sequential starting from 1.'
-                    );
-                }
-
                 // Check if number of bookingData provided is same as quantity
                 if (
-                    isset($item['quantity']) && isset($item['bookingData'])
-                    && $item['quantity'] !== count($item['bookingData'])
+                    (int) $fare['numPax'] == 1
+                    && isset($item['quantity']) && isset($item['bookingData'])
+                    && $item['quantity'] != count($item['bookingData'])
                 ) {
                     $validator->errors()->add(
                         $item['cartItemId'] . '.bookingData',
                         'bookingData items count should be same as quantity'
+                    );
+                } elseif (
+                    (int) $fare['numPax'] > 1
+                    && isset($item['quantity']) && isset($item['bookingData'])
+                    && count($item['bookingData']) != $item['quantity'] / (int) $fare['numPax']
+                ) {
+                    $validator->errors()->add(
+                        $item['cartItemId'] . '.bookingData',
+                        'Invalid number of bookingData items provided'
                     );
                 }
 
@@ -540,14 +514,133 @@ class CartItemController extends BaseController
 
         try {
             $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingData(
-                data: $data
+                data: $validator->validated()
             );
-            $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType($userId, $itemType);
-            if ($orderCommissionResponse->isSuccess()) {
-                $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
-                $orderCommission->percentage = null;
-                $orderCommission->points_available = null;
-                $orderCommission->save();
+            $isQuantityChanged = $updateItemBookingDataResponse->data['isQuantityChanged'];
+            if ($isQuantityChanged) {
+                $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+                    $user->uuid,
+                    $itemType
+                );
+                if ($orderCommissionResponse->isSuccess()) {
+                    $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
+                    $orderCommission->percentage = null;
+                    $orderCommission->points_available = null;
+                    $orderCommission->save();
+                }
+            }
+
+            return $this->sendResponseFromService($updateItemBookingDataResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to set booking data';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function setBookingDataV2(Request $request): JsonResponse
+    {
+        $user = $request->user;
+        $quoteId = $request->query('quoteId');
+
+        if ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+            $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
+        } else {
+            $itemType = ItemType::cart();
+            $cartItems = CartItem::userCartItems($user->uuid);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
+
+        $validator->after(function ($validator) use ($data, $user, $itemType, $cartItems) {
+            $cartItemIds = $cartItems->pluck('id')->toArray();
+            if (empty($cartItemIds)) {
+                $validator->errors()->add('cartItems', 'No cart items found');
+                return;
+            }
+            $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
+            $products = Product::whereIn('tdms_product_id', $productIds);
+
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($user->uuid, $itemType);
+            $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
+
+            foreach ($data as $item) {
+                $cartItem = $cartItems->where('id', $item['cartItemId'])->first();
+                // Check if cartItemId provided exists in user cart
+                if (!$cartItem) {
+                    $validator->errors()->add(
+                        $item['cartItemId'],
+                        'Cart item not found'
+                    );
+                    continue;
+                };
+
+                $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)->first();
+                $farePrices = $product->json['faresprices'];
+
+                foreach ($farePrices as $fare) {
+                    if ((string) $fare["productPricesDetailsId"] === (string) $cartItem->product_price_details_id) {
+                        break;
+                    }
+                }
+
+                if (
+                    isset($fare['fareQtyRestrictions'])
+                    && (int) $item['quantity'] % (int) $fare['fareQtyRestrictions'] != 0
+                ) {
+                    $validator->errors()->add(
+                        $item['cartItemId'],
+                        'Quantity must be multiple of ' . $fare['fareQtyRestrictions']
+                    );
+                }
+
+                // Check if number of bookingData provided is same as quantity
+                if (
+                    isset($item['quantity']) && isset($item['bookingData'])
+                    && $item['quantity'] !== count($item['bookingData'])
+                ) {
+                    $validator->errors()->add(
+                        $item['cartItemId'] . '.bookingData',
+                        'Invalid number of bookingData items provided'
+                    );
+                }
+
+                // Check if redeemers with provided id are available
+                foreach ($item['bookingData'] as $bookingData) {
+                    $notAvailableRedeemers = array_diff($bookingData['redeemers'] ?? [], $userRedeemerIds);
+                    if (!empty($notAvailableRedeemers)) {
+                        $bookingDataIndex = array_search($bookingData, $item['bookingData']);
+                        $validator->errors()->add(
+                            $item['cartItemId'] . '.bookingData.redeemers.' . $bookingDataIndex,
+                            "redeemer id" . json_encode($notAvailableRedeemers) . " not available"
+                        );
+                    }
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        try {
+            $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingDataV2(
+                data: $validator->validated()
+            );
+            $isQuantityChanged = $updateItemBookingDataResponse->data['isQuantityChanged'];
+            if ($isQuantityChanged) {
+                $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
+                    $user->uuid,
+                    $itemType
+                );
+                if ($orderCommissionResponse->isSuccess()) {
+                    $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
+                    $orderCommission->percentage = null;
+                    $orderCommission->points_available = null;
+                    $orderCommission->save();
+                }
             }
 
             return $this->sendResponseFromService($updateItemBookingDataResponse);
