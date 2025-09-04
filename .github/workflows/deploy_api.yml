@@ -153,6 +153,7 @@ jobs:
         echo 'Getting into EC2 server'
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
           cd ~/deploy/api
+          echo "$DOCKER_HUB_PASSWORD" | docker login --username $DOCKER_HUB_USERNAME --password-stdin
           docker-compose -f api-compose.yml down
           echo "removing previous images"
           docker rmi -f $(docker images freelanctravel/ft-api --format "{{.ID}}")
