@@ -429,7 +429,7 @@ class CartItemController extends BaseController
         }
 
         $data = json_decode($request->getContent(), true);
-        $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
+        $validator = Validator::make($data, CartItem::updateItemBookingDataRule());
 
         $validator->after(function ($validator) use ($data, $user, $itemType, $cartItems) {
             $cartItemIds = $cartItems->pluck('id')->toArray();

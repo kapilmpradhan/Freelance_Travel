@@ -175,13 +175,18 @@ class CartItem extends Model
     public static function updateItemBookingDataRule()
     {
         return [
-            'quantity' => 'required|integer',
-            'bookingData' => 'array',
-            'bookingData.optionalData' => 'array',
-            'bookingData.pickupId' => 'string',
-            'bookingData.pickupLocation' => 'string',
-            'bookingData.dropoffId' => 'string',
-            'bookingData.dropoffLocation' => 'string'
+            '*.cartItemId' => 'required|integer',
+            '*.quantity' => 'required|integer',
+            '*.bookingData' => 'required|array',
+            '*.bookingData.*.timeId' => 'required|string',
+            '*.bookingData.*.commences' => 'nullable|string',
+            '*.bookingData.*.pickupId' => 'nullable|string',
+            '*.bookingData.*.pickupLocation' => 'nullable|string',
+            '*.bookingData.*.dropoffId' => 'nullable|string',
+            '*.bookingData.*.dropoffLocation' => 'nullable|string',
+            '*.bookingData.*.redeemers' => 'array',
+            '*.bookingData.*.redeemers.*' => 'integer|min:1',
+            '*.bookingData.*.optionalData' => 'nullable|array',
         ];
     }
 
@@ -191,6 +196,7 @@ class CartItem extends Model
             '*.cartItemId' => 'required|integer',
             '*.quantity' => 'required|integer',
             '*.bookingData' => 'required|array',
+            '*.bookingData.*.quantityIndex' => 'required|integer',
             '*.bookingData.*.timeId' => 'required|string',
             '*.bookingData.*.commences' => 'nullable|string',
             '*.bookingData.*.pickupId' => 'nullable|string',
