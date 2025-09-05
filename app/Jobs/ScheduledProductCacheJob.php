@@ -60,41 +60,31 @@ class ScheduledProductCacheJob implements ShouldQueue
 
         while ($productsInBatch->count() > 0) {
             Logger::info('Processing batch number: ' . $batchNumber);
-            $productsLastUpdateDate = ProductService::getProductsLastUpdateFromApi(
-                $agentToken,
-                $productsInBatch->toArray()
-            );
             foreach ($productsInBatch as $tdmsProductId) {
-                $tdmsProductLastUpdateDate = $productsLastUpdateDate[$tdmsProductId] ?? null;
-                if (!$tdmsProductLastUpdateDate) {
-                    Logger::error('Product last update not found. TDMS product ID: ' . $tdmsProductId);
+                $product = $allAvailableCachedProducts->where('tdms_product_id', $tdmsProductId)->first();
+                $newProductDetails = ProductService::getProductDetails($agentToken, $tdmsProductId);
+                if (!$newProductDetails) {
+                    Logger::error('Unable to get product details. TDMS product ID: ' . $tdmsProductId);
                     continue;
                 }
 
-                $product = $allAvailableCachedProducts->where('tdms_product_id', $tdmsProductId)->first();
-                if ($product->tdms_product_last_update_date == $productsLastUpdateDate[$tdmsProductId]) {
-                    continue;
-                } else {
-                    $newProductDetails = ProductService::getProductDetails($agentToken, $tdmsProductId);
-                    if (!$newProductDetails) {
-                        Logger::error('Unable to get product details. TDMS product ID: ' . $tdmsProductId);
-                        continue;
-                    }
+                $latestProductDetails = !empty($newProductDetails['results']) ? $newProductDetails['results'][0] : [];
+                if (!$product || $product->json != $latestProductDetails) {
                     CacheProductJob::dispatch(
+                        product: $allAvailableCachedProducts->where('tdms_product_id', $tdmsProductId)->first(),
+                        latestProduct: $latestProductDetails,
                         batchNumber: $batchNumber,
-                        product: $newProductDetails['results'][0],
-                        checkTime: $tdmsProductLastUpdateDate,
                     )->delay(now()->addMinutes($batchNumber * 5));
                 }
+
+                $batchNumber += 1;
+                $productsInBatch = $allAvailableProductUniqueIds->slice(
+                    ($batchNumber * $batchSize),
+                    ($batchNumber * $batchSize) + $batchSize
+                );
             }
 
-            $batchNumber += 1;
-            $productsInBatch = $allAvailableProductUniqueIds->slice(
-                ($batchNumber * $batchSize),
-                ($batchNumber * $batchSize) + $batchSize
-            );
+            Logger::info('Scheduled product cache job completed.');
         }
-
-        Logger::info('Scheduled product cache job completed.');
     }
 }

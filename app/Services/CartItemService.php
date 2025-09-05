@@ -22,35 +22,36 @@ use Exception;
 class CartItemService
 {
     public static function cacheProduct(
-        array $product,
-        $checkTime,
+        Product|null $product,
+        array $latestProduct
     ) {
-        $existingProductQ = Product::where('tdms_product_id', $product['productId']);
-        if ($existingProductQ->exists()) {
-            $existingProduct = $existingProductQ->first();
-            $cachedProductLastUpdateDate = Carbon::parse($existingProduct->tdms_product_last_update_date);
-            $should_update = empty($cachedProductLastUpdateDate) ||
-                            Carbon::parse($checkTime)->isAfter($cachedProductLastUpdateDate);
+        if ($product && empty($latestProduct)) {
+            ProductHistory::create([
+                'tdms_product_id' => $latestProduct['productId'],
+                'version' => $product->version,
+                'tdms_product_last_update_date' => Carbon::now(),
+                'json' => $product->json,
+            ]);
 
-            if ($should_update) {
-                ProductHistory::create([
-                    'tdms_product_id' => $product['productId'],
-                    'version' => $existingProduct->version,
-                    'tdms_product_last_update_date' => $cachedProductLastUpdateDate,
-                    'json' => $existingProduct->json,
-                ]);
+            $product->delete();
+        } elseif ($product && !empty($latestProduct)) {
+            ProductHistory::create([
+                'tdms_product_id' => $latestProduct['productId'],
+                'version' => $product->version,
+                'tdms_product_last_update_date' => Carbon::now(),
+                'json' => $product->json,
+            ]);
 
-                $existingProduct->update([
-                    'json' => $product,
-                    'tdms_product_last_update_date' => $checkTime,
-                    'version' => $existingProduct->version + 1,
-                ]);
-            }
-        } else {
+            $product->update([
+                'json' => $latestProduct,
+                'tdms_product_last_update_date' => Carbon::now(),
+                'version' => $product->version + 1,
+            ]);
+        } elseif (!$product && !empty($latestProduct)) {
             Product::create([
-                'tdms_product_id' => $product['productId'],
-                'json' => $product,
-                'tdms_product_last_update_date' => $checkTime,
+                'tdms_product_id' => $latestProduct['productId'],
+                'json' => $latestProduct,
+                'tdms_product_last_update_date' => Carbon::now(),
             ]);
         }
     }
@@ -94,10 +95,19 @@ class CartItemService
                 message: 'Product not found',
             );
         }
-        $product = $productDetailsResponse['results'][0];
+        $latestProductDetails = $productDetailsResponse['results'][0];
+        $product = Product::where('tdms_product_id', $tdmsProductId)
+                        ->orderBy('version', 'desc')
+                        ->first();
+        if (!$product || $product->json != $latestProductDetails) {
+            self::cacheProduct($product, $latestProductDetails);
+        }
 
-        if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
-            $farePrices = $product['faresprices'];
+        if (
+            $latestProductDetails['apiProviderId'] > 0
+            && $latestProductDetails['groupFaresForAvailabilityCheck'] == true
+        ) {
+            $farePrices = $latestProductDetails['faresprices'];
 
             // Find fareTypeId for the given productPricesDetailsId
             $fareTypeId = null;
@@ -174,7 +184,7 @@ class CartItemService
         $productLastUpdate = $productLastUpdate[$tdmsProductId];
 
         return ServiceResponse::success(data: new OrderItemRequestData(
-            product: $product,
+            product: $latestProductDetails,
             productLastUpdate: $productLastUpdate,
             productBookingDetails: $bookingDetails,
             productAvailabilities: $productAvailabilities,
@@ -268,10 +278,6 @@ class CartItemService
 
             $now = Carbon::now();
             if ($isDryRun) {
-                self::cacheProduct(
-                    product: $product,
-                    checkTime: $productLastUpdate,
-                );
                 $cartItemsData = self::buildCartItemsData(
                     userId: $userId,
                     tdmsProductId: $tdmsProductId,
@@ -317,11 +323,6 @@ class CartItemService
                 $addToQuote,
                 $itemType,
             ) {
-                self::cacheProduct(
-                    product: $product,
-                    checkTime: $productLastUpdate,
-                );
-
                 $quote = null;
                 if (!is_null($addToQuote)) {
                     if ($addToQuote->isNew) {

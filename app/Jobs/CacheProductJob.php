@@ -18,16 +18,16 @@ class CacheProductJob implements ShouldQueue
     use SerializesModels;
 
     protected $product;
-    protected $checkTime;
+    protected $latestProduct;
     protected $batchNumber;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($product, $checkTime, $batchNumber)
+    public function __construct($product, $latestProduct, $batchNumber)
     {
         $this->product = $product;
-        $this->checkTime = $checkTime;
+        $this->latestProduct = $latestProduct;
         $this->batchNumber = $batchNumber;
     }
 
@@ -37,6 +37,6 @@ class CacheProductJob implements ShouldQueue
     public function handle(): void
     {
         Logger::info('Caching batch number ' . $this->batchNumber);
-        CartItemService::cacheProduct($this->product, $this->checkTime);
+        CartItemService::cacheProduct($this->product, $this->latestProduct);
     }
 }

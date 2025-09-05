@@ -248,10 +248,10 @@ class ProductCategoryService
                         } else {
                             $numberOfRegions -= 1;
                         }
-                        foreach ($products as $product) {
-                            $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
-                            if (!$productExists) {
-                                CartItemService::cacheProduct($product, Carbon::now());
+                        foreach ($products as $latestProductDetails) {
+                            $product = Product::where('tdms_product_id', $latestProductDetails['productId'])->first();
+                            if (!$product || $product->json != $latestProductDetails) {
+                                CartItemService::cacheProduct($product, $latestProductDetails);
                             }
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
                         }
@@ -299,10 +299,10 @@ class ProductCategoryService
                                 break;
                             }
                         }
-                        foreach ($products as $product) {
-                            $productExists = Product::where('tdms_product_id', $product['productId'])->exists();
-                            if (!$productExists) {
-                                CartItemService::cacheProduct($product, Carbon::now());
+                        foreach ($products as $latestProductDetails) {
+                            $product = Product::where('tdms_product_id', $latestProductDetails['productId'])->first();
+                            if (!$product || $product->json != $latestProductDetails) {
+                                CartItemService::cacheProduct($product, $latestProductDetails);
                             }
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
                         }

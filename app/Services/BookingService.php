@@ -391,15 +391,6 @@ class BookingService
         $unavailableProducts = [];
 
         foreach ($cartItems as $cartItem) {
-            $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)->first();
-            if (!$product) {
-                CacheProductJob::dispatchSync(
-                    user: null,
-                    cartItem: $cartItem
-                );
-                $product = Product::where('tdms_product_id', $cartItem->tdms_product_id)->first();
-            }
-
             $availability = ProductService::getProductAvailabilitiesFromApi(
                 agentToken: $agentToken,
                 productPricesDetailsId: $cartItem->product_price_details_id,
@@ -507,103 +498,84 @@ class BookingService
             forDiscount: $itemType->forDiscount
         );
 
-        if (OrderDataValidationFeature::isEnabled()) {
-            try {
-                $validateOrderDataResponse = TdmsService::validateOrderData(
-                    agentToken: $agent->access_token,
-                    bookingReference: $orderRequestData['bookingReference'],
-                    orderData: $orderRequestData
+        try {
+            $validateOrderDataResponse = TdmsService::validateOrderData(
+                agentToken: $agent->access_token,
+                bookingReference: $orderRequestData['bookingReference'],
+                orderData: $orderRequestData
+            );
+            if ($validateOrderDataResponse->isError()) {
+                return $validateOrderDataResponse;
+            }
+
+            $validatedItemsData = $validateOrderDataResponse->data;
+
+
+            $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
+            $totalRrp = $orderRequestData['totalCharged'];
+            $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
+            $pointsAvailable = UserOrderCommissionService::pointsFromCommission(
+                (float) $commission,
+                $agent->points_multiplier
+            );
+
+            if ($itemType->forDiscount) {
+                return ServiceResponse::success(
+                    data: [
+                        'branch' => $agent->branch_code,
+                        'commission' => $commissionPercentage,
+                        'pointsAvailable' => $pointsAvailable,
+                    ],
+                    message: 'Order data validated successfully'
                 );
-                if ($validateOrderDataResponse->isError()) {
-                    return $validateOrderDataResponse;
+            }
+
+            $discount = DiscountService::calcuateOverallDiscount(
+                commissionPercentage: $commissionPercentage,
+                user: User::find($userId)
+            );
+            $agentType = app('agentType');
+            if ($agentType->isDefaultAgent) {
+                $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
+                $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
+            }
+
+            $overallStatus = [];
+            foreach ($validatedItemsData as $item) {
+                if ($item['status'] === 'Available') {
+                    continue;
                 }
 
-                $validatedItemsData = $validateOrderDataResponse->data;
-
-
-                $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
-                $totalRrp = $orderRequestData['totalCharged'];
-                $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
-                $pointsAvailable = UserOrderCommissionService::pointsFromCommission(
-                    (float) $commission,
-                    $agent->points_multiplier
-                );
-
-                if ($itemType->forDiscount) {
-                    return ServiceResponse::success(
-                        data: [
-                            'branch' => $agent->branch_code,
-                            'commission' => $commissionPercentage,
-                            'pointsAvailable' => $pointsAvailable,
-                        ],
-                        message: 'Order data validated successfully'
-                    );
-                }
-
-                $discount = DiscountService::calcuateOverallDiscount(
-                    commissionPercentage: $commissionPercentage,
-                    user: User::find($userId)
-                );
-                $agentType = app('agentType');
-                if ($agentType->isDefaultAgent) {
-                    $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
-                    $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
-                }
-
-                $overallStatus = [];
-                foreach ($validatedItemsData as $item) {
-                    if ($item['status'] === 'Available') {
+                if ($item['status'] === 'Commission Details') {
+                    if (!isset($item['message']['errors'])) {
                         continue;
                     }
+                } else {
+                    $productId = !empty($item['productDetail'])
+                        ? $item['productDetail']['productId']
+                        : null;
 
-                    if ($item['status'] === 'Commission Details') {
-                        if (!isset($item['message']['errors'])) {
-                            continue;
-                        }
-                    } else {
-                        $productId = !empty($item['productDetail'])
-                            ? $item['productDetail']['productId']
-                            : null;
-
-                        $productPricesDetailsId = !empty($item['productDetail'])
-                            ? $item['productDetail']['productPricesDetailsId']
-                            : null;
+                    $productPricesDetailsId = !empty($item['productDetail'])
+                        ? $item['productDetail']['productPricesDetailsId']
+                        : null;
 
 
-                        $overallStatus[] = [
-                            'status' => $item['status'],
-                            'productId' => $productId,
-                            'productPricesDetailsId' => $productPricesDetailsId,
-                            'errors' => $item['message'] ?? [],
-                        ];
-                    }
+                    $overallStatus[] = [
+                        'status' => $item['status'],
+                        'productId' => $productId,
+                        'productPricesDetailsId' => $productPricesDetailsId,
+                        'errors' => $item['message'] ?? [],
+                    ];
                 }
-                if (!empty($overallStatus)) {
-                    return ServiceResponse::badRequest(
-                        message: 'Invalid order data',
-                        data: $overallStatus
-                    );
-                }
-            } catch (ServiceException $e) {
-                throw $e;
             }
-        } else {
-            $validateProductAvailabilityResponse = CartItemService::validateProductAvailability(
-                agentToken: $agent->access_token,
-                cartItems: $cartItems
-            );
-            if ($validateProductAvailabilityResponse->isError()) {
-                return $validateProductAvailabilityResponse;
+            if (!empty($overallStatus)) {
+                return ServiceResponse::badRequest(
+                    message: 'Invalid order data',
+                    data: $overallStatus
+                );
             }
-
-            $get_validate_cart_items_response = BookingService::validateCartItemAvailability(
-                $agent->access_token,
-                $cartItems
-            );
-
-            if ($get_validate_cart_items_response->isError()) {
-                return $get_validate_cart_items_response;
-            };
+        } catch (ServiceException $e) {
+            throw $e;
         }
 
         $bookingReference = $orderRequestData['bookingReference'];

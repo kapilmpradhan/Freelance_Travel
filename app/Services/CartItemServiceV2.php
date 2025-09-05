@@ -12,7 +12,6 @@ use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
-use Google\Service\TrafficDirectorService\NullMatch;
 use Illuminate\Support\Str;
 
 class CartItemServiceV2
@@ -27,37 +26,23 @@ class CartItemServiceV2
         $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
         $defaultAgentAccessToken = $userAgentResponse->data['access_token'];
 
-        $productDetails = null;
-        if ($itemType->forDiscount) {
-            $product = Product::where('tdms_product_id', $tdmsProductId)->first();
-            $productDetails = $product->json;
-            $productLastUpdate = $product->tdms_product_last_update_date;
-        }
+        $product = Product::where('tdms_product_id', $tdmsProductId)
+            ->orderBy('version', 'desc')
+            ->first();
 
-        if (is_null($productDetails)) {
-            $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-            if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
-                return ServiceResponse::notFound(
-                    message: 'Product not found',
-                    data: ['tdmsProductId' => $tdmsProductId]
-                );
-            }
-            $productDetails = $productDetailsResponse['results'][0];
-
-            $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
-                $defaultAgentAccessToken,
-                [$tdmsProductId],
+        $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
+        if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
+            return ServiceResponse::notFound(
+                message: 'Product not found',
+                data: ['tdmsProductId' => $tdmsProductId]
             );
-            if (!$productLastUpdate) {
-                throw new ServiceException(
-                    message: 'Product last update not found',
-                );
-            }
-            $productLastUpdate = $productLastUpdate[$tdmsProductId];
+        }
+        $latestProductDetails = $productDetailsResponse['results'][0];
 
+        if (!$product || $product->json != $latestProductDetails) {
             CartItemService::cacheProduct(
-                product: $productDetails,
-                checkTime: $productLastUpdate,
+                product: $product,
+                latestProduct: $latestProductDetails
             );
         }
 
@@ -161,7 +146,7 @@ class CartItemServiceV2
                 }
                 $quantity = $quantityIndex;
 
-                $farePrices = $productDetails['faresprices'];
+                $farePrices = $latestProductDetails['faresprices'];
 
                 // Find fareTypeId for the given productPricesDetailsId
                 $fareTypeId = null;
@@ -181,7 +166,10 @@ class CartItemServiceV2
                     );
                 }
 
-                if ($productDetails['apiProviderId'] > 0 && $productDetails['groupFaresForAvailabilityCheck'] == true) {
+                if (
+                    $latestProductDetails['apiProviderId'] > 0
+                    && $latestProductDetails['groupFaresForAvailabilityCheck'] == true
+                ) {
                     $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
                         agentToken: $defaultAgentAccessToken,
                         fareTypeId: $fareTypeId,
@@ -216,9 +204,9 @@ class CartItemServiceV2
                     );
                 }
                 $result[] = new OrderItemRequestData(
-                    product: $productDetails,
+                    product: $latestProductDetails,
                     productPriceDetailsId: $productPriceDetailsId,
-                    productLastUpdate: $productLastUpdate,
+                    productLastUpdate: Carbon::now(),
                     productBookingDetails: $bookingDetails ?? [],
                     productAvailabilities: $productAvailabilities[0],
                     bookingData: $bookingData,

@@ -30,8 +30,8 @@ class FavouritesService
 
     public static function addFavourite($userId, $tdmsProductId)
     {
-        $productExists = Product::where('tdms_product_id', $tdmsProductId)->exists();
-        if (!$productExists) {
+        $product = Product::where('tdms_product_id', $tdmsProductId)->first();
+        if (!$product) {
             $agentToken = UserAgentService::getDefaultAgentToken()->data['access_token'] ?? null;
             $productDetailsFromTdms = ProductService::getProductDetails(
                 agentToken: $agentToken,
@@ -42,10 +42,14 @@ class FavouritesService
                 return  ServiceResponse::notFound("Product with ID {$tdmsProductId} does not exist.");
             }
 
-            CartItemService::cacheProduct(
-                product: $productDetailsFromTdms['results'][0],
-                checkTime: now()
-            );
+            $latestProductDetails = $productDetailsFromTdms[0];
+
+            if (!$product || $product->json != $latestProductDetails) {
+                CartItemService::cacheProduct(
+                    product: $productDetailsFromTdms['results'][0],
+                    latestProduct: $latestProductDetails
+                );
+            }
         }
 
         try {
