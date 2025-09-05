@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use App\DTOs\AddToQuote;
 use App\Jobs\CacheProductJob;
 use App\Models\Product;
+use App\Models\Quote;
 use App\Services\BookingService;
 use App\Services\CartItemService;
 use App\Services\CartItemServiceV2;
@@ -164,8 +165,17 @@ class CartItemController extends BaseController
 
         $validateQuoteTitle = Validator::make(
             ['quoteTitle' => $data['quoteTitle']],
-            ['quoteTitle' => 'required|string|unique:quotes,title,user_id,user_order_id|max:200']
+            ['quoteTitle' => 'required|string|max:200']
         );
+
+        $userAvailableQuotes = Quote::where('user_id', $request->user->uuid)
+            ->where('user_order_id', null)
+            ->where('title', $data['quoteTitle'])
+            ->exists();
+
+        if ($userAvailableQuotes) {
+            return $this->sendError('Validation Error.', ['quoteTitle' => ['The quote title has already been taken.']]);
+        }
 
         if ($validateQuoteTitle->fails()) {
             return $this->sendError('Validation Error.', $validateQuoteTitle->errors());
