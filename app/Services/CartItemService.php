@@ -444,6 +444,7 @@ class CartItemService
                 $product = ProductHistory::where('tdms_product_id', $cartItem->tdms_product_id)
                                         ->where('version', $cartItem->product_version)
                                         ->first();
+                $product->counter = 0;
                 $isProductLatest = false;
             }
 
