@@ -15,19 +15,15 @@ use Illuminate\Support\Facades\Redis;
 class ProductCategoryService
 {
     public static $experienceOrder = [
+        'Activity',
+        'Attraction',
+        'Food & Drink',
+        'Hire',
         'Tours',
-        'Adventures',
-        'Hiking',
-        'Nature',
-        'Indigenous Culture',
-        'Adrenaline Sports',
-        'Sport Related',
-        'Water Sports',
+        'Wildlife & Animals',
+        'Sail & Cruise',
         'Health & Wellness',
-        'Ice / Snow Activity',
-        'Food / Drink Related',
-        'Flights',
-        'Hire Options',
+        'Culture'
     ];
 
     public static function getCategories()
@@ -167,7 +163,7 @@ class ProductCategoryService
 
                 return ServiceResponse::success(
                     message: 'Product categories',
-                    data: $productCategories ?? []
+                    data: $productCategories->toArray() ?? []
                 );
             }
 
@@ -304,7 +300,7 @@ class ProductCategoryService
                             if (!$product || $product->json != $latestProductDetails) {
                                 CartItemService::cacheProduct($product, $latestProductDetails);
                             }
-                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
                     }
                 }
@@ -319,8 +315,9 @@ class ProductCategoryService
             $result = [];
             $productsByLabels = json_decode(Redis::get($productFilter->cacheKey));
             foreach ($productsByLabels as $label => $productIds) {
+                $productIdsStr = implode(',', array_map(fn ($id) => "'$id'", $productIds));
                 $products = Product::whereIn('tdms_product_id', $productIds)
-                                ->orderByRaw('FIELD(tdms_product_id, ' . implode(',', $productIds) . ')')
+                                ->orderByRaw("FIELD(tdms_product_id, $productIdsStr)")
                                 ->get();
 
                 if ($productFilter->filterBy == 'destination') {

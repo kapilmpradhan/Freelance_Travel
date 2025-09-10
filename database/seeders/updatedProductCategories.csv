@@ -1,0 +1,150 @@
+category,label,type
+Apartment,Apartment,Accommodation
+Beach House,Beach House,Accommodation
+Boat,Boat,Accommodation
+Bungalow,Bungalow,Accommodation
+Cabins,Cabins,Accommodation
+Camping,Camping,Accommodation
+Desert Camp,Desert Camp,Accommodation
+Dorms,Hostel,Accommodation
+Double/Twin,Hostel,Accommodation
+Farm Stay,Farm Stay,Accommodation
+Glamping,Glamping,Accommodation
+Homestay,Homestay,Accommodation
+Hostel,Hostel,Accommodation
+Safari Lodge,Safari Lodge,Accommodation
+Single,Hostel,Accommodation
+Sleeper Train,Sleeper Train,Accommodation
+Suite,Suite,Accommodation
+Test,Test,,Accommodation
+Triple,Hostel,Accommodation
+Villa,Villa,Accommodation
+4WD,4WD,Transport
+Bike,Bike,Transport
+Bus,Bus,Transport
+Campervan,Campervan,Transport
+Coach,Coach,Transport
+Ferry,Ferry,Transport
+Flights,Flights,Transport
+Hire Car,Hire Car,Transport
+Hop on Hop Off,Bus,Transport
+Island Hopping,Island Hopping,Transport
+Limo,Limo,Transport
+Limosine,Limosine,Transport
+Mini Van,Hire Car,Transport
+MonoRail,Train,Transport
+Shuttle Bus,Bus,Transport
+Trains,Train,Transport
+4WD Tours,Activity,Experience
+Abseiling,Activity,Experience
+Adventure,Activity,Experience
+Aerobatic Flights,Activity,Experience
+Alpine Hiking,Activity,Experience
+Aquarium,Attraction,Experience
+Attraction,Attraction,Experience
+Ballooning,Activity,Experience
+Bar/Pub Crawl,Food & Drink,Experience
+Beer/Cider Tours,Food & Drink,Experience
+Bike Hire,Hire,Experience
+Bike Tours,Tours,Experience
+Board Hire,Hire,Experience
+Boat Hire,Hire,Experience
+Brewery Tours,Food & Drink,Experience
+Bridge Climb,Activity,Experience
+Bungy Jumping,Activity,Experience
+Camel Riding,Activity,Experience
+Campervan Hire,Hire,Experience
+Camping,Activity,Experience
+Canoeing,Activity,Experience
+Canyoning,Activity,Experience
+Cars/Go Kart,Activity,Experience
+Caving,Tours,Experience
+City Tour,Tours,Experience
+Crocodile Safari,Wildlife & Animals,Experience
+Cruise,Sail & Cruise,Experience
+Diving,Activity,Experience
+Dolphins/ Dolphin Swim,Wildlife & Animals,Experience
+Eco Tour,Tours,Experience
+Farm,Tours,Experience
+Fishing,Tours,Experience
+Fitness,Wellness,Experience
+Fly Board,Activity,Experience
+Food Tour,Food & Drink,Experience
+Forest / Rainforest,Tours,Experience
+Geothermal Parks,Tours,Experience
+Ghost Tours,Attraction,Experience
+Glacier Hiking,Tours,Experience
+Glacier Hot Pools/Massage,Health & Wellness,Experience
+Glowworm Caves,Attraction,Experience
+Golf,Activity,Experience
+Hang Gliding,Activity,Experience
+Hiking,Activity,Experience
+Horse Riding,Activity,Experience
+Hot Pools,Attraction,Experience
+Hovercraft,Activity,Experience
+Ice Climbing,Activity,Experience
+Ice Skating,Activity,Experience
+Indigenous &amp; Cultural,Culture,Experience
+Island Hopping,Sail & Cruise,Experience
+Jet Boating,Activity,Experience
+Jet Ski,Activity,Experience
+Jungle Surfing,Activity,Experience
+Kayaking,Activity,Experience
+Kite Surfing,Activity,Experience
+Live Aboard Diving,Activity,Experience
+Luge,Activity,Experience
+Marine Parks / Reserve,Tours,Experience
+Massage,Health & Wellness,Experience
+Motorbike Tours,Tours,Experience
+Motorsports,Activity,Experience
+Mountain Biking,Activity,Experience
+Muay Thai,Health & Wellness,Experience
+Museums,Attraction,Experience
+National Parks,Attraction,Experience
+Nature,Tours,Experience
+Outback,Tours,Experience
+Paddle Board,Activity,Experience
+Paintball,Activity,Experience
+Paragliding,Activity,Experience
+Parasailing,Activity,Experience
+Party Tour,Food & Drink,Experience
+Quad Biking,Activity,Experience
+Rafting,Activity,Experience
+Retreat,Health & Wellness,Experience
+River Cruises,Sail & Cruise,Experience
+Rock Climbing,Activity,Experience
+Rollerblading/Skating,Activity,Experience
+Safari,Tours,Experience
+Sailing,Tours,Experience
+Sand Boarding,Activity,Experience
+Scenic Flights / Heli,Activity,Experience
+Scenic Tour / Sightseeing,Tours,Experience
+Scooter Hire,Hire,Experience
+Seals,Wildlife & Animals,Experience
+Segway,Hire,Experience
+Self Drive,Hire,Experience
+Shark Diving,Wildlife & Animals,Experience
+Shooting,Activity,Experience
+Shopping,Activity,Experience
+Ski/Snowboarding/ski sports,Activity,Experience
+Skydiving,Activity,Experience
+Skydiving - Indoor,Activity,Experience
+Snorkelling,Activity,Experience
+Spa Treatments,Health & Wellness,Experience
+Sports Tour,Tours,Experience
+Sunset tour,Tours,Experience
+Surfing,Activity,Experience
+Swimming,Activity,Experience
+Theme Parks,Attraction,Experience
+Train Tour,Tours,Experience
+Volcano Tours,Tours,Experience
+Voluntourism,Tours,Experience
+Walking Tours,Tours,Experience
+Water Sports,Activity,Experience
+Whale Watching,Wildlife & Animals,Experience
+Windsurfing,Activity,Experience
+Wineries,Food & Drink,Experience
+Yoga,Health & Wellness,Experience
+Ziplining,Activity,Experience
+Zoos / Wildlife Parks,Wildlife & Animals,Experience
+Zorbing,Activity,Experience

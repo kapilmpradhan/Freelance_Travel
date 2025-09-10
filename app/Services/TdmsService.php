@@ -389,6 +389,43 @@ class TdmsService
         }
     }
 
+    public static function getCategoriesOfAType($type, $agentToken)
+    {
+        $url = config('vars.tdms_api_url') . "/categories/{$type}";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            "Authorization" => "Bearer {$agentToken}"
+        ])->get($url);
+
+        $data = $response->json();
+
+        if ($response->status() == 200) {
+            return ServiceResponse::success(
+                data: $data['results']
+            );
+        } else {
+            if (!isset($data['message'])) {
+                Logger::error(
+                    message: 'Error validating order data',
+                    extra: [
+                        "type" => $type,
+                        "responseData" => $data
+                    ]
+                );
+                throw new ServiceException(
+                    message: 'Internal server error',
+                    data: $data,
+                    code: $response->status()
+                );
+            } else {
+                return ServiceResponse::badRequest(
+                    message: $data['message']
+                );
+            }
+        }
+    }
+
     public static function getCategoriesByType($type, $agentToken, $countryId = 20)
     {
         $url = config('vars.tdms_api_url') . "/categories/{$type}?countries={$countryId}";
@@ -473,7 +510,7 @@ class TdmsService
         $query = '';
         foreach ($categoriesIdByTypes as $type => $categoryIds) {
             $ids = implode(',', $categoryIds);
-            $query = "$query$type=$ids";
+            $query = "$query$type=$ids" . '&';
         }
         $url = config('vars.tdms_api_url') .
             "/products?countries={$countryId}" .
