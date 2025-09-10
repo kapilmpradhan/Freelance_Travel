@@ -440,11 +440,13 @@ class CartItemServiceV2
                         }
                     }
                     foreach ($redeemers as $redeemer) {
+                        $bookingData['quantityIndex'] = $bookingData['quantityIndex'] ?? null;
                         $bookingData['redeemers'] = [$redeemer];
                         $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
                         $bookingDatas[] = $bookingData;
                     }
                 } else {
+                    $bookingData['quantityIndex'] = $bookingData['quantityIndex'] ?? null;
                     $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
                     $bookingData['redeemers'] = [$redeemers];
                     $bookingDatas[] = $bookingData;

@@ -249,7 +249,7 @@ class ProductCategoryService
                             if (!$product || $product->json != $latestProductDetails) {
                                 CartItemService::cacheProduct($product, $latestProductDetails);
                             }
-                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $product['productId'];
+                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
 
                         if ($numberOfRegions < 0) {
