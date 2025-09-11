@@ -54,6 +54,7 @@ return [
     'ptx_agent_password' => env('PETERPANS_AGENT_PASSWORD'),
 
     'only_char_regex' => '/^[a-zA-Z]+$/',
+    'only_char_with_space_regex' => '/^[a-zA-Z ]+$/',
 
     'discount_percentage' => (int) env('DISCOUNT_PERCENTAGE', 0),
 

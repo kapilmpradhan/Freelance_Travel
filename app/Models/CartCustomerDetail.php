@@ -82,11 +82,12 @@ class CartCustomerDetail extends Model
     public static function addNewRedeemerRule()
     {
         $onlyCharRegex = config('vars.only_char_regex');
+        $onlyCharRegexWithSpace = config('vars.only_char_with_space_regex');
 
         return [
             "title" => "required|in:Master,Mr,Miss,Mrs,Ms,Mx",
             "firstName" => "required|string|max:200|regex:{$onlyCharRegex}",
-            "lastName" => "required|string|max:200|regex:{$onlyCharRegex}",
+            "lastName" => "required|string|max:200|regex:{$onlyCharRegexWithSpace}",
             "dateOfBirth" => "required|date_format:d-M-Y",
             "email" => "required|email|max:255",
             "phoneNumber" => "required|string",
