@@ -431,6 +431,7 @@ class CartItemServiceV2
 
             $bookingDatas = [];
             $numpax = $item['quantity'] / count($item['bookingData']);
+            $quantityIndex = 1;
             foreach ($item['bookingData'] as $bookingData) {
                 $redeemers = array_slice($bookingData['redeemers'] ?? [], 0, $numpax);
                 if (isset($bookingData['redeemers'])) {
@@ -440,17 +441,19 @@ class CartItemServiceV2
                         }
                     }
                     foreach ($redeemers as $redeemer) {
-                        $bookingData['quantityIndex'] = $bookingData['quantityIndex'] ?? null;
+                        $bookingData['quantityIndex'] = $quantityIndex;
                         $bookingData['redeemers'] = [$redeemer];
                         $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
                         $bookingDatas[] = $bookingData;
                     }
                 } else {
-                    $bookingData['quantityIndex'] = $bookingData['quantityIndex'] ?? null;
+                    $bookingData['quantityIndex'] = $quantityIndex;
                     $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
                     $bookingData['redeemers'] = [$redeemers];
                     $bookingDatas[] = $bookingData;
                 }
+
+                $quantityIndex++;
             }
 
             if ($cartItem->booking_quantity != $item['quantity']) {
