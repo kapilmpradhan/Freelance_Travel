@@ -211,15 +211,18 @@ class TdmsService
                     $page++;
                     continue;
                 }
+            } else {
+                Logger::error(
+                    message: 'Error fetching customer orders',
+                    extra: [
+                        "customerEmail" => $customerEmail,
+                        "responseData" => $data,
+                        "page" => $page
+                    ]
+                );
+
+                return ServiceResponse::badRequest('Unable to get customer bookings.');
             }
-            Logger::error(
-                message: 'Error fetching customer orders',
-                extra: [
-                    "customerEmail" => $customerEmail,
-                    "responseData" => $data,
-                    "page" => $page
-                ]
-            );
         }
 
         return ServiceResponse::success(

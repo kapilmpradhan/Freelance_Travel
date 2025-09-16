@@ -27,7 +27,7 @@ class CartItemService
     ) {
         if ($product && empty($latestProduct)) {
             ProductHistory::create([
-                'tdms_product_id' => $latestProduct['productId'],
+                'tdms_product_id' => $product->tdms_product_id,
                 'version' => $product->version,
                 'tdms_product_last_update_date' => Carbon::now(),
                 'json' => $product->json,
