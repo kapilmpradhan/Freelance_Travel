@@ -193,8 +193,8 @@ class TdmsService
 
         $allOrders = [];
         $page = 1;
+        $url .= "&page=$page";
         while (true) {
-            $url .= "&page=" . rawurlencode($page);
             $response = Http::withBasicAuth($username, $password)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
