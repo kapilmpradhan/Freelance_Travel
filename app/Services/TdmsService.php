@@ -185,16 +185,14 @@ class TdmsService
 
     public static function getCustomerBookings($customerEmail)
     {
-        $url = config('vars.tdms_customer_api_url') . "?email=" . urlencode($customerEmail);
-
         // Credentials from config
         $username = config('vars.tdms_customer_api_username');
         $password = config('vars.tdms_customer_api_password');
 
         $allOrders = [];
         $page = 1;
-        $url .= "&page=$page";
         while (true) {
+            $url = config('vars.tdms_customer_api_url') . "?email=" . urlencode($customerEmail) . "&page=$page";
             $response = Http::withBasicAuth($username, $password)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
