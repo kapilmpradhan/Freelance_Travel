@@ -15,15 +15,15 @@ use Illuminate\Support\Facades\Redis;
 class ProductCategoryService
 {
     public static $experienceOrder = [
+        'Tours',
         'Activity',
         'Attraction',
-        'Food & Drink',
-        'Hire',
-        'Tours',
-        'Wildlife & Animals',
         'Sail & Cruise',
+        'Wildlife & Animals',
+        'Food & Drink',
         'Health & Wellness',
-        'Culture'
+        'Culture',
+        'Hire'
     ];
 
     public static function getCategories()
