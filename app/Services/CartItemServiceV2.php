@@ -55,6 +55,19 @@ class CartItemServiceV2
         }
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
+            $farePrices = $latestProductDetails['faresprices'];
+
+            // Find fareTypeId for the given productPricesDetailsId
+            $farePrice = null;
+            foreach ($farePrices as $fare) {
+                if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
+                    $farePrice = $fare;
+                    break;
+                }
+            }
+            $fareTypeId = $farePrice['fareTypeId'];
+            $numPax = (int) $farePrice['numPax'];
+
             $quantityDetails = $productPriceDetails['quantityDetails'];
 
             $bookingDates = array_map(function ($detail) {
@@ -131,11 +144,12 @@ class CartItemServiceV2
                     }
                 } else {
                     $quantity = $details['quantity'];
+                    $noOfBookingData = (int) $quantity / $numPax;
                     $timeId = $details['timeId'] ?? '0';
                     $commences = $details['commences'] ?? null;
                     $optionalData = $details['bookingData']['optionalData'] ?? [];
                     $bookingData = $details['bookingData'] ?? [];
-                    for ($i = 1; $i <= $quantity; $i++) {
+                    for ($i = 1; $i <= $noOfBookingData; $i++) {
                         $bookingData[] = [
                             "quantityIndex" => ++$quantityIndex,
                             "timeId" => $timeId,
@@ -144,18 +158,7 @@ class CartItemServiceV2
                         ];
                     }
                 }
-                $quantity = $quantityIndex;
-
-                $farePrices = $latestProductDetails['faresprices'];
-
-                // Find fareTypeId for the given productPricesDetailsId
-                $fareTypeId = null;
-                foreach ($farePrices as $fare) {
-                    if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
-                        $fareTypeId = $fare["fareTypeId"];
-                        break;
-                    }
-                }
+                $quantity = $quantityIndex * $numPax;
 
                 if (
                     isset($fare['fareQtyRestrictions'])
@@ -434,7 +437,7 @@ class CartItemServiceV2
             $quantityIndex = 1;
             foreach ($item['bookingData'] as $bookingData) {
                 $redeemers = array_slice($bookingData['redeemers'] ?? [], 0, $numpax);
-                if (isset($bookingData['redeemers'])) {
+                if (isset($bookingData['redeemers']) && !empty($bookingData['redeemers'])) {
                     if ($numpax > 1 && count($redeemers) < $numpax) {
                         while (count($redeemers) < $numpax) {
                             $redeemers[] = $redeemers[0];
