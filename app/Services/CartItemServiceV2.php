@@ -452,7 +452,7 @@ class CartItemServiceV2
                 } else {
                     $bookingData['quantityIndex'] = $quantityIndex;
                     $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
-                    $bookingData['redeemers'] = [$redeemers];
+                    $bookingData['redeemers'] = $redeemers;
                     $bookingDatas[] = $bookingData;
                 }
 
