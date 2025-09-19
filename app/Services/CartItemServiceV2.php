@@ -126,25 +126,37 @@ class CartItemServiceV2
                 $bookingData = [];
                 if (isset($details['bookingData'])) {
                     foreach ($details['bookingData'] as $data) {
+                        $quantityIndex = $data['quantityIndex'];
                         $timeId = $data['timeId'];
                         $commences = $data['commences'] ?? null;
                         $optionalData = $data['optionalData'] ?? [];
                         $pickupId = $data['pickupId'] ?? null;
                         $pickupLocation = $data['pickupLocation'] ?? null;
-                        $redeemers = $data['redeemers'] ?? null;
-                        $bookingData[] = [
-                            "quantityIndex" => ++$quantityIndex,
-                            "timeId" => $timeId,
-                            "commences" => $commences,
-                            "pickupId" => $pickupId,
-                            "pickupLocation" => $pickupLocation,
-                            "optionalData" => $optionalData,
-                            "redeemers" => $redeemers
-                        ];
+                        $redeemers = array_slice($data['redeemers'] ?? [], 0, $numPax);
+                        if (
+                            $numPax > 1 &&
+                            count($redeemers) > 0 &&
+                            count($redeemers) < $numPax
+                        ) {
+                            while (count($redeemers) < $numPax) {
+                                $redeemers[] = $redeemers[0];
+                            }
+                        }
+                        foreach ($redeemers as $redeemer) {
+                            $bookingData[] = [
+                                "quantityIndex" => $quantityIndex,
+                                "timeId" => $timeId,
+                                "commences" => $commences,
+                                "pickupId" => $pickupId,
+                                "pickupLocation" => $pickupLocation,
+                                "optionalData" => $optionalData,
+                                "redeemers" => [$redeemer]
+                            ];
+                        }
                     }
                 } else {
                     $quantity = $details['quantity'];
-                    $noOfBookingData = (int) $quantity / $numPax;
+                    $noOfBookingData = intdiv((int) $quantity, $numPax);
                     $timeId = $details['timeId'] ?? '0';
                     $commences = $details['commences'] ?? null;
                     $optionalData = $details['bookingData']['optionalData'] ?? [];

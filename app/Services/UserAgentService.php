@@ -68,7 +68,8 @@ class UserAgentService
             $defaultAgent = UserAgent::create([
                 "branch_code" => $branchCode,
                 "email" => $email,
-                "password" => $password
+                "password" => $password,
+                "subsystem_type" => "FTA"
             ]);
         }
 
@@ -162,7 +163,7 @@ class UserAgentService
             $userAgentData = AgentResource::userAgentDetails($userAgent);
 
             return ServiceResponse::success($userAgentData);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error('Exception while adding agent', $e);
             return ServiceResponse::badRequest('Could not add agent');
         }

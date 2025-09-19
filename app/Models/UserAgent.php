@@ -47,6 +47,7 @@ class UserAgent extends Model
         'email',
         'password',
         'branch_code',
+        'subsystem_type',
         'status',
         'access_token',
         'token_updated_at',
