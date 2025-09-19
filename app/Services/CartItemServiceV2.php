@@ -126,7 +126,7 @@ class CartItemServiceV2
                 $bookingData = [];
                 if (isset($details['bookingData'])) {
                     foreach ($details['bookingData'] as $data) {
-                        $quantityIndex = $data['quantityIndex'];
+                        $quantityIndex = isset($data['quantityIndex']) ? $data['quantityIndex'] : $quantityIndex;
                         $timeId = $data['timeId'];
                         $commences = $data['commences'] ?? null;
                         $optionalData = $data['optionalData'] ?? [];
