@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'auth.jwt' => \App\Http\Middleware\JwtAuthenticate::class,
         'auth.ifToken' => \App\Http\Middleware\CheckTokenIfAvailable::class,
         'admin' => \App\Http\Middleware\AdminAuthenticate::class,
+        'pointsAndCommissionAgentOnly' => \App\Http\Middleware\PointsAndCommissionAgentOnly::class,
     ];
 }

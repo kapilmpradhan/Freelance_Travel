@@ -15,8 +15,9 @@ use App\Services\UserService;
 use App\Logging\Logger;
 use App\Services\RedeemerService;
 use App\Services\FcmService;
+use App\Services\FeatureService;
 use Exception;
-use Google\Service\Dfareporting\Country;
+use Laravel\Pennant\Feature;
 
 class UserController extends BaseController
 {
@@ -144,7 +145,7 @@ class UserController extends BaseController
             }
             $user->updatePassword($data['new_password']);
             return $this->sendResponse('Password changed successfully');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $errorMessage = "Failed to reset password";
             Logger::error($errorMessage, $e);
             return $this->sendError('Password reset failed');
@@ -296,5 +297,23 @@ class UserController extends BaseController
         $user->save();
 
         return $this->sendResponse('Points visibility toggled');
+    }
+
+    public function userMetaData(Request $request)
+    {
+        $user = auth()->user();
+        $userAgent = app('agentType');
+        $isTestUser = Feature::for($user)->active('tester');
+        $isDefaultAgent = $userAgent->isDefaultAgent;
+
+        $isOrderTabbedEnabledForAll = FeatureService::isFeatureEnabled('order-tabbed-view');
+
+        $isOrderTabEnabled = !$isDefaultAgent && ($isOrderTabbedEnabledForAll || $isTestUser);
+
+        $data = [
+            'is_order_tab_enabled' => $isOrderTabEnabled
+        ];
+
+        return $this->sendResponse('User meta data', $data);
     }
 }

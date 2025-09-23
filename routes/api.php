@@ -69,6 +69,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('/points/show-hide', [UserController::class, 'showHidePoints']);
     Route::post('/fcm/token/add', [UserController::class, 'addFcmToken']);
     Route::delete('/fcm/token/{fcmToken}', [UserController::class, 'removeFcmToken']);
+    Route::get('metaData', [UserController::class, 'userMetaData']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'middleware' => 'admin'], function () {
@@ -113,8 +114,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {
     Route::post('new', [CartItemController::class, 'addItemsInNewQuote']);
     Route::post('new/v2', [CartItemController::class, 'addItemsInNewQuoteV2']);
-    Route::get('all', [CartItemController::class, 'getAllQuotes']);
-    Route::get('my', [CartItemController::class, 'getMyQuotes']);
+    Route::get('all', [CartItemController::class, 'getAllQuotes'])->middleware('pointsAndCommissionAgentOnly');
+    Route::get('my', [CartItemController::class, 'getMyQuotes'])->middleware('pointsAndCommissionAgentOnly');
     Route::get('{quoteId}', [CartItemController::class, 'getQuoteDetails']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add', [CartItemController::class, 'addItemsInExistingQuote']);
@@ -132,7 +133,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {
     Route::get('{bookingReference}/items', [CartItemController::class, 'getCartDetailsByBookingReference']);
     Route::get('{bookingReference}/detail', [CartItemController::class, 'getCustomerOrderDetail']);
-    Route::get('all', [CartItemController::class, 'getAllUserOrders']);
+    Route::get('all', [CartItemController::class, 'getAllUserOrders'])->middleware('pointsAndCommissionAgentOnly');
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {
