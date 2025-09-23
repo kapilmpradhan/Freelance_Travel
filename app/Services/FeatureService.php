@@ -12,7 +12,7 @@ class FeatureService
             ->where('name', $featureName)
             ->where('scope', $scope ? $scope : '__laravel_null')
             ->first();
-        
+
         $value = $feature ? ($feature->value == 'true' ? true : false) : false;
         return $feature && $value;
     }
