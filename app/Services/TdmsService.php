@@ -304,6 +304,41 @@ class TdmsService
         }
     }
 
+    public static function getUserOrders($agentToken)
+    {
+        try {
+            $url = config('vars.tdms_api_url') . "/customerOrderDetail";
+
+            $response = Http::withQueryParameters([
+                "searchOnlyStatus" => "Order",
+                "toDate" => Carbon::now()->format('d-M-Y')
+            ])
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$agentToken}"
+            ])
+            ->get($url);
+        } catch (Exception $e) {
+            Logger::error(
+                message: "Error while fetching customer order detail",
+                extra: ["exception" => $e]
+            );
+            throw new ServiceException(message: 'Server error while fetching customer order detail');
+        }
+
+        $responseStatus = $response->status();
+
+        if ($responseStatus == 200) {
+            return ServiceResponse::success($response->json());
+        } else {
+            Logger::error(
+                message: "Error while fetching customer order detail",
+                extra: ["response" => $response->json()]
+            );
+            return ServiceResponse::badRequest(message: 'Internal server error');
+        }
+    }
+
     public static function customerOrderHistory(
         string $agentToken,
         string|null $customerEmail = null,

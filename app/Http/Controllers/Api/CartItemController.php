@@ -22,6 +22,7 @@ use App\Services\DiscountService;
 use App\Services\ProductCategoryService;
 use App\Services\RedeemerService;
 use App\Services\ServiceException;
+use App\Services\ServiceResponse;
 use App\Services\TdmsService;
 use App\Services\UserOrderCommissionService;
 use Illuminate\Support\Facades\DB;
@@ -331,6 +332,32 @@ class CartItemController extends BaseController
         $userId = $request->user->uuid;
         try {
             $getQuotesResponse = CartItemService::getQuotes(userId: $userId);
+            return $this->sendResponseFromService($getQuotesResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get quotes';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getAllQuotes(Request $request): JsonResponse
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getQuotesResponse = CartItemService::getQuotes(userId: $userId);
+            return $this->sendResponseFromService($getQuotesResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get quotes';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getMyQuotes(Request $request): JsonResponse
+    {
+        $userId = $request->user->uuid;
+        try {
+            $getQuotesResponse = CartItemService::getMyQuotes(userId: $userId);
             return $this->sendResponseFromService($getQuotesResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get quotes';
@@ -1002,6 +1029,17 @@ class CartItemController extends BaseController
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
+    }
+
+    public function getAllUserOrders(Request $request)
+    {
+        $agentType = app('agentType');
+        if ($agentType->isPointsAgent || $agentType->isCommissionAgent) {
+            $userOrdersResponse = TdmsService::getUserOrders($agentType->agent->access_token);
+            return $this->sendResponseFromService($userOrdersResponse);
+        }
+
+        return ServiceResponse::badRequest('Need to upgrade to points agent.');
     }
 
     public function getCartDetailsByBookingReference(Request $request, $bookingReference): JsonResponse

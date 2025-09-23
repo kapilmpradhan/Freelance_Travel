@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\UserAgent;
+use Laravel\Pennant\Feature;
 
 class UserResource
 {
@@ -11,6 +12,8 @@ class UserResource
         $userAgent = new UserAgent();
         $activeAgent = $userAgent->getActiveAgent($data->uuid);
         $hasUserAgent = (bool)$activeAgent;
+
+        $isTester = Feature::for(auth()->user())->active('tester');
 
         $returnData =  [
             'id' => $data->uuid,
@@ -30,6 +33,7 @@ class UserResource
             'created_at' => $data->created_at,
             'is_temporarily_deleted' => $data->is_temporarily_deleted,
             'is_points_displayed' => (bool) $data->is_points_displayed,
+            'is_tester' => $isTester
         ];
 
         if ($data->sso_type === 'apple') {

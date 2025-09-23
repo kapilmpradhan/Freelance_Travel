@@ -489,6 +489,65 @@ class CartItemService
         return ServiceResponse::success(data: $quotes);
     }
 
+    public static function getMyQuotes($userId, bool $isPaid = false)
+    {
+        $primaryRedeemerId = CartCustomerDetail::where('user_id', $userId)
+            ->where('is_primary', true)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($primaryRedeemerId)) {
+            return ServiceResponse::success([]);
+        }
+
+        $quotes = Quote::where('user_id', $userId)->where('is_paid', $isPaid)->get();
+
+        foreach ($quotes as $quote) {
+            $items = CartItem::where('quote_id', $quote->id)->get();
+            foreach ($items as $item) {
+                $hasPrimaryRedeemer = false;
+                if ($item->booking_data) {
+                    $redeemers = [];
+                    foreach ($item->booking_data as $data) {
+                        if (isset($data['redeemers'])) {
+                            $itemRedeemers = $data['redeemers'];
+                            $redeemers = array_merge($redeemers, $itemRedeemers);
+                        }
+                    }
+                    // Remove item from items if primary redeemer is not in any of the booking data
+                    foreach ($primaryRedeemerId as $primaryId) {
+                        if (in_array($primaryId, $redeemers)) {
+                            $hasPrimaryRedeemer = true;
+                            break;
+                        }
+                    }
+                    if (!$hasPrimaryRedeemer) {
+                        break;
+                    }
+                }
+            }
+
+            if (!$hasPrimaryRedeemer) {
+                // Remove quote from the collection
+                $quotes = $quotes->reject(function ($i) use ($quote) {
+                    return $i->id === $quote->id;
+                });
+                continue;
+            }
+
+            $productIds = $items->pluck('tdms_product_id')->unique();
+            $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+            $items->each(function ($item) use ($products) {
+                $item->product = $products->get($item->tdms_product_id);
+            });
+
+            $quote->items = $items;
+        }
+
+        return ServiceResponse::success(data: $quotes);
+    }
+
     public static function getQuoteDetails($quoteId)
     {
         $quote = Quote::where('id', $quoteId)->first();
