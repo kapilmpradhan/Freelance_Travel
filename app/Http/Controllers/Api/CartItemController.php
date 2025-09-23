@@ -355,9 +355,9 @@ class CartItemController extends BaseController
 
     public function getMyQuotes(Request $request): JsonResponse
     {
-        $userId = $request->user->uuid;
+        $user = $request->user;
         try {
-            $getQuotesResponse = CartItemService::getMyQuotes(userId: $userId);
+            $getQuotesResponse = CartItemService::getMyQuotes(user: $user);
             return $this->sendResponseFromService($getQuotesResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get quotes';

@@ -489,18 +489,15 @@ class CartItemService
         return ServiceResponse::success(data: $quotes);
     }
 
-    public static function getMyQuotes($userId, bool $isPaid = false)
+    public static function getMyQuotes($user, bool $isPaid = false)
     {
-        $primaryRedeemerId = CartCustomerDetail::where('user_id', $userId)
-            ->where('is_primary', true)
-            ->pluck('id')
-            ->toArray();
+        $redeemerIdsForUserEmail = CartCustomerDetail::where('email', $user->email)->pluck('id')->toArray();
 
-        if (empty($primaryRedeemerId)) {
+        if (empty($redeemerIdsForUserEmail)) {
             return ServiceResponse::success([]);
         }
 
-        $quotes = Quote::where('user_id', $userId)->where('is_paid', $isPaid)->get();
+        $quotes = Quote::where('is_paid', $isPaid)->get();
 
         foreach ($quotes as $quote) {
             $items = CartItem::where('quote_id', $quote->id)->get();
@@ -515,8 +512,8 @@ class CartItemService
                         }
                     }
                     // Remove item from items if primary redeemer is not in any of the booking data
-                    foreach ($primaryRedeemerId as $primaryId) {
-                        if (in_array($primaryId, $redeemers)) {
+                    foreach ($redeemerIdsForUserEmail as $redeemerId) {
+                        if (in_array($redeemerId, $redeemers)) {
                             $hasPrimaryRedeemer = true;
                             break;
                         }
@@ -527,7 +524,7 @@ class CartItemService
                 }
             }
 
-            if (!$hasPrimaryRedeemer) {
+            if (empty($items) || !$hasPrimaryRedeemer) {
                 // Remove quote from the collection
                 $quotes = $quotes->reject(function ($i) use ($quote) {
                     return $i->id === $quote->id;
@@ -545,7 +542,7 @@ class CartItemService
             $quote->items = $items;
         }
 
-        return ServiceResponse::success(data: $quotes);
+        return ServiceResponse::success(data: $quotes->values());
     }
 
     public static function getQuoteDetails($quoteId)
