@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\ItemType;
 use App\Models\CartCustomerDetail;
+use App\Models\Quote;
 
 class RedeemerService
 {
@@ -85,11 +86,16 @@ class RedeemerService
 
     public static function listActiveRedeemers($userId, ItemType $itemType)
     {
-        $query = CartCustomerDetail::where('user_id', $userId)
-            ->where('user_order_id', null)
+        $query = CartCustomerDetail::where('user_order_id', null)
             ->where('is_deleted', false);
 
-        $primaryRedeemer = (clone $query)->where('is_primary', true)->first();
+        $primaryRedeemer = (clone $query)->where('is_primary', true)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$itemType->isQuote) {
+            $query = $query::where('user_id', $userId);
+        }
 
         if ($itemType->isQuote) {
             $query->where('quote_id', $itemType->typeId);
@@ -101,8 +107,21 @@ class RedeemerService
         }
 
         $redeemers = $query->where('is_primary', false)->get();
-        if ($primaryRedeemer) {
+        $quote = Quote::where('id', $itemType->typeId)->first();
+        if (!$quote) {
+            return ServiceResponse::notFound();
+        }
+
+        if ($quote->user_id == $userId && $primaryRedeemer) {
             $redeemers->prepend($primaryRedeemer);
+        } elseif ($quote->user_id != $userId) {
+            $primaryRedeemerOfQuote = CartCustomerDetail::where('user_id', $quote->user_id)
+                ->where('is_primary', true)
+                ->first();
+
+            if ($primaryRedeemerOfQuote) {
+                $redeemers->prepend($primaryRedeemerOfQuote);
+            }
         }
 
         return ServiceResponse::success($redeemers);
