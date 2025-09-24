@@ -30,6 +30,13 @@ RUN composer install --no-dev --optimize-autoloader
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# PHP-FPM tuning: increase max_children etc.
+RUN sed -i 's/pm.max_children = .*/pm.max_children = 30/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/pm.start_servers = .*/pm.start_servers = 25/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/pm.min_spare_servers = .*/pm.min_spare_servers = 15/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/pm.max_spare_servers = .*/pm.max_spare_servers = 25/' /usr/local/etc/php-fpm.d/www.conf
+
 # Copy and run cron setup script
 COPY cron-setup.sh /usr/local/bin/cron-setup.sh
 RUN chmod +x /usr/local/bin/cron-setup.sh
