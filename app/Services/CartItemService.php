@@ -500,9 +500,10 @@ class CartItemService
         $quotes = Quote::where('is_paid', $isPaid)->get();
 
         foreach ($quotes as $quote) {
-            $items = CartItem::where('quote_id', $quote->id)->get();
+            $items = CartItem::userItemsByQuoteId(ItemType::quote($quote->id));
+
+            $hasPrimaryRedeemer = false;
             foreach ($items as $item) {
-                $hasPrimaryRedeemer = false;
                 if ($item->booking_data) {
                     $redeemers = [];
                     foreach ($item->booking_data as $data) {
@@ -518,7 +519,7 @@ class CartItemService
                             break;
                         }
                     }
-                    if (!$hasPrimaryRedeemer) {
+                    if ($hasPrimaryRedeemer) {
                         break;
                     }
                 }

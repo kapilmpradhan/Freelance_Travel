@@ -113,12 +113,12 @@ class RedeemerService
             if (!$quote) {
                 return ServiceResponse::notFound();
             }
-    
+
             if ($quote->user_id != $userId) {
                 $primaryRedeemerOfQuote = CartCustomerDetail::where('user_id', $quote->user_id)
                     ->where('is_primary', true)
                     ->first();
-    
+
                 if ($primaryRedeemerOfQuote) {
                     $redeemers->prepend($primaryRedeemerOfQuote);
                 }

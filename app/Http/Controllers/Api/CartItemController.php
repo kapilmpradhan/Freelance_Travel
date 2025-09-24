@@ -643,18 +643,6 @@ class CartItemController extends BaseController
                         'Invalid number of bookingData items provided'
                     );
                 }
-
-                // Check if redeemers with provided id are available
-                foreach ($item['bookingData'] as $bookingData) {
-                    $notAvailableRedeemers = array_diff($bookingData['redeemers'] ?? [], $userRedeemerIds);
-                    if (!empty($notAvailableRedeemers)) {
-                        $bookingDataIndex = array_search($bookingData, $item['bookingData']);
-                        $validator->errors()->add(
-                            $item['cartItemId'] . '.bookingData.redeemers.' . $bookingDataIndex,
-                            "redeemer id" . json_encode($notAvailableRedeemers) . " not available"
-                        );
-                    }
-                }
             }
         });
 
