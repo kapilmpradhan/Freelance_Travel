@@ -94,7 +94,7 @@ class RedeemerService
             ->first();
 
         if (!$itemType->isQuote) {
-            $query = $query::where('user_id', $userId);
+            $query = $query->where('user_id', $userId);
         }
 
         if ($itemType->isQuote) {
@@ -107,21 +107,29 @@ class RedeemerService
         }
 
         $redeemers = $query->where('is_primary', false)->get();
-        $quote = Quote::where('id', $itemType->typeId)->first();
-        if (!$quote) {
-            return ServiceResponse::notFound();
+
+        if ($itemType->isQuote) {
+            $quote = Quote::where('id', $itemType->typeId)->first();
+            if (!$quote) {
+                return ServiceResponse::notFound();
+            }
+    
+            if ($quote->user_id != $userId) {
+                $primaryRedeemerOfQuote = CartCustomerDetail::where('user_id', $quote->user_id)
+                    ->where('is_primary', true)
+                    ->first();
+    
+                if ($primaryRedeemerOfQuote) {
+                    $redeemers->prepend($primaryRedeemerOfQuote);
+                }
+            }
+
+            return ServiceResponse::success($redeemers);
         }
 
-        if ($quote->user_id == $userId && $primaryRedeemer) {
-            $redeemers->prepend($primaryRedeemer);
-        } elseif ($quote->user_id != $userId) {
-            $primaryRedeemerOfQuote = CartCustomerDetail::where('user_id', $quote->user_id)
-                ->where('is_primary', true)
-                ->first();
 
-            if ($primaryRedeemerOfQuote) {
-                $redeemers->prepend($primaryRedeemerOfQuote);
-            }
+        if ($primaryRedeemer) {
+            $redeemers->prepend($primaryRedeemer);
         }
 
         return ServiceResponse::success($redeemers);

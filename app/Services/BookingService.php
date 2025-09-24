@@ -133,10 +133,10 @@ class BookingService
         return $redeemers;
     }
 
-    public static function buildRedeemersDataV2($cartItems, $userId, $forDiscount = false)
+    public static function buildRedeemersDataV2($cartItems, $userId, $itemType)
     {
-        $userRedeemers = CartCustomerDetail::where('user_id', $userId)->get();
-        if ($forDiscount) {
+        $userRedeemers = RedeemerService::listActiveRedeemers($userId, $itemType)->data;
+        if ($itemType->forDiscount) {
             $fakeRedeemer = CartCustomerDetail::factory(count: 1)->make()->first();
         }
 
@@ -150,7 +150,7 @@ class BookingService
                             : null;
 
             foreach ($bookingDatas as $bookingData) {
-                if (!$forDiscount) {
+                if (!$itemType->forDiscount) {
                     $redeemerIds = $bookingData['redeemers'] ?? [];
                 } else {
                     $redeemerIds = [$fakeRedeemer->id];
@@ -163,7 +163,7 @@ class BookingService
                 }
 
                 $redeemerId = $redeemerIds[0];
-                if (!$forDiscount) {
+                if (!$itemType->forDiscount) {
                     $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
                 } else {
                     $userRedeemer = $fakeRedeemer;
@@ -340,14 +340,14 @@ class BookingService
         ?int $pointsApplied,
         Collection $cartItems,
         array $customers,
-        bool $forDiscount = false
+        ItemType $itemType
     ): array {
         $totalChargeAmount = self::getTotalChargeAmount(
             $cartItems
         );
         $orderProducts = self::buildProductsData($cartItems);
         if (empty($customers)) {
-            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $forDiscount);
+            $redeemers = self::buildRedeemersDataV2($cartItems, $userId, $itemType);
         } else {
             $redeemers = self::buildRedeemersData($cartItems, $customers);
         }
@@ -441,7 +441,7 @@ class BookingService
             $cartItems = (
                 !$itemType->isQuote
                 ? CartItem::userCartItems($userId)
-                : CartItem::userQuoteItems($userId, $itemType)
+                : CartItem::userItemsByQuoteId($itemType)
             );
         }
         $cartItemIds = $cartItems->pluck('id')->toArray();
@@ -495,7 +495,7 @@ class BookingService
             pointsApplied: $pointsApplied,
             cartItems: $cartItems,
             customers: $customers,
-            forDiscount: $itemType->forDiscount
+            itemType: $itemType
         );
 
         try {

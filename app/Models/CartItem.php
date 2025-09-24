@@ -255,10 +255,10 @@ class CartItem extends Model
         return $this->create($data);
     }
 
-    public static function userItems($userId, ItemType $itemType): Collection
+    public static function userItems(null|string $userId = null, ItemType $itemType): Collection
     {
         return CartItem::query()
-            ->where('user_id', $userId)
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
@@ -319,5 +319,10 @@ class CartItem extends Model
     public static function userDirectPurchaseItems(string $userId)
     {
         return self::userItems($userId, ItemType::direct());
+    }
+
+    public static function userItemsByQuoteId(ItemType $type)
+    {
+        return self::userItems(userId: null, itemType: $type);
     }
 }
