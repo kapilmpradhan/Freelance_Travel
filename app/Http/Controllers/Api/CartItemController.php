@@ -1023,7 +1023,11 @@ class CartItemController extends BaseController
     {
         $agentType = app('agentType');
         if ($agentType->isPointsAgent || $agentType->isCommissionAgent) {
-            $userOrdersResponse = TdmsService::getUserOrders($agentType->agent->access_token);
+            try {
+                $userOrdersResponse = TdmsService::getUserOrders($agentType->agent->access_token);
+            } catch (ServiceException $e) {
+                return $this->sendResponseFromService($e->toServiceResponse());
+            }
             return $this->sendResponseFromService($userOrdersResponse);
         }
 

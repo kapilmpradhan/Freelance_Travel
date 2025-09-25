@@ -330,6 +330,8 @@ class TdmsService
 
         if ($responseStatus == 200) {
             return ServiceResponse::success($response->json());
+        } elseif ($responseStatus == 404) {
+            return ServiceResponse::success([]);
         } else {
             Logger::error(
                 message: "Error while fetching customer order detail",
