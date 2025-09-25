@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\RedeemerController;
+use App\Http\Controllers\Api\SharedPaymentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
@@ -87,7 +88,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount',
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::post('items', [CartItemController::class, 'addItemsToCart']);
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
-    Route::get('items', [CartItemController::class, 'getItemsInCart']);
+    // Route::get('items', [CartItemController::class, 'getItemsInCart']);
     Route::put('items/v2', [CartItemController::class, 'setBookingDataV2']);
     Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
@@ -127,7 +128,12 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::put('{quoteId}/customers', [CartItemController::class, 'setQuoteCustomers']);
     Route::get('{quoteId}/customers', [CartItemController::class, 'getQuoteCustomers']);
     Route::post('{quoteId}/order', [CartItemController::class, 'submitQuoteOrder']);
+    Route::post('{quoteId}/share', [SharedPaymentController::class, 'sharePaymentLink']);
     Route::get('', [CartItemController::class, 'getQuotes']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quote'], function () {
+    Route::get('{quoteId}/payment', [SharedPaymentController::class, 'redirectToStripePayment']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {

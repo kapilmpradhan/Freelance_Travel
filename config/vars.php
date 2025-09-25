@@ -22,6 +22,8 @@ return [
     'peterpans_order_complete_template_id' => env('BREVO_PETERPANS_ORDER_COMPLETE_TEMPLATE_ID'),
     'peterpans_account_deletion_template_id' => env('BREVO_PETERPANS_ACCOUNT_DELETION_TEMPLATE_ID'),
     'peterpans_points_earned_template_id' => env('BREVO_PETERPANS_POINTS_EARNED_NOTIFICATION_TEMPLATE_ID'),
+    'peterpans_share_payment_template_id' => env('BREVO_PETERPANS_SHARE_PAYMENT_TEMPLATE_ID'),
+    'share_payment_template_id' => env('BREVO_SHARE_PAYMENT_TEMPLATE_ID'),
 
     'sso_type_email' => env('SSO_TYPE_EMAIL'),
     'sso_type_google' => env('SSO_TYPE_GOOGLE'),

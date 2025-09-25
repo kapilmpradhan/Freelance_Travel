@@ -123,8 +123,6 @@ class RedeemerService
                     $redeemers->prepend($primaryRedeemerOfQuote);
                 }
             }
-
-            return ServiceResponse::success($redeemers);
         }
 
 

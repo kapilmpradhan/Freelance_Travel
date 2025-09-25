@@ -27,7 +27,7 @@ class UserAgentService
         if (
             !$agent->access_token ||
             !$agent->token_updated_at ||
-            $agent->token_updated_at->diffInHours(Carbon::now()) > 21
+            $agent->token_updated_at->diffInHours(Carbon::now()) > 15
         ) {
             $response = TdmsService::getAgentToken(
                 username: $agent->email,
