@@ -342,9 +342,9 @@ class CartItemController extends BaseController
 
     public function getAllQuotes(Request $request): JsonResponse
     {
-        $userId = $request->user->uuid;
+        $user = $request->user;
         try {
-            $getQuotesResponse = CartItemService::getQuotes(userId: $userId);
+            $getQuotesResponse = CartItemService::getAllQuotes(user: $user);
             return $this->sendResponseFromService($getQuotesResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get quotes';
@@ -642,6 +642,18 @@ class CartItemController extends BaseController
                         $item['cartItemId'] . '.bookingData',
                         'Invalid number of bookingData items provided'
                     );
+                }
+
+                // Check if redeemers with provided id are available
+                foreach ($item['bookingData'] as $bookingData) {
+                    $notAvailableRedeemers = array_diff($bookingData['redeemers'] ?? [], $userRedeemerIds);
+                    if (!empty($notAvailableRedeemers)) {
+                        $bookingDataIndex = array_search($bookingData, $item['bookingData']);
+                        $validator->errors()->add(
+                            $item['cartItemId'] . '.bookingData.redeemers.' . $bookingDataIndex,
+                            "redeemer id" . json_encode($notAvailableRedeemers) . " not available"
+                        );
+                    }
                 }
             }
         });

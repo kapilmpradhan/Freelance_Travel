@@ -497,7 +497,9 @@ class CartItemService
             return ServiceResponse::success([]);
         }
 
-        $quotes = Quote::where('is_paid', $isPaid)->get();
+        $quotes = Quote::where('is_paid', $isPaid)
+            ->where('user_id', $user->uuid)
+            ->get();
 
         foreach ($quotes as $quote) {
             $items = CartItem::userItemsByQuoteId(ItemType::quote($quote->id));
@@ -512,7 +514,6 @@ class CartItemService
                             $redeemers = array_merge($redeemers, $itemRedeemers);
                         }
                     }
-                    // Remove item from items if primary redeemer is not in any of the booking data
                     foreach ($redeemerIdsForUserEmail as $redeemerId) {
                         if (in_array($redeemerId, $redeemers)) {
                             $hasPrimaryRedeemer = true;
@@ -526,6 +527,64 @@ class CartItemService
             }
 
             if (empty($items) || !$hasPrimaryRedeemer) {
+                // Remove quote from the collection
+                $quotes = $quotes->reject(function ($i) use ($quote) {
+                    return $i->id === $quote->id;
+                });
+                continue;
+            }
+
+            $productIds = $items->pluck('tdms_product_id')->unique();
+            $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+
+            $items->each(function ($item) use ($products) {
+                $item->product = $products->get($item->tdms_product_id);
+            });
+
+            $quote->items = $items;
+        }
+
+        return ServiceResponse::success(data: $quotes->values());
+    }
+
+    public static function getAllQuotes($user, bool $isPaid = false)
+    {
+        $redeemerIdsForUserEmail = CartCustomerDetail::where('email', $user->email)->pluck('id')->toArray();
+
+        if (empty($redeemerIdsForUserEmail)) {
+            return ServiceResponse::success([]);
+        }
+
+        $quotes = Quote::where('is_paid', $isPaid)
+            ->where('user_id', $user->uuid)
+            ->get();
+
+        foreach ($quotes as $quote) {
+            $items = CartItem::userItemsByQuoteId(ItemType::quote($quote->id));
+
+            $hasPrimaryRedeemer = false;
+            foreach ($items as $item) {
+                if ($item->booking_data) {
+                    $redeemers = [];
+                    foreach ($item->booking_data as $data) {
+                        if (isset($data['redeemers'])) {
+                            $itemRedeemers = $data['redeemers'];
+                            $redeemers = array_merge($redeemers, $itemRedeemers);
+                        }
+                    }
+                    foreach ($redeemerIdsForUserEmail as $redeemerId) {
+                        if (in_array($redeemerId, $redeemers)) {
+                            $hasPrimaryRedeemer = true;
+                            break;
+                        }
+                    }
+                    if ($hasPrimaryRedeemer) {
+                        break;
+                    }
+                }
+            }
+
+            if (empty($items) || $hasPrimaryRedeemer) {
                 // Remove quote from the collection
                 $quotes = $quotes->reject(function ($i) use ($quote) {
                     return $i->id === $quote->id;

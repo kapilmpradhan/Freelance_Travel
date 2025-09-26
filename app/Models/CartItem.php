@@ -255,7 +255,7 @@ class CartItem extends Model
         return $this->create($data);
     }
 
-    public static function userItems(null|string $userId = null, ItemType $itemType): Collection
+    public static function userItems(null|string $userId, ItemType $itemType): Collection
     {
         return CartItem::query()
             ->when($userId, fn ($query) => $query->where('user_id', $userId))
