@@ -307,11 +307,14 @@ class UserController extends BaseController
         $isDefaultAgent = $userAgent->isDefaultAgent;
 
         $isOrderTabbedEnabledForAll = FeatureService::isFeatureEnabled('order-tabbed-view');
+        $isPaymentLinkSharingEnabledForAll = FeatureService::isFeatureEnabled('payment-link-sharing');
 
         $isOrderTabEnabled = !$isDefaultAgent && ($isOrderTabbedEnabledForAll || $isTestUser);
+        $isPaymentLinkSharingEnabled = $isPaymentLinkSharingEnabledForAll || $isTestUser;
 
         $data = [
-            'is_order_tab_enabled' => $isOrderTabEnabled
+            'is_order_tab_enabled' => $isOrderTabEnabled,
+            'is_payment_link_sharing_enabled' => $isPaymentLinkSharingEnabled
         ];
 
         return $this->sendResponse('User meta data', $data);
