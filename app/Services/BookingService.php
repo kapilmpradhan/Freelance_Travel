@@ -441,7 +441,7 @@ class BookingService
             $cartItems = (
                 !$itemType->isQuote
                 ? CartItem::userCartItems($userId)
-                : CartItem::userItemsByQuoteId($itemType)
+                : CartItem::userItemsByQuoteId($userId, $itemType)
             );
         }
         $cartItemIds = $cartItems->pluck('id')->toArray();

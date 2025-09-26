@@ -88,7 +88,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount',
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::post('items', [CartItemController::class, 'addItemsToCart']);
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
-    // Route::get('items', [CartItemController::class, 'getItemsInCart']);
+    Route::get('items', [CartItemController::class, 'getItemsInCart']);
     Route::put('items/v2', [CartItemController::class, 'setBookingDataV2']);
     Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);

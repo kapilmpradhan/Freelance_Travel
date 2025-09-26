@@ -502,7 +502,7 @@ class CartItemService
             ->get();
 
         foreach ($quotes as $quote) {
-            $items = CartItem::userItemsByQuoteId(ItemType::quote($quote->id));
+            $items = CartItem::userItemsByQuoteId($user->uuid, ItemType::quote($quote->id));
 
             $hasPrimaryRedeemer = false;
             foreach ($items as $item) {
@@ -560,7 +560,7 @@ class CartItemService
             ->get();
 
         foreach ($quotes as $quote) {
-            $items = CartItem::userItemsByQuoteId(ItemType::quote($quote->id));
+            $items = CartItem::userItemsByQuoteId($user->uuid, ItemType::quote($quote->id));
 
             $hasPrimaryRedeemer = false;
             foreach ($items as $item) {
