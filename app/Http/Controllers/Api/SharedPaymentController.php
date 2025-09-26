@@ -159,7 +159,7 @@ class SharedPaymentController extends BaseController
                 $query->where('is_primary', true)
                       ->where('user_id', auth()->user()->uuid);
             })
-            ->select('id', 'first_name', 'last_name')
+            ->select('id', 'first_name', 'last_name', 'email')
             ->get();
 
         $receivers = [];
