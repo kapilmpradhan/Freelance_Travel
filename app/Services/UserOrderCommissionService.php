@@ -32,18 +32,6 @@ class UserOrderCommissionService
 
     public static function getOrSetCommissionOfUserCartOrQuote($userId, ItemType $itemType): ServiceResponse
     {
-        // Setting this zero for now
-        // TODO: Return applicable discount and points
-        if ($itemType->isQuote) {
-            $quote = Quote::where('id', $itemType->typeId)->first();
-            if (!$quote || $quote->user_id != $userId) {
-                return ServiceResponse::success([
-                    'commission' => 0,
-                    'pointsAvailable' => 0
-                ]);
-            }
-        }
-
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             $userId,
             $itemType
