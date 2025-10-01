@@ -19,6 +19,9 @@ class SharePaymentLinkJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /**
+     * @var SharedPayment
+     */
     public $sharedPayment;
     public $platform;
     public function __construct(SharedPayment $sharedPayment, $platform)
@@ -35,7 +38,7 @@ class SharePaymentLinkJob implements ShouldQueue
         $quoteId = $this->sharedPayment->quote_id;
         $name = $this->sharedPayment->name;
         $email = $this->sharedPayment->email;
-        $freelanceRedirectUrl = config('app.url') . "/api/quote/{$quoteId}/payment";
+        $paymentLink = $this->sharedPayment->payment_link;
 
         $quote = Quote::where('id', $quoteId)->first();
 
@@ -53,7 +56,7 @@ class SharePaymentLinkJob implements ShouldQueue
             'params' => [
                 'receiverName' => $name,
                 'quoteName' => $quote->title,
-                'paymentLink' => $freelanceRedirectUrl
+                'paymentLink' => $paymentLink
             ],
         ];
 
