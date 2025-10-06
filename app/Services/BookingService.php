@@ -421,7 +421,7 @@ class BookingService
     public static function basePostOrder(
         string $userId,
         string $intent,
-        ?int $pointsApplied,
+        ?float $pointsApplied,
         ItemType $itemType,
         bool $processAsQuote = true,
         array $customers = []
@@ -592,7 +592,7 @@ class BookingService
             throw new ServiceException($orderResponseData['message']);
         }
 
-        if ($agentType->isPointsAgent) {
+        if (!$agentType->isDefaultAgent) {
             $pointsToDollar = UserOrderCommissionService::pointsToDollars($pointsApplied, $agent->points_multiplier);
             $paymentAmount -= $pointsToDollar;
         }
@@ -677,7 +677,7 @@ class BookingService
     public static function postOrder(
         string $userId,
         string $intent,
-        ?int $pointsApplied,
+        ?float $pointsApplied,
         ItemType $itemType,
         bool $processAsQuote = true
     ): ?ServiceResponse {

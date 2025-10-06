@@ -38,7 +38,7 @@ class SharePaymentLinkJob implements ShouldQueue
         $quoteId = $this->sharedPayment->quote_id;
         $name = $this->sharedPayment->name;
         $email = $this->sharedPayment->email;
-        $paymentLink = $this->sharedPayment->payment_link;
+        $paymentLink = config('app.url') . "/api/quote/{$this->sharedPayment->quote_id}/payment";
 
         $quote = Quote::where('id', $quoteId)->first();
 

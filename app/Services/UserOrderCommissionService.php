@@ -136,7 +136,7 @@ class UserOrderCommissionService
         return (float) round($commission * $pointsMultiplier, 2);
     }
 
-    public static function pointsToDollars(?int $points, int $pointsMultiplier): ?float
+    public static function pointsToDollars(?float $points, int $pointsMultiplier): ?float
     {
         if (!$points) {
             return null;

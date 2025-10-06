@@ -36,7 +36,8 @@ class SharedPaymentController extends BaseController
         if ($isNew) {
             $validator = Validator::make($requestData, [
                 'name' => 'string|required',
-                'email' => 'required|email'
+                'email' => 'required|email',
+                "pointsApplied" => "nullable|numeric"
             ]);
             if ($validator->fails()) {
                 return $this->sendError('Validation error', $validator->errors());
@@ -47,7 +48,8 @@ class SharedPaymentController extends BaseController
             $redeemerId = null;
         } else {
             $validator = Validator::make($requestData, [
-                'redeemerId' => 'integer|required'
+                'redeemerId' => 'integer|required',
+                "pointsApplied" => "nullable|numeric"
             ]);
             if ($validator->fails()) {
                 return $this->sendError('Validation error', $validator->errors());
@@ -69,7 +71,7 @@ class SharedPaymentController extends BaseController
         $postOrderResponse = BookingService::postOrder(
             userId: $request->user->uuid,
             intent: 'pay-now',
-            pointsApplied: null,
+            pointsApplied: $requestData['pointsApplied'] ?? 0,
             processAsQuote: true,
             itemType: $itemType
         );
@@ -78,7 +80,7 @@ class SharedPaymentController extends BaseController
             return $this->sendResponseFromService($postOrderResponse);
         }
 
-        $paymentLink = $postOrderResponse->data['payNow']['redirectUrl'];
+        $paymentLink = $postOrderResponse->data['payNow']['quoteUrl'];
 
         $lastSharedPayment = SharedPayment::where('quote_id', $quoteId)
             ->where('is_latest', true)
