@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Logging\Logger;
+use App\Models\UserAgent;
 
 class TdmsService
 {
@@ -763,6 +764,46 @@ class TdmsService
             Logger::error(
                 message: 'Error upgrading User to Agent',
                 extra: array_merge($params, ["responseData" => $response->json()])
+            );
+
+            throw new ServiceException(
+                message: 'Error upgrading User to Agent',
+                data: $response->json(),
+                code: $response->status()
+            );
+        }
+
+        $responseData = $response->json();
+
+        if (count($responseData['error'] ?? []) > 0) {
+            $messages = array_map(fn ($item) => $item['message'], $responseData['error'] ?? []);
+
+            return ServiceResponse::badRequest(
+                message: implode(". ", $messages),
+                data: $responseData,
+            );
+        }
+
+        return ServiceResponse::success($responseData);
+    }
+
+    public static function upgradeToCommissionAgent(
+        UserAgent $agent,
+    ): ServiceResponse {
+        $url = config('vars.tdms_api_url') . "/convertToFTA";
+
+        $response = Http::asJson()
+            ->timeout(120)
+            ->withToken($agent->access_token)
+            ->post($url);
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error upgrading User to Agent',
+                extra: [
+                    "agentBranch" => $agent->branch_code,
+                    "responseData" => $response->json()
+                ]
             );
 
             throw new ServiceException(

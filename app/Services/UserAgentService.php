@@ -40,6 +40,7 @@ class UserAgentService
 
             $agent->update([
                 "access_token" => $response->data['access_token'],
+                "subsystem_type" => $response->data['subSystemType'],
                 "points_balance" => $response->data['pointsBalance'],
                 "points_available" => $response->data['availableBalance'],
                 "points_multiplier" => $response->data['pointsMultiplier'],
@@ -132,7 +133,8 @@ class UserAgentService
         $username,
         $password,
         ?string $branchCode,
-        ?int $referralSourceId
+        ?int $referralSourceId,
+        string $subSystemType = 'FIT'
     ): ServiceResponse {
         $response = TdmsService::getAgentToken($username, $password);
         if ($response->isError() || !$response->data) {
@@ -158,6 +160,7 @@ class UserAgentService
             $agentDetail['is_active'] = true;
             $agentDetail['branch_code'] = $branchCode;
             $agentDetail['referral_source_id'] = $referralSourceId;
+            $agentDetail['subsystem_type'] = $subSystemType;
 
             $userAgent = UserAgent::create($agentDetail);
             $userAgentData = AgentResource::userAgentDetails($userAgent);
@@ -189,6 +192,19 @@ class UserAgentService
 
         $agent->update($newAgentDetail);
         return ServiceResponse::success();
+    }
+
+    public static function upgradeToCommission(UserAgent $agent, array $data): ServiceResponse
+    {
+        $newAgentDetail = [
+            "subsystem_type" => $data['subSystemType'],
+            'points_balance' => $data['pointsBalance'],
+            'points_available' => $data['availableBalance'],
+            'points_multiplier' => $data['pointsMultiplier'],
+        ];
+
+        $agent->update($newAgentDetail);
+        return ServiceResponse::success($agent);
     }
 
     public static function unlinkAgent($agent)

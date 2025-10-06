@@ -2,10 +2,11 @@
 
 namespace App\Listeners;
 
+use App\DTOs\UserAgentDTO;
 use App\Events\CompleteOrderEvent;
 use App\Logging\Logger;
 use App\Jobs\SendPointsEarnedNotificationJob;
-use App\Services\UserAgentService;
+use App\Models\User;
 
 class PointsEarnedNotification
 {
@@ -23,15 +24,12 @@ class PointsEarnedNotification
     public function handle(CompleteOrderEvent $event): void
     {
         $className = get_class($this);
-        Logger::debug("[{$className}] Received order created event");
+        Logger::debug("[{$className}] Received points earned notification event");
 
-        $agent = UserAgentService::getUserAgent($event->userOrder->user_id);
-        if (!$agent->isSuccess()) {
-            Logger::debug("[{$className}] User is not an agent. Skipping sending points earned notification.");
-            return;
-        }
+        $userId = $event->userOrder->user_id;
+        $agentType = UserAgentDTO::getUserAgent(User::find($userId), app('platform'));
 
-        SendPointsEarnedNotificationJob::dispatch($event->userOrder, app('platform'), $agent->data);
+        SendPointsEarnedNotificationJob::dispatch($event->userOrder, app('platform'), $agentType);
 
         Logger::debug("[{$className}] Dispatched job to send complete order mail");
     }

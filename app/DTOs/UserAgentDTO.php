@@ -38,7 +38,8 @@ class UserAgentDTO
 
         if ($agent) {
             $agent = UserAgentService::refreshAgent($agent);
-            if (!is_null($agent->bank_account)) {
+
+            if ($agent->subsystem_type == 'FTA') {
                 $isCommissionAgent = true;
             } else {
                 $isPointsAgent = true;

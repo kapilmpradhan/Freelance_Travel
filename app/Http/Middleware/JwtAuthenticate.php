@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\DTOs\UserAgentDTO;
+use App\Enums\AgentBranchCode;
 use Closure;
 use App\Services\JwtService;
 use App\Services\ResponseService;
@@ -48,7 +49,9 @@ class JwtAuthenticate
         Auth::login($validated_data['user']);
 
         $request->merge(['user' => $validated_data['user']]);
-        App::instance('agentType', UserAgentDTO::getUserAgent($request->user, app('platform')));
+        $agentType = UserAgentDTO::getUserAgent($request->user, app('platform'));
+
+        App::instance('agentType', $agentType);
 
         return $next($request);
     }

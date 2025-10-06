@@ -25,13 +25,13 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
 
     protected $data;
     protected $platform;
-    protected $agent;
+    protected $agentType;
 
-    public function __construct($data, $platform, $agent)
+    public function __construct($data, $platform, $agentType)
     {
         $this->data = $data;
         $this->platform = $platform;
-        $this->agent = $agent;
+        $this->agentType = $agentType;
     }
 
     // Prepare mobile notification data
@@ -78,7 +78,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $userId = $this->data->user_id;
         $user = User::where('uuid', $userId)->first();
 
-        $agentToken = $this->agent->access_token;
+        $agentToken = $this->agentType->agent->access_token;
 
         $getCommissionReportResponse = TdmsService::getCommissionReport(
             agentToken: $agentToken,
@@ -114,12 +114,11 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         // Email notification data
         $sender = BrevoEmailService::platformSenderDetail($this->platform);
 
-        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS && !$this->agentType->isCommissionAgent
             ? 'peterpans_points_earned_template_id'
             : 'points_earned_template_id';
 
         $customerData = [
-            'sender' => $sender,
             'to' => [
                 [
                     'email' => $user->email
@@ -131,6 +130,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
                 'earnedPoints' => $balance,
                 'availableDate' => $requiredReport['availableDate'],
                 'platform' => $sender['name'],
+                'isCommissionAgent' => $this->agentType->isCommissionAgent
             ]
         ];
 

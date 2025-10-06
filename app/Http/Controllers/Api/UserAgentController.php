@@ -232,4 +232,36 @@ class UserAgentController extends BaseController
 
         return $this->sendResponseFromService($addUserAgentResponse);
     }
+
+    public function upgradeToCommissionAgent(Request $request): JsonResponse
+    {
+        $user = $request->user; /** @var User $user */
+
+        if (Feature::for($user)->active('tester')) {
+            return $this->sendError('This test account cannot be upgraded to an agent.');
+        }
+
+        $getAgentResponse = UserAgentService::getUserAgent($user->uuid);
+
+        if ($getAgentResponse->isError()) {
+            return $this->sendResponseFromService($getAgentResponse);
+        }
+
+        $agent = $getAgentResponse->data;
+
+        $upgradeToCommissionAgentResponse = TdmsService::upgradeToCommissionAgent($agent);
+
+        if ($upgradeToCommissionAgentResponse->isError()) {
+            return $this->sendResponseFromService($upgradeToCommissionAgentResponse);
+        }
+
+        $data = $upgradeToCommissionAgentResponse->data;
+
+        $updateAgent = UserAgentService::upgradeToCommission(
+            agent: $agent,
+            data: $data
+        );
+
+        return $this->sendResponseFromService($updateAgent);
+    }
 }

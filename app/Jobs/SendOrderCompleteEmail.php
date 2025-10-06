@@ -12,7 +12,6 @@ use App\Services\IEmailService;
 use App\Logging\Logger;
 use App\Services\BrevoEmailService;
 use App\Services\TdmsService;
-use App\Services\UserAgentService;
 use Carbon\Carbon;
 
 class SendOrderCompleteEmail implements ShouldQueue
@@ -24,11 +23,13 @@ class SendOrderCompleteEmail implements ShouldQueue
 
     protected $data;
     protected $platform;
+    protected $agentType;
 
-    public function __construct($data, $platform)
+    public function __construct($data, $platform, $agentType)
     {
         $this->data = $data;
         $this->platform = $platform;
+        $this->agentType = $agentType;
     }
 
     /**
@@ -40,13 +41,7 @@ class SendOrderCompleteEmail implements ShouldQueue
         $this->data['platform'] = $sender['name'];
         $bookingReference = $this->data['bookingReference'];
 
-        $agentResponse = UserAgentService::getUserAgentByBranch(substr($bookingReference, 0, 3));
-        if ($agentResponse->isError()) {
-            Logger::error('Agent not found');
-            return;
-        }
-
-        $agentToken = $agentResponse->data->access_token;
+        $agentToken = $this->agentType->agent->access_token;
         $getCustomerDetails = TdmsService::customerOrderHistory(
             agentToken: $agentToken,
             sinceDate: Carbon::yesterday()
@@ -57,13 +52,13 @@ class SendOrderCompleteEmail implements ShouldQueue
             return isset($order['bookingReference']) && $order['bookingReference'] === $bookingReference;
         })[0];
 
-        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
+        $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS && !$this->agentType->isCommissionAgent
             ? 'peterpans_order_complete_template_id'
             : 'order_complete_template_id';
 
         $this->data['totalCharged'] = round($requiredOrder['paidAmount'], 2);
+        $this->data['isCommissionAgent'] = $this->agentType->isCommissionAgent;
         $customerData = [
-            'sender' => $sender,
             'to' => [
                 [
                     'email' => $this->data['redeemers'][0]['emailAddress']

@@ -2,12 +2,14 @@
 
 namespace App\Listeners;
 
+use App\DTOs\UserAgentDTO;
+use App\Enums\AgentBranchCode;
 use App\Events\CompleteOrderEvent;
 use App\Logging\Logger;
+use App\Models\User;
 use App\Services\BookingNotificationService;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SetBookingNotificationData implements ShouldQueue
+class SetBookingNotificationData
 {
     /**
      * Create the event listener.
@@ -24,10 +26,14 @@ class SetBookingNotificationData implements ShouldQueue
     {
         Logger::debug("Received event to set booking notification data");
 
+        $userId = $event->userOrder->user_id;
+        $agentType = UserAgentDTO::getUserAgent(User::find($userId), app('platform'));
+        $platform = $agentType->isCommissionAgent ? AgentBranchCode::DEFAULT : $event->platform;
+
         $addBookingDataResponse = BookingNotificationService::addBookingDataToNotification(
             cartItems: $event->cartItems,
             userOrder: $event->userOrder,
-            platform: $event->platform
+            platform: $platform
         );
 
         if ($addBookingDataResponse->success()) {

@@ -162,6 +162,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent', 'm
     Route::post('integration/points', [UserAgentController::class, 'getAndUpdateUserAgentPoints']);
     Route::post('integration', [UserAgentController::class, 'addUserAgent']);
     Route::post('integration/upgradeToAgent', [UserAgentController::class, 'upgradeToAgent']);
+    Route::post('integration/upgradeToCommissionAgent', [UserAgentController::class, 'upgradeToCommissionAgent']);
     Route::put('integration', [UserAgentController::class, 'updateUserAgent']);
     Route::delete('integration', [UserAgentController::class, 'unlinkUserAgent']);
 });

@@ -61,6 +61,7 @@ class UserAgent extends Model
         'trading_name',
         'is_active',
         'is_deleted',
+        'subsystem_type',
         'points_balance',
         'points_available',
         'points_multiplier',
