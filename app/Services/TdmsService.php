@@ -312,7 +312,7 @@ class TdmsService
 
             $response = Http::withQueryParameters([
                 "searchOnlyStatus" => "Order",
-                "toDate" => Carbon::now()->format('d-M-Y')
+                "toDate" => Carbon::now()->addDay()->format('d-M-Y')
             ])
             ->withHeaders([
                 'Content-Type' => 'application/json',
