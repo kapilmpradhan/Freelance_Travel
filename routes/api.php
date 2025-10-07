@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\QuotetController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
+use App\Http\Controllers\Api\AppMetaDataController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\DiscountController;
 use App\Http\Controllers\Api\HealthCheckController;
@@ -79,6 +80,11 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'admin', 'm
     Route::put('/discount/{discountId}/update', [DiscountController::class, 'updateDiscount']);
     Route::delete('/discount/{discountId}/delete', [DiscountController::class, 'deleteDiscount']);
     Route::post('/send/notification/topic', [AdminController::class, 'sendNotificationToTopic']);
+    Route::post('mobile/minSupportVersion', [AppMetaDataController::class, 'setMobileMinSupportedVersion']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'app'], function () {
+    Route::get('minSupportVersion', [AppMetaDataController::class, 'getMobileMinSupportedVersion']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount', 'middleware' => 'auth.ifToken'], function () {
