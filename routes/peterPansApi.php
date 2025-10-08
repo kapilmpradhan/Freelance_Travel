@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RedeemerController;
+use App\Http\Controllers\Api\SharedPaymentController;
 use App\Http\Controllers\Api\UserAgentController;
 use App\Http\Controllers\Api\UserController;
 
@@ -54,6 +55,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'user', 'mi
     Route::post('/points/show-hide', [UserController::class, 'showHidePoints']);
     Route::post('/fcm/token/add', [UserController::class, 'addFcmToken']);
     Route::delete('/fcm/token/{fcmToken}', [UserController::class, 'removeFcmToken']);
+    Route::get('metaData', [UserController::class, 'userMetaData']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'agent'], function () {
@@ -89,6 +91,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {
     Route::post('new/v2', [CartItemController::class, 'addItemsInNewQuoteV2']);
+    Route::get('all', [CartItemController::class, 'getAllQuotes'])->middleware('pointsAndCommissionAgentOnly');
+    Route::get('my', [CartItemController::class, 'getMyQuotes'])->middleware('pointsAndCommissionAgentOnly');
     Route::get('{quoteId}', [CartItemController::class, 'getQuoteDetails']);
     Route::get('{quoteId}/items', [CartItemController::class, 'getItemsInQuote']);
     Route::put('{quoteId}/items/add/v2', [CartItemController::class, 'addItemsInExistingQuoteV2']);
@@ -98,6 +102,11 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::put('{quoteId}/customers', [CartItemController::class, 'setQuoteCustomers']);
     Route::get('{quoteId}/customers', [CartItemController::class, 'getQuoteCustomers']);
     Route::post('{quoteId}/order', [CartItemController::class, 'submitQuoteOrder']);
+    Route::post('{quoteId}/payment/share', [SharedPaymentController::class, 'sharePaymentLink']);
+    Route::get('{quoteId}/list/payment/shared', [SharedPaymentController::class, 'sharedPaymentSentList']);
+    Route::post('{quoteId}/add/payment/receivers', [SharedPaymentController::class, 'addPaymentLinkReceiver']);
+    Route::get('{quoteId}/list/payment/receivers', [SharedPaymentController::class, 'listPaymentReceivers']);
+    Route::post('{quoteId}/resend/{sharePaymentId}', [SharedPaymentController::class, 'resendPaymentLink']);
     Route::get('', [CartItemController::class, 'getQuotes']);
 });
 
