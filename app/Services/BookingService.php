@@ -10,8 +10,6 @@ use App\DTOs\RedeemerProductsOrderData;
 use App\Enums\AgentBranchCode;
 use App\Events\CompleteOrderEvent;
 use App\Events\OrderPosted;
-use App\Features\OrderDataValidationFeature;
-use App\Jobs\CacheProductJob;
 use App\Logging\Logger;
 use App\Models\CartCustomerDetail;
 use App\Models\CartItem;
@@ -337,7 +335,7 @@ class BookingService
         bool $processAsQuote,
         string|null $bookingReference,
         string|null $paymentMethodCode,
-        ?int $pointsApplied,
+        ?float $pointsApplied,
         Collection $cartItems,
         array $customers,
         ItemType $itemType
