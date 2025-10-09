@@ -9,8 +9,8 @@ use App\Models\CartCustomerDetail;
 use App\Models\Quote;
 use App\Models\SharedPayment;
 use App\Services\BookingService;
-use App\Services\ServiceResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class SharedPaymentController extends BaseController
@@ -208,6 +208,7 @@ class SharedPaymentController extends BaseController
             return $this->sendError('Quote not found');
         }
 
+        DB::beginTransaction();
         $lastSharedPayment = SharedPayment::where('quote_id', $quoteId)
             ->where('is_latest', true)
             ->first();
@@ -221,6 +222,7 @@ class SharedPaymentController extends BaseController
         $sharePayment->is_latest = true;
         $sharePayment->payment_link = $lastSharedPayment->payment_link;
         $sharePayment->save();
+        DB::commit();
 
         SharePaymentLinkJob::dispatch($sharePayment, app('platform'));
 

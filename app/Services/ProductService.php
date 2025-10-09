@@ -116,8 +116,18 @@ class ProductService
                 'Content-Type' => 'application/json',
             ])
             ->get($requestUrl);
-        $response = json_decode($response, true);
-        return $response;
+        if ($response->successful()) {
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status(),
+            );
+        } else {
+            return HttpResponse::failed(
+                message: 'Failed to retrieve availability',
+                responseCode: $response->status(),
+                data: $response->status(),
+            );
+        }
     }
 
     public static function getProductAvailabilitiesByProductAndRange(

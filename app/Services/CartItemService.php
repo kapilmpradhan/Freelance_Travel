@@ -133,19 +133,20 @@ class CartItemService
 
             $productAvailabilities = $productAvailabilitiesResponse->data;
         } else {
-            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
                 $defaultAgentAccessToken,
                 $productPricesDetailsId,
                 $bookingData['timeId'],
                 $startDate,
                 $days,
             );
-        }
 
-        if (empty($productAvailabilities)) {
-            return ServiceResponse::notFound(
-                message: 'Product availability not found',
-            );
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+            $productAvailabilities = $productAvailabilitiesResponse->data;
         }
 
         $maxIndex = max($selectedAvailableIndices);
@@ -404,13 +405,21 @@ class CartItemService
 
             $productAvailabilities = $productAvailabilitiesResponse->data;
         } else {
-            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
                 $agentToken,
                 $productPricesDetailsId,
                 $item->time_id,
                 $item->startDate,
                 $item->days,
             );
+
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found',
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
         }
 
         if (empty($productAvailabilities)) {
@@ -1180,7 +1189,7 @@ class CartItemService
     {
         $errorData = [];
         foreach ($cartItems as $cartItem) {
-            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
                 agentToken: $agentToken,
                 productPricesDetailsId: $cartItem->product_price_details_id,
                 timeId: $cartItem->booking_data['timeId'],
@@ -1188,12 +1197,13 @@ class CartItemService
                 days: $cartItem->days
             );
 
-            if (empty($productAvailabilities)) {
+            if ($productAvailabilitiesResponse->isError()) {
                 return ServiceResponse::notFound(
                     message: 'Product availability not found',
                 );
             }
 
+            $productAvailabilities = $productAvailabilitiesResponse->data;
             $productAvailability = $productAvailabilities[$cartItem->selected_index];
 
             if ($productAvailability['NumAvailable'] < $cartItem->booking_quantity) {

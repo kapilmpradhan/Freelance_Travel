@@ -201,23 +201,22 @@ class CartItemServiceV2
 
                     $productAvailabilities = $productAvailabilitiesResponse->data;
                 } else {
-                    $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+                    $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
                         $defaultAgentAccessToken,
                         $productPriceDetailsId,
                         $timeId,
                         $details['bookingDate'],
                         1,
                     );
+
+                    if ($productAvailabilitiesResponse->isError()) {
+                        return ServiceResponse::notFound(
+                            message: 'Product availability not found',
+                        );
+                    }
+                    $productAvailabilities = $productAvailabilitiesResponse->data;
                 }
-                if (
-                    empty($productAvailabilities) ||
-                    (isset($productAvailabilities['statusCode']) &&
-                    $productAvailabilities['statusCode'] != 200)
-                ) {
-                    return ServiceResponse::notFound(
-                        message: 'Product availability not found',
-                    );
-                }
+
                 $result[] = new OrderItemRequestData(
                     product: $latestProductDetails,
                     productPriceDetailsId: $productPriceDetailsId,
@@ -528,19 +527,21 @@ class CartItemServiceV2
 
             $productAvailabilities = $productAvailabilitiesResponse->data;
         } else {
-            $productAvailabilities = ProductService::getProductAvailabilitiesFromApi(
+            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
                 $agentToken,
                 $cartItem->product_price_details_id,
                 $cartItem->time_id,
                 $cartItem->booking_date,
                 1,
             );
-        }
 
-        if (empty($productAvailabilities) || isset($productAvailabilities['errors'])) {
-            return ServiceResponse::notFound(
-                message: 'Product availability not found for cart item: ' . $cartItem->id,
-            );
+            if ($productAvailabilitiesResponse->isError()) {
+                return ServiceResponse::notFound(
+                    message: 'Product availability not found for cart item: ' . $cartItem->id,
+                );
+            }
+
+            $productAvailabilities = $productAvailabilitiesResponse->data;
         }
 
         $cartItem->availability = $productAvailabilities[0];

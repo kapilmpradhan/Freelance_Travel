@@ -389,14 +389,15 @@ class BookingService
         $unavailableProducts = [];
 
         foreach ($cartItems as $cartItem) {
-            $availability = ProductService::getProductAvailabilitiesFromApi(
+            $availabilityResponse = ProductService::getProductAvailabilitiesFromApi(
                 agentToken: $agentToken,
                 productPricesDetailsId: $cartItem->product_price_details_id,
                 timeId: 0,
                 startDate: $cartItem->booking_date,
                 days: 1
-            )[0];
+            );
 
+            $availability = $availabilityResponse->data[0];
             $availableNumber = $availability['NumAvailable'];
             if ($availableNumber < $cartItem->booking_quantity) {
                 $unavailableProducts[] = [
