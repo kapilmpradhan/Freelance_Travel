@@ -302,9 +302,11 @@ class UserController extends BaseController
     public function userMetaData(Request $request)
     {
         $user = auth()->user();
-        $userAgent = app('agentType');
+        $agentType = app('agentType');
         $isTestUser = Feature::for($user)->active('tester');
-        $isDefaultAgent = $userAgent->isDefaultAgent;
+        $isDefaultAgent = $agentType->isDefaultAgent;
+        $isPointsAgent = $agentType->isPointsAgent;
+        $isCommissionAgent = $agentType->isCommissionAgent;
 
         $isOrderTabbedEnabledForAll = FeatureService::isFeatureEnabled('order-tabbed-view');
         $isPaymentLinkSharingEnabledForAll = FeatureService::isFeatureEnabled('payment-link-sharing');
@@ -314,7 +316,11 @@ class UserController extends BaseController
 
         $data = [
             'is_order_tab_enabled' => $isOrderTabEnabled,
-            'is_payment_link_sharing_enabled' => $isPaymentLinkSharingEnabled
+            'is_payment_link_sharing_enabled' => $isPaymentLinkSharingEnabled,
+            'is_test_user' => $isTestUser,
+            'is_default_agent' => $isDefaultAgent,
+            'is_points_agent' => $isPointsAgent,
+            'is_commission_agent' => $isCommissionAgent
         ];
 
         return $this->sendResponse('User meta data', $data);
