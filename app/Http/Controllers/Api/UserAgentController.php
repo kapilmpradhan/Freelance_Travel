@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
+use App\Services\ServiceException;
 use App\Services\UserAgentService;
 use Laravel\Pennant\Feature;
 
@@ -241,14 +242,54 @@ class UserAgentController extends BaseController
             return $this->sendError('This test account cannot be upgraded to an agent.');
         }
 
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'bankBsb' => 'required|string',
+            'bankAccount' => 'required|string',
+            'bankCountryShortCode' => 'required|string',
+            'businessNumber' => 'required|string',
+            'tradingName' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Error occurred', $validator->errors(), 400);
+        }
+
+        $data = $validator->validated();
+
         $getAgentResponse = UserAgentService::getUserAgent($user->uuid);
 
         if ($getAgentResponse->isError()) {
             return $this->sendResponseFromService($getAgentResponse);
         }
 
+        // Update agent bank details in db first
         $agent = $getAgentResponse->data;
+        try {
+            $updateAgentBankDetailsResponse = UserAgentService::updateAgentBankDetails(
+                agent: $agent,
+                data: $data
+            );
 
+            if ($updateAgentBankDetailsResponse->isError()) {
+                return $this->sendResponseFromService($updateAgentBankDetailsResponse);
+            }
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+
+        // Now update bank details in TDMS
+        $agent = $updateAgentBankDetailsResponse->data;
+        try {
+            $updateAgentResponse = TdmsService::updateAgentDetails($agent);
+            if ($updateAgentResponse->isError()) {
+                return $this->sendResponseFromService($updateAgentResponse);
+            }
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+
+        // Now upgrade to commission agent in TDMS
         $upgradeToCommissionAgentResponse = TdmsService::upgradeToCommissionAgent($agent);
 
         if ($upgradeToCommissionAgentResponse->isError()) {
@@ -257,11 +298,11 @@ class UserAgentController extends BaseController
 
         $data = $upgradeToCommissionAgentResponse->data;
 
-        $updateAgent = UserAgentService::upgradeToCommission(
+        $upgradeAgent = UserAgentService::upgradeToCommission(
             agent: $agent,
             data: $data
         );
 
-        return $this->sendResponseFromService($updateAgent);
+        return $this->sendResponseFromService($upgradeAgent);
     }
 }

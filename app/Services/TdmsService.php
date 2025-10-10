@@ -827,6 +827,42 @@ class TdmsService
         return ServiceResponse::success($responseData);
     }
 
+    public static function updateAgentDetails(
+        UserAgent $agent
+    ): ServiceResponse {
+        $url = config('vars.tdms_api_url') . "/updateAgentAccount";
+        $body = [
+            'bankBsb' => $agent->bank_bsb,
+            'bankAccount' => $agent->bank_account ?? '',
+            'bankCountryShortCode' => $agent->bank_country_short_code ?? '',
+            'businessnumber' => $agent->business_number ?? '',
+            'tradingname' => $agent->trading_name ?? '',
+        ];
+
+        $response = Http::asJson()
+            ->withToken($agent->access_token)
+            ->post($url, $body);
+
+        if (!$response->successful()) {
+            Logger::error(
+                message: 'Error updating agent details',
+                extra: [
+                    "agentBranch" => $agent->branch_code,
+                    "requestParams" => $body,
+                    "responseData" => $response->json()
+                ]
+            );
+
+            throw new ServiceException(
+                message: 'Error upgrading User to Agent',
+                data: $response->json(),
+                code: $response->status()
+            );
+        }
+
+        return ServiceResponse::success();
+    }
+
     public static function getCommissionReport(
         string $agentToken,
         Carbon $startDate,

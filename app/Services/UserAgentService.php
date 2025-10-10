@@ -263,4 +263,24 @@ class UserAgentService
             Logger::error('Error updating user agent points', $e);
         }
     }
+
+    public static function updateAgentBankDetails($agent, $data)
+    {
+        try {
+            $agent->bank_bsb = $data['bankBsb'];
+            $agent->bank_account = $data['bankAccount'];
+            $agent->bank_country_short_code = $data['bankCountryShortCode'];
+            $agent->business_number = $data['businessNumber'];
+            $agent->trading_name = $data['tradingName'];
+            $agent->save();
+
+            return ServiceResponse::success(
+                message: "Agent bank details updated successfully",
+                data: $agent
+            );
+        } catch (Exception $e) {
+            Logger::error('Error updating user agent bank details', $e);
+            throw new ServiceException('Could not update agent bank details');
+        }
+    }
 }
