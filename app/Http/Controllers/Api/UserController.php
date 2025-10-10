@@ -317,6 +317,7 @@ class UserController extends BaseController
         $data = [
             'is_order_tab_enabled' => $isOrderTabEnabled,
             'is_payment_link_sharing_enabled' => $isPaymentLinkSharingEnabled,
+            'is_points_displayed' => (bool) $user->is_points_displayed,
             'is_test_user' => $isTestUser,
             'is_default_agent' => $isDefaultAgent,
             'is_points_agent' => $isPointsAgent,
