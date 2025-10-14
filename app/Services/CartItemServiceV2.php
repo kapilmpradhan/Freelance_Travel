@@ -126,7 +126,7 @@ class CartItemServiceV2
                 $bookingData = [];
                 if (isset($details['bookingData'])) {
                     foreach ($details['bookingData'] as $data) {
-                        $quantityIndex = isset($data['quantityIndex']) ? $data['quantityIndex'] : $quantityIndex;
+                        $quantityIndex = isset($data['quantityIndex']) ? $data['quantityIndex'] : ++$quantityIndex;
                         $timeId = $data['timeId'];
                         $commences = $data['commences'] ?? null;
                         $optionalData = $data['optionalData'] ?? [];
@@ -145,7 +145,7 @@ class CartItemServiceV2
 
                         if (count($redeemers) == 0) {
                             $bookingData[] = [
-                                "quantityIndex" => ++$quantityIndex,
+                                "quantityIndex" => $quantityIndex,
                                 "timeId" => $timeId,
                                 "commences" => $commences,
                                 "pickupId" => $pickupId,
@@ -158,7 +158,7 @@ class CartItemServiceV2
 
                         foreach ($redeemers as $redeemer) {
                             $bookingData[] = [
-                                "quantityIndex" => ++$quantityIndex,
+                                "quantityIndex" => $quantityIndex,
                                 "timeId" => $timeId,
                                 "commences" => $commences,
                                 "pickupId" => $pickupId,
