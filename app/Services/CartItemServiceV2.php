@@ -142,9 +142,23 @@ class CartItemServiceV2
                                 $redeemers[] = $redeemers[0];
                             }
                         }
+
+                        if (count($redeemers) == 0) {
+                            $bookingData[] = [
+                                "quantityIndex" => ++$quantityIndex,
+                                "timeId" => $timeId,
+                                "commences" => $commences,
+                                "pickupId" => $pickupId,
+                                "pickupLocation" => $pickupLocation,
+                                "optionalData" => $optionalData,
+                                "redeemers" => []
+                            ];
+                            continue;
+                        }
+
                         foreach ($redeemers as $redeemer) {
                             $bookingData[] = [
-                                "quantityIndex" => $quantityIndex,
+                                "quantityIndex" => ++$quantityIndex,
                                 "timeId" => $timeId,
                                 "commences" => $commences,
                                 "pickupId" => $pickupId,
