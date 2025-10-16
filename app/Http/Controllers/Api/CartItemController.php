@@ -366,6 +366,72 @@ class CartItemController extends BaseController
         }
     }
 
+    public function shareQuote(Request $request, string $quoteId): JsonResponse
+    {
+        $user = $request->user;
+
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'shareToEmail' => 'required|email',
+        ]);
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $shareToEmail = $data['shareToEmail'];
+        try {
+            $shareQuoteResponse = CartItemServiceV2::shareQuote(
+                sharedByUserId: $user->uuid,
+                sharedToEmail: $shareToEmail,
+                quoteId: $quoteId
+            );
+            return $this->sendResponseFromService($shareQuoteResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to share quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getQuotesSharedToMe(Request $request): JsonResponse
+    {
+        $user = $request->user;
+        try {
+            $getSharedQuotesResponse = CartItemServiceV2::getQuotesSharedToMe(user: $user);
+            return $this->sendResponseFromService($getSharedQuotesResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get shared quotes';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function acceptQuoteInvite(Request $request, $quoteShareId): JsonResponse
+    {
+        $user = $request->user;
+        try {
+            $acceptInviteResponse = CartItemServiceV2::acceptQuoteInvite(user: $user, quoteShareId: $quoteShareId);
+            return $this->sendResponseFromService($acceptInviteResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to accept invite';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function rejectQuoteInvite(Request $request, $quoteShareId): JsonResponse
+    {
+        $user = $request->user;
+        try {
+            $rejectInviteResponse = CartItemServiceV2::rejectQuoteInvite(user: $user, quoteShareId: $quoteShareId);
+            return $this->sendResponseFromService($rejectInviteResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to reject invite';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
     public function setQuoteCustomers(Request $request, string $quoteId): JsonResponse
     {
         $userId = $request->user->uuid;

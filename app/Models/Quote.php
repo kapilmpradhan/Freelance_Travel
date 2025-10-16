@@ -15,6 +15,7 @@ class Quote extends Model
         'title',
         'is_paid',
         'user_order_id',
+        'shared_by_email'
     ];
     protected $casts = [
         'is_paid' => 'boolean',

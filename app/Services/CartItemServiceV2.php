@@ -2,16 +2,19 @@
 
 namespace App\Services;
 
+use App\Models\ShareQuote;
 use App\Models\UserOrderCommission;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
 use App\DTOs\OrderItemRequestData;
+use App\Jobs\ShareQuoteJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 class CartItemServiceV2
@@ -559,6 +562,161 @@ class CartItemServiceV2
         }
 
         $cartItem->availability = $productAvailabilities[0];
+        return ServiceResponse::success();
+    }
+
+    public static function shareQuote($sharedByUserId, $sharedToEmail, $quoteId)
+    {
+        $quote = Quote::where('user_id', $sharedByUserId)
+            ->where('id', $quoteId)
+            ->first();
+        if (!$quote) {
+            return ServiceResponse::notFound(
+                message: 'Quote not found',
+                data: ['quoteId' => $quoteId]
+            );
+        }
+
+        $shareQuoteExists = ShareQuote::where('shared_by_user_id', $sharedByUserId)
+            ->where('shared_to_email', $sharedToEmail)
+            ->where('quote_id', $quoteId)
+            ->where('is_accepted', false)
+            ->where('is_declined', false)
+            ->first();
+        if ($shareQuoteExists) {
+            return ServiceResponse::badRequest(
+                message: 'Quote already shared to this email',
+                data: ['sharedToEmail' => $sharedToEmail, 'quoteId' => $quoteId]
+            );
+        }
+
+        $shareQuote = ShareQuote::create([
+            'shared_by_user_id' => $sharedByUserId,
+            'shared_to_email' => $sharedToEmail,
+            'quote_id' => $quote->id
+        ]);
+
+        ShareQuoteJob::dispatch(
+            platform: app('platform'),
+            shareQuote: $shareQuote
+        );
+
+        return ServiceResponse::success(data: $shareQuote);
+    }
+
+    public static function getQuotesSharedToMe($user)
+    {
+        $sharedQuotes = ShareQuote::query()
+            ->where('shared_to_email', $user->email)
+            ->where('is_accepted', false)
+            ->where('is_declined', false)
+            ->select(
+                DB::raw('MIN(id) as id'),
+                'quote_id',
+                DB::raw('MIN(shared_by_user_id) as shared_by_user_id'),
+                DB::raw('COUNT(*) as total_shares')
+            )
+            ->groupBy('quote_id');
+
+        $sharedQuoteIds = (clone $sharedQuotes)->pluck('quote_id')
+            ->toArray();
+
+        $quotesQuery = Quote::query()->whereIn('id', $sharedQuoteIds);
+
+        $result = [];
+        foreach ($sharedQuotes->get() as $sharedQuote) {
+            $sharedByUserEmail = User::whereUuid($sharedQuote->shared_by_user_id)->first()->email;
+            $quote = $quotesQuery->where('id', $sharedQuote->quote_id)
+                ->select(['id', 'title', 'created_at', 'updated_at'])
+                ->first();
+            $noOfItems = CartItem::query()->where('quote_id', $quote->id)
+                ->count();
+
+            $quote->quote_share_id = $sharedQuote->id;
+            $quote->no_of_items = $noOfItems;
+            $quote->shared_by = $sharedByUserEmail;
+
+            $quoteItems = CartItem::query()->where('quote_id', $quote->id)
+                ->with('product')
+                ->get();
+
+            $totalPrice = BookingService::getTotalChargeAmount(cartItems: $quoteItems);
+            $quote->total_rrp = $totalPrice;
+            $quote->number_of_shares = $sharedQuote->total_shares;
+            $result[] = $quote;
+        }
+
+        return ServiceResponse::success(data: $result);
+    }
+
+    public static function acceptQuoteInvite($user, $quoteShareId)
+    {
+        $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
+            ->first();
+        if (!$quoteShareInstance) {
+            return ServiceResponse::notFound(
+                message: 'Shared quote not found',
+                data: ['quoteShareId' => $quoteShareId]
+            );
+        }
+        if ($quoteShareInstance->shared_to_email != $user->email) {
+            return ServiceResponse::unauthorized(
+                message: 'You are not authorized to accept this quote',
+            );
+        }
+        if ($quoteShareInstance->is_accepted) {
+            return ServiceResponse::badRequest(
+                message: 'You have already accepted this quote',
+            );
+        }
+        if ($quoteShareInstance->is_declined) {
+            return ServiceResponse::badRequest(
+                message: 'You have already declined this quote',
+            );
+        }
+
+        $quote = Quote::where('id', $quoteShareInstance->quote_id)
+            ->first();
+
+        DB::beginTransaction();
+        $newQuote = Quote::create([
+            'user_id' => $user->uuid,
+            'title' => $quote->title,
+            'shared_by_email' => User::whereUuid($quoteShareInstance->shared_by_user_id)->first()->email
+        ]);
+
+        $cartItems = CartItem::where('quote_id', $quote->id)
+            ->get();
+
+        foreach ($cartItems as $cartItem) {
+            $cartItemData = $cartItem->toArray();
+            unset($cartItemData['id']);
+            $cartItemData['user_id'] = $user->uuid;
+            $cartItemData['quote_id'] = $newQuote->id;
+            CartItem::create($cartItemData);
+        }
+
+        $quoteShareInstance->is_accepted = true;
+        $quoteShareInstance->save();
+        DB::commit();
+
+        return ServiceResponse::success(data: $newQuote);
+    }
+
+    public static function rejectQuoteInvite($user, $quoteShareId)
+    {
+        $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
+            ->first();
+        if (!$quoteShareInstance) {
+            return ServiceResponse::notFound(
+                message: 'Shared quote not found',
+                data: ['quoteShareId' => $quoteShareId]
+            );
+        }
+
+        $quoteShareInstance->is_declined = true;
+        $quoteShareInstance->save();
+
         return ServiceResponse::success();
     }
 }

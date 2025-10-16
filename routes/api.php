@@ -140,6 +140,10 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::get('{quoteId}/list/payment/receivers', [SharedPaymentController::class, 'listPaymentReceivers']);
     Route::post('{quoteId}/resend/{sharePaymentId}', [SharedPaymentController::class, 'resendPaymentLink']);
     Route::get('', [CartItemController::class, 'getQuotes']);
+    Route::post('share/{quoteId}', [CartItemController::class, 'shareQuote']);
+    Route::get('share/to/me', [CartItemController::class, 'getQuotesSharedToMe']);
+    Route::post('share/accept/{quoteShareId}', [CartItemController::class, 'acceptQuoteInvite']);
+    Route::post('share/reject/{quoteShareId}', [CartItemController::class, 'rejectQuoteInvite']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quote'], function () {
