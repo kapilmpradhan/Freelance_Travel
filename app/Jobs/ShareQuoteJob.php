@@ -58,11 +58,8 @@ class ShareQuoteJob implements ShouldQueue
             $tokens = $receiver->fcmTokens($this->platform);
             $pushNotificationData = [
                 'title' => "Quote Shared",
-                'body' => "{$quote->title} has been shared with you. Please login to accept the invite.",
-                'data' => [
-                    'type' => 'quote_shared',
-                    'quote_id' => $this->shareQuote->quote_id,
-                ]
+                'body' => "{$quote->title} has been shared with you.",
+                'path' => "/quotes/shared/{$this->shareQuote->id}"
             ];
 
             foreach ($tokens as $token) {

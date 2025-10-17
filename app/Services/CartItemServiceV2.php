@@ -626,7 +626,7 @@ class CartItemServiceV2
         $result = [];
         foreach ($sharedQuotes->get() as $sharedQuote) {
             $sharedByUserEmail = User::whereUuid($sharedQuote->shared_by_user_id)->first()->email;
-            $quote = $quotesQuery->where('id', $sharedQuote->quote_id)
+            $quote = (clone $quotesQuery)->where('id', $sharedQuote->quote_id)
                 ->select(['id', 'title', 'created_at', 'updated_at'])
                 ->first();
             $noOfItems = CartItem::query()->where('quote_id', $quote->id)
