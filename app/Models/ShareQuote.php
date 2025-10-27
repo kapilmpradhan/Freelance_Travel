@@ -18,6 +18,7 @@ class ShareQuote extends Model
         'quote_id',
         'is_accepted',
         'is_declined',
+        'is_quote_deleted',
         'timestamp',
     ];
 }

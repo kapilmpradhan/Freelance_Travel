@@ -610,6 +610,7 @@ class CartItemServiceV2
             ->where('shared_to_email', $user->email)
             ->where('is_accepted', false)
             ->where('is_declined', false)
+            ->where('is_quote_deleted', false)
             ->select(
                 DB::raw('MIN(id) as id'),
                 'quote_id',
@@ -625,7 +626,7 @@ class CartItemServiceV2
 
         $result = [];
         foreach ($sharedQuotes->get() as $sharedQuote) {
-            $sharedByUserEmail = User::whereUuid($sharedQuote->shared_by_user_id)->first()->email;
+            $sharedByUserEmail = User::where('uuid', $sharedQuote->shared_by_user_id)->first()->email;
             $quote = (clone $quotesQuery)->where('id', $sharedQuote->quote_id)
                 ->select(['id', 'title', 'created_at', 'updated_at'])
                 ->first();
@@ -677,6 +678,10 @@ class CartItemServiceV2
 
         $quote = Quote::where('id', $quoteShareInstance->quote_id)
             ->first();
+
+        if (!$quote) {
+            return ServiceResponse::notFound(message: 'Quote not found');
+        }
 
         DB::beginTransaction();
         $newQuote = Quote::create([

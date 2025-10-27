@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Models\ProductHistory;
 use App\Models\ProductPriceAvailability;
 use App\Models\Quote;
+use App\Models\ShareQuote;
 use App\Models\UserOrder;
 use App\Models\UserOrderCommission;
 use Exception;
@@ -800,6 +801,10 @@ class CartItemService
 
             // Delete cart customer details of that quote
             CartCustomerDetail::where('quote_id', $quoteId)->delete();
+
+            // Update shared quotes
+            ShareQuote::where('quote_id', $quoteId)
+                ->update(['is_quote_deleted' => true]);
 
             // Delete quote
             $quote->delete();
