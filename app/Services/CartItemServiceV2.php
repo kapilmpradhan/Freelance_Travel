@@ -682,7 +682,7 @@ class CartItemServiceV2
         $newQuote = Quote::create([
             'user_id' => $user->uuid,
             'title' => $quote->title,
-            'shared_by_email' => User::whereUuid($quoteShareInstance->shared_by_user_id)->first()->email
+            'shared_by_email' => User::where('uuid', $quoteShareInstance->shared_by_user_id)->first()->email
         ]);
 
         $cartItems = CartItem::where('quote_id', $quote->id)

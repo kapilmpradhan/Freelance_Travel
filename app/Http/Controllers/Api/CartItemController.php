@@ -371,14 +371,38 @@ class CartItemController extends BaseController
         $user = $request->user;
 
         $data = $request->all();
-        $validator = Validator::make($data, [
-            'shareToEmail' => 'required|email',
-        ]);
+        $isRedeemer = false;
+        if ($request->query->has('isRedeemer') && $request->query('isRedeemer') == true) {
+            $isRedeemer = true;
+        }
+
+        if ($isRedeemer) {
+            $validator = Validator::make($data, [
+                'redeemerId' => 'required|integer',
+            ]);
+        } else {
+            $validator = Validator::make($data, [
+                'shareToEmail' => 'required|email',
+            ]);
+        }
+
         if ($validator->fails()) {
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $shareToEmail = $data['shareToEmail'];
+        if ($isRedeemer) {
+            $shareToEmail = CartCustomerDetail::where('id', $data['redeemerId'])
+                ->where('user_id', $user->uuid)
+                ->where('is_deleted', false)
+                ->whereNot('email', $user->email)
+                ->value('email');
+            if (!$shareToEmail) {
+                return $this->sendError('Redeemer not found');
+            }
+        } else {
+            $shareToEmail = $data['shareToEmail'];
+        }
+
         try {
             $shareQuoteResponse = CartItemServiceV2::shareQuote(
                 sharedByUserId: $user->uuid,
