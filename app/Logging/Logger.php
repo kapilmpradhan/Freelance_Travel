@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Log;
 
 class Logger
 {
-    public static function info($message)
+    public static function info($message, $data = null)
     {
-        Log::stack(['console', 'single'])->info($message);
+        Log::stack(['console', 'single'])->info($message, $data);
     }
 
     public static function debug($message, $data = null)
