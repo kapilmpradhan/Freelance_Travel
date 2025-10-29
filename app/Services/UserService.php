@@ -77,8 +77,8 @@ class UserService
             'platform' => app('platform')
         ]);
 
-        SubscribeToFCMTopic::dispatch($token, 'all');
-        SubscribeToFCMTopic::dispatch($token, app('platform'));
+        SubscribeToFCMTopic::dispatch($user, $token, 'all');
+        SubscribeToFCMTopic::dispatch($user, $token, app('platform'));
 
         return ServiceResponse::success();
     }
@@ -89,8 +89,8 @@ class UserService
                                 ->where('token', $token)
                                 ->first();
 
-        UnsubscribeFromFCMTopic::dispatch($token->token, 'all');
-        UnsubscribeFromFCMTopic::dispatch($token->token, app('platform'));
+        UnsubscribeFromFCMTopic::dispatch($user, $token->token, 'all');
+        UnsubscribeFromFCMTopic::dispatch($user, $token->token, app('platform'));
 
         $token->delete();
         return ServiceResponse::success();

@@ -31,7 +31,7 @@ class UserController extends BaseController
 
         $data['sso_type'] = 'email'; // Add email sso to the array
         $new_user = $user->storeUser($data);
-        SendProfileEmailOtp::dispatch($new_user->uuid, app('platform'));
+        SendProfileEmailOtp::dispatch($new_user, app('platform'));
         $return_data = $userResource->userDetail($new_user);
 
         return $this->sendResponse('successfully', $return_data);
@@ -278,12 +278,10 @@ class UserController extends BaseController
     public function removeFcmToken(Request $request, $fcmToken)
     {
         $user = $request->user;
-        $fcmService = new FcmService();
 
         $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $fcmToken);
         if ($checkFcmResponse->isSuccess()) {
             $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
-            $fcmService->unsubscribeTokensFromTopic($user->uuid, [$fcmToken]);
             return $this->sendResponseFromService($removeFcmToken);
         }
 

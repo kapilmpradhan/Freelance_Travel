@@ -6,6 +6,7 @@ use App\Logging\Logger;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Google\Client as GoogleClient;
+use Throwable;
 
 class FcmService
 {
@@ -39,7 +40,7 @@ class FcmService
         }
     }
 
-    public function subscribeTokensToTopic($topic, array $tokens)
+    public function subscribeTokensToTopic($topic, array $tokens): HttpResponse|Exception
     {
         $url = "https://iid.googleapis.com/iid/v1:batchAdd";
 
@@ -57,16 +58,26 @@ class FcmService
 
             if (!$response->successful()) {
                 Logger::error('Error while subscribing', extra: $response->json());
-                return HttpResponse::failed('Error while subscribing', $response->status());
+                return HttpResponse::failed(
+                    message: 'Error while subscribing',
+                    responseCode: $response->status(),
+                    data: $response->json()
+                );
             }
-            return HttpResponse::success($response->json());
-        } catch (Exception $e) {
-            Logger::error('Error while subsribing', $e);
-            return HttpResponse::failed('Error while subsribing', 500);
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status()
+            );
+        } catch (Throwable $e) {
+            Logger::exception(
+                message: 'Error while subscribing',
+                exception: $e
+            );
+            throw $e;
         }
     }
 
-    public function unsubscribeTokensFromTopic($topic, array $tokens)
+    public function unsubscribeTokensFromTopic($topic, array $tokens): HttpResponse|Exception
     {
         $url = "https://iid.googleapis.com/iid/v1:batchRemove";
 
@@ -84,12 +95,22 @@ class FcmService
 
             if (!$response->successful()) {
                 Logger::error('Error while un-subscribing', extra: $response->json());
-                return HttpResponse::failed('Error while un-subscribing', $response->status());
+                return HttpResponse::failed(
+                    message: 'Error while unsubscribing',
+                    responseCode: $response->status(),
+                    data: $response->json()
+                );
             }
-            return HttpResponse::success($response->json());
-        } catch (Exception $e) {
-            Logger::error('Error while un-subscribing', $e);
-            return HttpResponse::failed('Error while un-subscribing', 500);
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status()
+            );
+        } catch (Throwable $e) {
+            Logger::exception(
+                message: 'Error while unsubscribing',
+                exception: $e
+            );
+            throw $e;
         }
     }
 

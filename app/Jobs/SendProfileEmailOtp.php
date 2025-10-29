@@ -9,11 +9,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\User;
 use App\Services\IEmailService;
 use App\Services\OtpService;
 use App\Logging\Logger;
 use App\Services\BrevoEmailService;
+use Throwable;
 
 class SendProfileEmailOtp implements ShouldQueue
 {
@@ -22,12 +22,12 @@ class SendProfileEmailOtp implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected $userId;
+    protected $user;
     protected $platform;
 
-    public function __construct($userId, $platform)
+    public function __construct($user, $platform)
     {
-        $this->userId = $userId;
+        $this->user = $user;
         $this->platform = $platform;
     }
 
@@ -37,7 +37,7 @@ class SendProfileEmailOtp implements ShouldQueue
     public function handle(IEmailService $emailService)
     {
         try {
-            $user = User::findOrFail($this->userId);
+            $user = $this->user;
             $otp = OtpService::generateOtp($user);
             if ($otp['success'] == false) {
                 Logger::info($otp['error']);
@@ -73,12 +73,36 @@ class SendProfileEmailOtp implements ShouldQueue
                 ]
             ];
 
-            $response = $emailService->sendMail($data);
-            $response = json_decode($response, true);
+            $sendMailResponse = $emailService->sendMailV2($data);
 
-            Logger::info('Profile setup email verification sent to ' . $email);
-        } catch (Exception $e) {
-            Logger::error('Failed to send email to user with id:' . $this->userId, $e);
+            $logData = [
+                'log_file' => config('logging.log_files.account_verification'),
+                'user_id' => $user->uuid,
+                'user_email' => $email,
+                'platform' => $this->platform,
+                'response' => json_encode($sendMailResponse->data)
+            ];
+
+            if ($sendMailResponse->isSuccess()) {
+                Logger::info(
+                    message: 'Account verification email sent successfully.',
+                    data: $logData,
+                    write: true
+                );
+            } else {
+                Logger::error(
+                    message: 'Failed to send account verification email.',
+                    data: $logData,
+                    write: true
+                );
+            }
+        } catch (Throwable $e) {
+            Logger::exception(
+                message: 'Failed to send account verification email.',
+                data: $logData ?? [],
+                exception: $e,
+                write: true
+            );
             throw $e;
         }
     }

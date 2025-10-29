@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Enums\AgentBranchCode;
+use App\Logging\Logger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Services\IEmailService;
+use Throwable;
 
 class SendForgotPasswordOtp implements ShouldQueue
 {
@@ -51,11 +53,36 @@ class SendForgotPasswordOtp implements ShouldQueue
                 ],
             ];
 
-            $response = $emailService->sendMail($data);
+            $sendMailResponse = $emailService->sendMailV2($data);
 
-            echo $response;
-        } catch (\Exception $e) {
-            echo 'Failed to send email. Error: ' . $e->getMessage();
+            $logData = [
+                'log_file' => config('logging.log_files.forgot_password'),
+                'user_id' => $this->user->uuid,
+                'user_email' => $this->user->email,
+                'platform' => $this->platform,
+                'response' => json_encode($sendMailResponse->data)
+            ];
+
+            if ($sendMailResponse->isSuccess()) {
+                Logger::info(
+                    message: 'Forgot password OTP email sent successfully.',
+                    data: $logData,
+                    write: true
+                );
+            } else {
+                Logger::error(
+                    message: 'Failed to send forgot password OTP email.',
+                    data: $logData,
+                    write: true
+                );
+            }
+        } catch (Throwable $e) {
+            Logger::exception(
+                message: 'Failed to send forgot password OTP email.',
+                data: $logData,
+                exception: $e,
+                write: true
+            );
             throw $e;
         }
     }

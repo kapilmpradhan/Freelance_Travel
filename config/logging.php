@@ -131,4 +131,9 @@ return [
         ],
     ],
 
+    'log_files' => [
+        'account_verification' => 'verify-account.csv',
+        'forgot_password' => 'forgot-password.csv',
+        'fcm_subscription' => 'fcm-subscription.csv',
+    ]
 ];
