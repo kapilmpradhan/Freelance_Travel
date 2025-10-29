@@ -48,7 +48,8 @@ class ShareQuoteJob implements ShouldQueue
             'templateId' => 24,
             'params' => [
                 'inviterName' => ($inviter->first_name . ' ' . $inviter->last_name),
-                'quoteName' => $quote->title
+                'quoteName' => $quote->title,
+                'redirectUrl' => config('app.web_url') . "/quotes/{$quote->id}?isPending=true"
             ]
 
         ];

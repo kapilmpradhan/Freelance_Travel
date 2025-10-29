@@ -551,6 +551,12 @@ class CartItemService
                 $item->product = $products->get($item->tdms_product_id);
             });
 
+            $numberOfShares = ShareQuote::where('quote_id', $quote->id)
+                ->where('is_declined', false)
+                ->where('is_quote_deleted', false)
+                ->count();
+
+            $quote->number_of_shares = $numberOfShares;
             $quote->items = $items;
         }
 
@@ -609,6 +615,12 @@ class CartItemService
                 $item->product = $products->get($item->tdms_product_id);
             });
 
+            $numberOfShares = ShareQuote::where('quote_id', $quote->id)
+                ->where('is_declined', false)
+                ->where('is_quote_deleted', false)
+                ->count();
+
+            $quote->number_of_shares = $numberOfShares;
             $quote->items = $items;
         }
 

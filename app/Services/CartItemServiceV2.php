@@ -614,8 +614,7 @@ class CartItemServiceV2
             ->select(
                 DB::raw('MIN(id) as id'),
                 'quote_id',
-                DB::raw('MIN(shared_by_user_id) as shared_by_user_id'),
-                DB::raw('COUNT(*) as total_shares')
+                DB::raw('MIN(shared_by_user_id) as shared_by_user_id')
             )
             ->groupBy('quote_id');
 
@@ -643,7 +642,6 @@ class CartItemServiceV2
 
             $totalPrice = BookingService::getTotalChargeAmount(cartItems: $quoteItems);
             $quote->total_rrp = $totalPrice;
-            $quote->number_of_shares = $sharedQuote->total_shares;
             $result[] = $quote;
         }
 
@@ -705,7 +703,7 @@ class CartItemServiceV2
         $quoteShareInstance->save();
         DB::commit();
 
-        return ServiceResponse::success(data: $newQuote);
+        return ServiceResponse::success(data: $newQuote, message: 'Quote accepted');
     }
 
     public static function rejectQuoteInvite($user, $quoteShareId)
