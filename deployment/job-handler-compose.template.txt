@@ -3,6 +3,8 @@ services:
     image: $DOCKER_IMAGE_NAME:$VERSION
     container_name: freelance-travel-job-handler
     platform: linux/amd64
+    volumes:
+      - /mnt/logs:/var/www/html/storage/logs
     entrypoint: /usr/local/bin/cron-setup.sh
     restart: always
     networks:

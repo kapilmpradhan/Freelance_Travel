@@ -154,6 +154,9 @@ jobs:
         # SSH into the EC2 instance and pull the new Docker image, then restart the services using Docker Compose
         echo 'Getting into EC2 server'
         ssh -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          mkdir -p /mnt/logs
+          chmod +x /mnt/logs
+
           cd ~/deploy/api
           echo "$DOCKER_HUB_PASSWORD" | docker login --username $DOCKER_HUB_USERNAME --password-stdin
           docker-compose -f api-compose.yml down

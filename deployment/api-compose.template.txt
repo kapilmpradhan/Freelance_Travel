@@ -4,7 +4,7 @@ services:
     container_name: freelance-travel-api
     platform: linux/amd64
     volumes:
-      - /mnt/data/api/logs:/var/www/html/storage/logs
+      - /mnt/logs:/var/www/html/storage/logs
     ports:
       - "$APP_PORT:9000"
     networks:
@@ -14,8 +14,6 @@ services:
     image: $DOCKER_IMAGE_NAME:$VERSION
     container_name: freelance-travel-migrator
     platform: linux/amd64
-    volumes:
-      - /mnt/data/api/logs:/var/www/html/storage/logs
     entrypoint: php artisan migrate --force
     restart: "no"
     networks:
