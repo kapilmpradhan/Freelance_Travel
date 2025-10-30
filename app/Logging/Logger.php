@@ -21,9 +21,15 @@ class Logger
         $path = storage_path(
             'logs/' .
             date('Y-m-d') .
-            '-' .
+            '/' .
             $logFile
         );
+
+        // Ensure the directory exists
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
 
         $fileExists = file_exists($path);
         $file = fopen($path, 'a');
