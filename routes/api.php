@@ -142,6 +142,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::get('', [CartItemController::class, 'getQuotes']);
     Route::post('share/{quoteId}', [CartItemController::class, 'shareQuote']);
     Route::get('share/to/me', [CartItemController::class, 'getQuotesSharedToMe']);
+    Route::get('share/{quoteId}/users', [CartItemController::class, 'getQuoteSharedUsers']);
     Route::post('share/accept/{quoteShareId}', [CartItemController::class, 'acceptQuoteInvite']);
     Route::post('share/reject/{quoteShareId}', [CartItemController::class, 'rejectQuoteInvite']);
 });

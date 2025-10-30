@@ -601,7 +601,7 @@ class CartItemServiceV2
             shareQuote: $shareQuote
         );
 
-        return ServiceResponse::success(data: $shareQuote);
+        return ServiceResponse::success(data: $shareQuote, message: 'Invitation sent');
     }
 
     public static function getQuotesSharedToMe($user)
@@ -646,6 +646,38 @@ class CartItemServiceV2
         }
 
         return ServiceResponse::success(data: $result);
+    }
+
+    public static function getQuoteSharedUsers($quoteId)
+    {
+        $quoteSharedUsers = ShareQuote::query()
+            ->select([
+                'share_quotes.shared_to_email as email',
+                'cart_customer_details.first_name as first_name',
+                'cart_customer_details.last_name as last_name',
+            ])
+            ->leftJoin('cart_customer_details', function ($join) use ($quoteId) {
+                $join->on('cart_customer_details.email', '=', 'share_quotes.shared_to_email')
+                    ->where('cart_customer_details.quote_id', '=', $quoteId);
+            })
+            ->where('share_quotes.quote_id', $quoteId)
+            ->where('share_quotes.is_quote_deleted', false)
+            ->where('share_quotes.is_declined', false)
+            ->get()
+            ->map(function ($item) {
+                if ($item->first_name && $item->last_name) {
+                    $name = $item->first_name . ' ' . $item->last_name;
+                } else {
+                    $name = null;
+                }
+                return [
+                    'email' => $item->email,
+                    'name' => $name,
+                ];
+            })
+            ->toArray();
+
+        return ServiceResponse::success(data: $quoteSharedUsers);
     }
 
     public static function acceptQuoteInvite($user, $quoteShareId)

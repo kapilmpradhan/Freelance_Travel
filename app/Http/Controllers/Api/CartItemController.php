@@ -394,13 +394,16 @@ class CartItemController extends BaseController
             $shareToEmail = CartCustomerDetail::where('id', $data['redeemerId'])
                 ->where('user_id', $user->uuid)
                 ->where('is_deleted', false)
-                ->whereNot('email', $user->email)
                 ->value('email');
             if (!$shareToEmail) {
                 return $this->sendError('Redeemer not found');
             }
         } else {
             $shareToEmail = $data['shareToEmail'];
+        }
+
+        if ($shareToEmail == $user->email) {
+            return $this->sendError('Cannot share quote to yourself');
         }
 
         try {
@@ -412,6 +415,20 @@ class CartItemController extends BaseController
             return $this->sendResponseFromService($shareQuoteResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to share quote';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
+
+    public function getQuoteSharedUsers(Request $request, string $quoteId): JsonResponse
+    {
+        try {
+            $getSharedUsersResponse = CartItemServiceV2::getQuoteSharedUsers(
+                quoteId: $quoteId
+            );
+            return $this->sendResponseFromService($getSharedUsersResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to get shared users';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
