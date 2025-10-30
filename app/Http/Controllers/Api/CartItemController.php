@@ -371,10 +371,7 @@ class CartItemController extends BaseController
         $user = $request->user;
 
         $data = $request->all();
-        $isRedeemer = false;
-        if ($request->query->has('isRedeemer') && $request->query('isRedeemer') == true) {
-            $isRedeemer = true;
-        }
+        $isRedeemer = $request->query->has('isRedeemer') && $request->query('isRedeemer');
 
         if ($isRedeemer) {
             $validator = Validator::make($data, [

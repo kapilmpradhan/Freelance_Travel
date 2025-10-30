@@ -577,20 +577,7 @@ class CartItemServiceV2
             );
         }
 
-        $shareQuoteExists = ShareQuote::where('shared_by_user_id', $sharedByUserId)
-            ->where('shared_to_email', $sharedToEmail)
-            ->where('quote_id', $quoteId)
-            ->where('is_accepted', false)
-            ->where('is_declined', false)
-            ->first();
-        if ($shareQuoteExists) {
-            return ServiceResponse::badRequest(
-                message: 'Quote already shared to this email',
-                data: ['sharedToEmail' => $sharedToEmail, 'quoteId' => $quoteId]
-            );
-        }
-
-        $shareQuote = ShareQuote::create([
+        $shareQuote = ShareQuote::updateOrCreate([
             'shared_by_user_id' => $sharedByUserId,
             'shared_to_email' => $sharedToEmail,
             'quote_id' => $quote->id
