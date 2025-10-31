@@ -642,10 +642,24 @@ class CartItemService
 
         $items = CartItem::where('quote_id', $quoteId)->get();
         $productIds = $items->pluck('tdms_product_id')->unique();
-        $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
+        $products = Product::whereIn('tdms_product_id', $productIds);
 
         $items->each(function ($item) use ($products) {
-            $item->product = $products->get($item->tdms_product_id);
+            $product = (clone $products)->where('tdms_product_id', $item->tdms_product_id)
+                                        ->where('version', $item->product_version)
+                                        ->first();
+            $isProductLatest = true;
+            if (!$product) {
+                $product = ProductHistory::where('tdms_product_id', $item->tdms_product_id)
+                                        ->where('version', $item->product_version)
+                                        ->first();
+                $product->counter = 0;
+                $isProductLatest = true;
+            }
+
+            $item->is_availability_latest = true;
+            $item->is_product_latest = $isProductLatest;
+            $item->product = $product;
         });
 
         $quote->items = $items;

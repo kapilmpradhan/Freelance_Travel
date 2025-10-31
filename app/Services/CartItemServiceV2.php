@@ -577,11 +577,17 @@ class CartItemServiceV2
             );
         }
 
-        $shareQuote = ShareQuote::updateOrCreate([
-            'shared_by_user_id' => $sharedByUserId,
-            'shared_to_email' => $sharedToEmail,
-            'quote_id' => $quote->id
-        ]);
+        $shareQuote = ShareQuote::updateOrCreate(
+            [
+                'shared_by_user_id' => $sharedByUserId,
+                'shared_to_email' => $sharedToEmail,
+                'quote_id' => $quote->id
+            ],
+            [
+                'is_accepted' => false,
+                'is_declined' => false,
+            ]
+        );
 
         ShareQuoteJob::dispatch(
             platform: app('platform'),

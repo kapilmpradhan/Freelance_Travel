@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Logging\Logger;
+use App\Models\FirebaseFcmToken;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Google\Client as GoogleClient;
@@ -140,6 +141,7 @@ class FcmService
                 ])->post($url, $payload);
 
             if (!$response->successful()) {
+                FirebaseFcmToken::where('token', $token)->delete();
                 Logger::error('Error sending fcm notification', extra: [
                     "payload" => $payload,
                     "bearer" => $this->accessToken,
