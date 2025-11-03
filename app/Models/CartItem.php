@@ -246,6 +246,7 @@ class CartItem extends Model
         $rule['productPricesDetails.*.quantityDetails.*.bookingData.*.optionalData'] = 'nullable|array';
 
         $rule['pointsApplied'] = 'nullable|numeric';
+        $rule['commissionApplied'] = 'nullable|numeric';
 
         return $rule;
     }

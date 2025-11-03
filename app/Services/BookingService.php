@@ -421,6 +421,7 @@ class BookingService
         string $userId,
         string $intent,
         ?float $pointsApplied,
+        ?float $commissionApplied,
         ItemType $itemType,
         bool $processAsQuote = true,
         array $customers = []
@@ -511,6 +512,16 @@ class BookingService
 
 
             $commission = $validatedItemsData['commission']['message']['estimatedCommission'] ?? 0;
+            if ($commissionApplied !== null && $commission < $commissionApplied) {
+                throw new ServiceException(
+                    message: 'Commission applied is more than estimated commission',
+                    data: [
+                        'commissionApplied' => $commissionApplied,
+                        'estimatedCommission' => $commission,
+                    ],
+                );
+            }
+
             $totalRrp = $orderRequestData['totalCharged'];
             $commissionPercentage = round(((float) $commission / (float) $totalRrp) * 100, 2);
             $pointsAvailable = UserOrderCommissionService::pointsFromCommission(
@@ -579,6 +590,10 @@ class BookingService
 
         $bookingReference = $orderRequestData['bookingReference'];
         $paymentAmount = $orderRequestData['totalCharged'];
+        if ($agentType->isCommissionAgent && $commissionApplied > 0) {
+            $paymentAmount -= $commissionApplied;
+            $orderRequestData['totalCharged'] -= $commissionApplied;
+        }
 
         $placeOrderResponse = TdmsService::placeOrder(
             agentToken: $agent->access_token,
@@ -677,6 +692,7 @@ class BookingService
         string $userId,
         string $intent,
         ?float $pointsApplied,
+        ?float $commissionApplied,
         ItemType $itemType,
         bool $processAsQuote = true
     ): ?ServiceResponse {
@@ -692,6 +708,7 @@ class BookingService
                 userId: $userId,
                 intent: $intent,
                 pointsApplied: $pointsApplied,
+                commissionApplied: $commissionApplied,
                 itemType: $itemType,
                 processAsQuote: $processAsQuote
             );

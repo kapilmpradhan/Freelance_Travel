@@ -935,7 +935,8 @@ class CartItemController extends BaseController
         $data = $request->all();
         $validate = Validator::make($data, [
             "paymentType" => "required|in:email-quote,pay-now",
-            "pointsApplied" => "nullable|numeric"
+            "pointsApplied" => "nullable|numeric",
+            "commissionApplied" => "nullable|numeric"
         ]);
 
         if ($validate->fails()) {
@@ -949,6 +950,7 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 intent: $data['paymentType'],
                 pointsApplied: $data['pointsApplied'] ?? null,
+                commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
                 itemType: $itemType
             );
@@ -964,7 +966,8 @@ class CartItemController extends BaseController
     {
         $data = $request->all();
         $validate = Validator::make($data, [
-            "pointsApplied" => "nullable|numeric"
+            "pointsApplied" => "nullable|numeric",
+            "commissionApplied" => "nullable|numeric"
         ]);
 
         if ($validate->fails()) {
@@ -978,6 +981,7 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 intent: 'pay-now',
                 pointsApplied: $data['pointsApplied'] ?? null,
+                commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
                 itemType: $itemType
             );
@@ -1050,6 +1054,7 @@ class CartItemController extends BaseController
                 userId: $user->uuid,
                 intent: 'pay-now',
                 pointsApplied: $data['pointsApplied'] ?? null,
+                commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
                 itemType: $itemType
             );

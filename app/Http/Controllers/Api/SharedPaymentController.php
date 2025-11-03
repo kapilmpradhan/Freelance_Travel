@@ -49,7 +49,8 @@ class SharedPaymentController extends BaseController
         } else {
             $validator = Validator::make($requestData, [
                 'redeemerId' => 'integer|required',
-                "pointsApplied" => "nullable|numeric"
+                "pointsApplied" => "nullable|numeric",
+                "commissionApplied" => "nullable|numeric"
             ]);
             if ($validator->fails()) {
                 return $this->sendError('Validation error', $validator->errors());
@@ -72,6 +73,7 @@ class SharedPaymentController extends BaseController
             userId: $request->user->uuid,
             intent: 'pay-now',
             pointsApplied: $requestData['pointsApplied'] ?? 0,
+            commissionApplied: $requestData['commissionApplied'] ?? 0,
             processAsQuote: true,
             itemType: $itemType
         );

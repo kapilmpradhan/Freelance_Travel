@@ -57,6 +57,7 @@ class UserOrderCommissionService
             userId: $userId,
             intent: 'pay-now',
             pointsApplied: null,
+            commissionApplied: null,
             itemType: $itemType
         );
 
@@ -116,6 +117,7 @@ class UserOrderCommissionService
             userId: $userId,
             intent: 'pay-now',
             pointsApplied: null,
+            commissionApplied: null,
             itemType: $itemType
         );
 
