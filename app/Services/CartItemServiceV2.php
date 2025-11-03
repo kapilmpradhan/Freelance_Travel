@@ -719,6 +719,12 @@ class CartItemServiceV2
         foreach ($cartItems as $cartItem) {
             $cartItemData = $cartItem->toArray();
             unset($cartItemData['id']);
+
+            foreach ($cartItemData['booking_data'] as &$bookingData) {
+                unset($bookingData['redeemers']);
+                $bookingData['optionalData'] = [];
+            }
+
             $cartItemData['user_id'] = $user->uuid;
             $cartItemData['quote_id'] = $newQuote->id;
             CartItem::create($cartItemData);
