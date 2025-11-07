@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use App\Models\Quote;
 use App\Models\User;
@@ -38,6 +39,9 @@ class ShareQuoteJob implements ShouldQueue
         $quote = Quote::where('id', $this->shareQuote->quote_id)->first();
         $inviter = User::where('uuid', $this->shareQuote->shared_by_user_id)->first();
         $receiver = User::where('email', $this->shareQuote->shared_to_email)->first();
+        $webUrl = $this->platform === AgentBranchCode::DEFAULT
+            ? config('app.web_url')
+            : config('app.web_url_peterpans');
 
         $mailData = [
             'to' => [
@@ -49,7 +53,7 @@ class ShareQuoteJob implements ShouldQueue
             'params' => [
                 'inviterName' => ($inviter->first_name . ' ' . $inviter->last_name),
                 'quoteName' => $quote->title,
-                'redirectUrl' => config('app.web_url') . "/quotes/{$quote->id}?isPending=true"
+                'redirectUrl' => $webUrl . "/quotes/{$quote->id}?isPending=true"
             ]
 
         ];

@@ -18,6 +18,7 @@ env:
       APP_DEBUG: ${{ vars.APP_DEBUG }}
       APP_URL: ${{ vars.APP_URL }}
       WEB_URL: ${{ vars.WEB_URL }}
+      WEB_URL_PETERPANS: ${{ vars.WEB_URL_PETERPANS }}
       APP_PORT: ${{ vars.APP_PORT }}
       NETWORK_NAME: ${{vars.NETWORK_NAME}}
       API_IP_ADDRESS: ${{ vars.API_IP_ADDRESS }}

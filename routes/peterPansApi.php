@@ -110,6 +110,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
     Route::get('', [CartItemController::class, 'getQuotes']);
     Route::post('share/{quoteId}', [CartItemController::class, 'shareQuote']);
     Route::get('share/to/me', [CartItemController::class, 'getQuotesSharedToMe']);
+    Route::get('share/{quoteId}/users', [CartItemController::class, 'getQuoteSharedUsers']);
     Route::post('share/accept/{quoteShareId}', [CartItemController::class, 'acceptQuoteInvite']);
     Route::post('share/reject/{quoteShareId}', [CartItemController::class, 'rejectQuoteInvite']);
 });
@@ -117,6 +118,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', '
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'booking', 'middleware' => 'auth.jwt'], function () {
     Route::get('{bookingReference}/items', [CartItemController::class, 'getCartDetailsByBookingReference']);
     Route::get('{bookingReference}/detail', [CartItemController::class, 'getCustomerOrderDetail']);
+    Route::get('all', [CartItemController::class, 'getAllUserOrders'])->middleware('pointsAndCommissionAgentOnly');
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart'], function () {
