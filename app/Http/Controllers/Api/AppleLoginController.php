@@ -18,9 +18,9 @@ class AppleLoginController extends BaseController
     public function appleAuthCallback(Request $request)
     {
         $body = http_build_query($request->all());
-        if (app('platform' == AgentBranchCode::DEFAULT)) {
+        if (app('platform') == AgentBranchCode::DEFAULT) {
             $package = Config::get('services.apple.client_id');
-        } elseif (app('platform' == AgentBranchCode::PETERPANS)) {
+        } elseif (app('platform') == AgentBranchCode::PETERPANS) {
             $package = Config::get('services.apple.peterpans_client_id');
         }
 
