@@ -43,13 +43,17 @@ class ShareQuoteJob implements ShouldQueue
             ? config('app.web_url')
             : config('app.web_url_peterpans');
 
+        $templateId = $this->platform === AgentBranchCode::DEFAULT
+            ? config('vars.share_quote_template_id')
+            : config('vars.peterpans_share_quote_template_id');
+
         $mailData = [
             'to' => [
                 [
                     'email' => $this->shareQuote->shared_to_email
                 ]
             ],
-            'templateId' => 24,
+            'templateId' => (int) $templateId,
             'params' => [
                 'inviterName' => ($inviter->first_name . ' ' . $inviter->last_name),
                 'quoteName' => $quote->title,
