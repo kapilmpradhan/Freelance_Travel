@@ -4,11 +4,9 @@ namespace App\Services;
 
 use App\DTOs\HomeFeedProductFilter;
 use App\Logging\Logger;
-use App\Models\Agent;
-use App\Models\CartItem;
+use App\Models\Fareprice;
 use App\Models\Product;
 use App\Models\ProductCategory;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Redis;
 
@@ -187,11 +185,11 @@ class ProductCategoryService
 
     public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter, $isJobRun = false)
     {
-        $agent = UserAgentService::getDefaultAgentToken();
-        if ($agent->isError()) {
-            return $agent;
+        $agentResponse = UserAgentService::getUserAgentByBranch($productFilter->agentBranchCode);
+        if ($agentResponse->isError()) {
+            return $agentResponse;
         }
-        $agentToken = $agent->data['access_token'];
+        $agent = $agentResponse->data;
         try {
             $homeFeedSchemaResponse = ProductCategoryService::getProductSchemaByCategoriesWithLabel();
             if ($homeFeedSchemaResponse->isError()) {
@@ -200,7 +198,7 @@ class ProductCategoryService
             $homeFeedSchema = $homeFeedSchemaResponse->data;
 
             if ($productFilter->filterBy == 'destination') {
-                $regionsResponse = TdmsService::getCountryRegions($agentToken, $productFilter->countryId);
+                $regionsResponse = TdmsService::getCountryRegions($agent->access_token, $productFilter->countryId);
                 if ($regionsResponse->isError()) {
                     return $regionsResponse;
                 }
@@ -230,7 +228,7 @@ class ProductCategoryService
                 if ($productFilter->filterBy == 'destination') {
                     foreach ($typeLabels as $typeLabel) {
                         $productsResponse = TdmsService::getProductsByRegion(
-                            $agentToken,
+                            $agent->access_token,
                             $productFilter->countryId,
                             $typeLabel['regionId']
                         );
@@ -245,10 +243,11 @@ class ProductCategoryService
                             $numberOfRegions -= 1;
                         }
                         foreach ($products as $latestProductDetails) {
-                            $product = Product::where('tdms_product_id', $latestProductDetails['productId'])->first();
-                            if (!$product || $product->json != $latestProductDetails) {
-                                CartItemService::cacheProduct($product, $latestProductDetails);
-                            }
+                            CartItemService::cacheProductV2(
+                                tdmsProductId: $latestProductDetails['productId'],
+                                agent: $agent,
+                                productDetails: $latestProductDetails
+                            );
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
 
@@ -269,7 +268,7 @@ class ProductCategoryService
                         while (true) {
                             $productsResponse = TdmsService::getProductsByMultipleCategories(
                                 categoriesIdByTypes: $categoriesByLabels,
-                                agentToken: $agentToken,
+                                agentToken: $agent->access_token,
                                 countryId: $productFilter->countryId,
                                 recordStart: $recordStart,
                                 recordsLength: $recordLength
@@ -296,10 +295,11 @@ class ProductCategoryService
                             }
                         }
                         foreach ($products as $latestProductDetails) {
-                            $product = Product::where('tdms_product_id', $latestProductDetails['productId'])->first();
-                            if (!$product || $product->json != $latestProductDetails) {
-                                CartItemService::cacheProduct($product, $latestProductDetails);
-                            }
+                            CartItemService::cacheProductV2(
+                                tdmsProductId: $latestProductDetails['productId'],
+                                agent: $agent,
+                                productDetails: $latestProductDetails
+                            );
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
                     }
@@ -319,6 +319,26 @@ class ProductCategoryService
                 $products = Product::whereIn('tdms_product_id', $productIds)
                                 ->orderByRaw("FIELD(tdms_product_id, $productIdsStr)")
                                 ->get();
+
+                $fareprices = Fareprice::whereIn('tdms_product_id', $productIds)
+                    ->where('agent_branch', $agent->branch_code);
+
+                foreach ($products as $product) {
+                    $fareprice = (clone $fareprices)->where('tdms_product_id', $product->tdms_product_id)->first();
+                    if (!$fareprice) {
+                        $fareprice = Fareprice::create([
+                            'tdms_product_id' => $product->tdms_product_id,
+                            'agent_branch' => $agent->branch_code,
+                            'json' => $product->json['faresprices']
+                        ]);
+                    }
+
+                    $productJson = $product->json;
+                    $productJson['faresprices'] = $fareprice;
+                    $product->json = $productJson;
+                    $product->fareprice_version = $fareprice->version;
+                    $product->fareprice_branch = $fareprice->agent_branch;
+                }
 
                 if ($productFilter->filterBy == 'destination') {
                     $destinationLabel = array_filter($regions, function ($region) use ($label) {

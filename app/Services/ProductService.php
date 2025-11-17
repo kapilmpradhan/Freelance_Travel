@@ -7,25 +7,32 @@ use Illuminate\Support\Facades\Http;
 
 class ProductService
 {
-    public static function getProductsLastUpdateFromApi($agentToken, $productIds)
+    public static function getProductsLastUpdateFromApi($agentToken, array|int $productIds)
     {
-        $productIdsArrayToString = implode(',', $productIds);
+        $productIdsFormatted = is_array($productIds) ?
+            implode(',', $productIds) :
+            $productIds;
 
-        $requestUrl = config('vars.tdms_api_url');
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "{$requestUrl}/product/lastupdate/{$productIdsArrayToString}");
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer {$agentToken}",
-            "Content-Type: application/json",
-        ));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        $response = curl_exec($curl);
+        $requestUrl = config('vars.tdms_api_url') . "/product/lastupdate/{$productIdsFormatted}";
 
-        if ($response == false) {
-            return null;
+        // Send the HTTP GET request
+        $response = Http::withToken($agentToken)
+            ->acceptJson()
+            ->get($requestUrl);
+
+        // Check if the response is successful
+        if ($response->successful()) {
+            return HttpResponse::success(
+                data: $response->json(),
+                responseCode: $response->status(),
+            );
+        } else {
+            return HttpResponse::failed(
+                message: 'Failed to retrieve product last update',
+                responseCode: $response->status(),
+                data: $response->status(),
+            );
         }
-        return json_decode($response, true);
     }
 
     public static function getProductDetailsFromApi($agentToken, $product)
@@ -54,6 +61,31 @@ class ProductService
             return null;
         }
         return $response;
+    }
+
+    public static function getProductDetailsV2($agentToken, $productId)
+    {
+
+        $requestUrl = config('vars.tdms_api_url') . "/product/{$productId}";
+
+        // Send the HTTP GET request
+        $response = Http::withToken($agentToken)
+            ->acceptJson()
+            ->get($requestUrl);
+
+        // Check if the response is successful
+        if ($response->successful()) {
+            return HttpResponse::success(
+                data: $response->json()['results'][0],
+                responseCode: $response->status(),
+            );
+        } else {
+            return HttpResponse::failed(
+                message: 'Failed to retrieve product details',
+                responseCode: $response->status(),
+                data: $response->status(),
+            );
+        }
     }
 
     public static function getMultipleProductDetails($agentToken, array $productIds)

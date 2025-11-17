@@ -6,29 +6,26 @@ use App\Logging\Logger;
 use App\Services\CartItemService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Arr;
-use Schema;
 
-class UpdateCartItemAvailabilityJob implements ShouldQueue
+class UpdateCartItemAvailabilityJob
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
 
-    protected $items;
+    protected $item;
     protected $agent;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($items, $agent)
+    public function __construct($item, $agent)
     {
-        $this->items = $items;
+        $this->item = $item;
         $this->agent = $agent;
     }
 
@@ -37,30 +34,26 @@ class UpdateCartItemAvailabilityJob implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach ($this->items as $item) {
-            $cartItem = $item['cartItem'];
-            $product = $item['product'];
-            Logger::info('Updating availability for item: ' . $cartItem->id);
+        Logger::info('Updating availability for item: ' . $this->item->id);
 
-            $availabilityResponse = CartItemService::getItemAvailability($cartItem, $product, $this->agent);
-            if ($availabilityResponse->isError()) {
-                Logger::debug(
-                    message: 'Error updating availability for item: ' . $item['cartItem']->id,
-                    data: $availabilityResponse->data
-                );
-            } else {
-                $cartItem->availability = $availabilityResponse->data;
-                $cartItem->availability_last_updated_at = Carbon::now();
-                $fillableFields = $cartItem->getFillable(); // fields allowed in DB
+        $availabilityResponse = CartItemService::getItemAvailability($this->item, $this->agent);
+        if ($availabilityResponse->isError()) {
+            Logger::debug(
+                message: 'Error updating availability for item: ' . $this->item['cartItem']->id,
+                data: $availabilityResponse->data
+            );
+        } else {
+            $this->item->availability = $availabilityResponse->data;
+            $this->item->availability_last_updated_at = Carbon::now();
+            $fillableFields = $this->item->getFillable(); // fields allowed in DB
 
-                foreach ($cartItem->getAttributes() as $key => $value) {
-                    if (!in_array($key, $fillableFields)) {
-                        unset($cartItem->$key);
-                    }
+            foreach ($this->item->getAttributes() as $key => $value) {
+                if (!in_array($key, $fillableFields)) {
+                    unset($this->item->$key);
                 }
-
-                $cartItem->save();
             }
+
+            $this->item->save();
         }
     }
 }

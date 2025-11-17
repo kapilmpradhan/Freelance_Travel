@@ -7,7 +7,6 @@ use App\Jobs\CountryLocationsJob;
 use App\Logging\Logger;
 use App\Services\ProductCategoryService;
 use App\Services\ServiceException;
-use App\Services\ServiceResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 

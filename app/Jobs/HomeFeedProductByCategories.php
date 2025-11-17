@@ -77,21 +77,23 @@ class HomeFeedProductByCategories implements ShouldQueue
                     }
                     $productIds = array_column($products, 'productId');
                     $getProductAvailabilities = ProductService::getProductsLastUpdateFromApi($agentToken, $productIds);
-                    if (!$getProductAvailabilities) {
+                    if ($getProductAvailabilities->isError()) {
                         Logger::error('Unable to fetch product last update');
                         continue;
                     }
 
                     foreach ($products as $product) {
                         try {
+                            $values = [
+                                "json" => $product,
+                                "tdms_product_last_update_date" => $getProductAvailabilities
+                                                                    ->data[$product['productId']]
+                            ];
                             Product::updateOrCreate(
                                 [
                                     "tdms_product_id" => $product['productId'],
                                 ],
-                                [
-                                "json" => $product,
-                                "tdms_product_last_update_date" => $getProductAvailabilities[$product['productId']]
-                                    ]
+                                $values
                             );
                         } catch (Exception $e) {
                             Logger::error("Failed to cache productId: {$product['productId']}");

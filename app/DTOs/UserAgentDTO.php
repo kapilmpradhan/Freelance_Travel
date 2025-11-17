@@ -2,8 +2,9 @@
 
 namespace App\DTOs;
 
-use App\Models\UserAgent;
+use App\Enums\AgentBranchCode;
 use App\Services\UserAgentService;
+use Exception;
 
 class UserAgentDTO
 {
@@ -33,22 +34,23 @@ class UserAgentDTO
         $isPointsAgent = false;
         $isCommissionAgent = false;
 
-        $agent = UserAgent::where('user_id', $user->uuid)
-            ->first();
-
-        if ($agent) {
-            $agent = UserAgentService::refreshAgent($agent);
-
-            if ($agent->subsystem_type == 'FTA') {
-                $isCommissionAgent = true;
-            } else {
-                $isPointsAgent = true;
-            }
+        if (is_null($user)) {
+            $agentResponse = UserAgentService::getDefaultAgent();
         } else {
-            $platform = app('platform');
-            $agentResponse = UserAgentService::getUserAgentByBranch($platform);
-            $agent = $agentResponse->data;
+            $agentResponse = UserAgentService::getUserAgentIfExistsElseDefault($user ? $user->uuid : null);
+        }
+
+        if ($agentResponse->isError()) {
+            throw new Exception('Unable to get agent');
+        }
+
+        $agent = $agentResponse->data;
+        if (in_array($agent->branch_code, [AgentBranchCode::PETERPANS, AgentBranchCode::DEFAULT])) {
             $isDefaultAgent = true;
+        } elseif ($agent->subsystem_type == 'FTA') {
+            $isCommissionAgent = true;
+        } else {
+            $isPointsAgent = true;
         }
 
         return new self(

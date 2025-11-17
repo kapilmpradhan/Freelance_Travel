@@ -22,6 +22,38 @@ class UserAgentService
         return ServiceResponse::notFound();
     }
 
+    public static function getDefaultAgent()
+    {
+        if (app()->bound('platform') && app('platform') == AgentBranchCode::PETERPANS) {
+            $branchCode = config('vars.ptx_agent_branch_code');
+            $email = config('vars.ptx_agent_email');
+            $password = config('vars.ptx_agent_password');
+        } else {
+            $branchCode = config('vars.default_agent_branch_code');
+            $email = config('vars.default_agent_email');
+            $password = config('vars.default_agent_password');
+        }
+
+        $defaultAgent = UserAgent::where('email', $email)->first();
+        if (!$defaultAgent) {
+            $defaultAgent = UserAgent::create([
+                "branch_code" => $branchCode,
+                "email" => $email,
+                "password" => $password,
+                "subsystem_type" => "FTA"
+            ]);
+        }
+
+        $refreshedAgent = self::refreshAgent($defaultAgent);
+        if (!$refreshedAgent) {
+            $errorMessage = 'Unable to get default agent';
+            Logger::error($errorMessage);
+            return ServiceResponse::badRequest($errorMessage);
+        }
+
+        return ServiceResponse::success($refreshedAgent);
+    }
+
     public static function refreshAgent(UserAgent $agent): ?UserAgent
     {
         if (

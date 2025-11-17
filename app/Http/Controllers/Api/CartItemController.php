@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\DTOs\AddToQuote;
-use App\Jobs\CacheProductJob;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Services\BookingService;
@@ -29,59 +28,6 @@ use Illuminate\Support\Facades\DB;
 
 class CartItemController extends BaseController
 {
-    public function addItemToCart(Request $request, CartItem $cartItem): JsonResponse
-    {
-        $data = $request->all();
-        $data['user_id'] = $request->user->uuid;
-
-        $validate = Validator::make($data, $cartItem->addProductsToCartRule());
-
-        if ($validate->fails()) {
-            return $this->sendError('Validation Error.', $validate->errors());
-        }
-
-        try {
-            $cartItem = $cartItem->storeCartItem($request->user, $data);
-            CacheProductJob::dispatch($request->user, $cartItem);
-            return $this->sendResponse('Items added to cart', $cartItem->toArray());
-        } catch (Exception $e) {
-            Logger::error('Failed to add item to cart', $e);
-            return $this->sendError($e->getMessage());
-        }
-    }
-
-    public function addItemsToCart(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $validated = Validator::make($data, CartItem::saveItemsRule());
-
-        if ($validated->fails()) {
-            return $this->sendError('Validation Error.', $validated->errors());
-        }
-
-        try {
-            $isDryRun = $request->query('dry') == 1;
-
-            $saveItemsResponse = CartItemService::saveItems(
-                userId: $request->user->uuid,
-                tdmsProductId: $data['tdmsProductId'],
-                productPricesDetailsId: $data['productPricesDetailsId'],
-                timeId: $data['timeId'] ?? null,
-                bookingData: $data['bookingData'] ?? [],
-                startDate: $data['startDate'],
-                days: $data['days'],
-                selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::cart(),
-                isDryRun: $isDryRun,
-            );
-            return $this->sendResponseFromService($saveItemsResponse);
-        } catch (Exception $e) {
-            $errorMessage = 'Failed to add items to cart';
-            Logger::error($errorMessage, $e);
-            return $this->sendError($errorMessage);
-        }
-    }
-
     public function addItemsToCartV2(Request $request): JsonResponse
     {
         $data = $request->all();
@@ -110,46 +56,6 @@ class CartItemController extends BaseController
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to add items to cart';
-            Logger::error($errorMessage, $e);
-            return $this->sendError($errorMessage);
-        }
-    }
-
-    public function addItemsInNewQuote(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $validated = Validator::make($data, CartItem::saveItemsInNewQuote());
-
-        if ($validated->fails()) {
-            return $this->sendError('Validation Error.', $validated->errors());
-        }
-
-        $validateQuoteTitle = Validator::make(
-            ['quoteTitle' => $data['quoteTitle']],
-            ['quoteTitle' => 'required|string|max:200']
-        );
-
-        if ($validateQuoteTitle->fails()) {
-            return $this->sendError('Validation Error.', $validateQuoteTitle->errors());
-        }
-
-        $addToQuote = AddToQuote::new(title: $data['quoteTitle']);
-        try {
-            $saveItemsResponse = CartItemService::saveItems(
-                userId: $request->user->uuid,
-                tdmsProductId: $data['tdmsProductId'],
-                productPricesDetailsId: $data['productPricesDetailsId'],
-                timeId: $data['timeId'] ?? null,
-                bookingData: $data['bookingData'] ?? [],
-                startDate: $data['startDate'],
-                days: $data['days'],
-                selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::quote($addToQuote->quoteId),
-                addToQuote: $addToQuote
-            );
-            return $this->sendResponseFromService($saveItemsResponse);
-        } catch (Exception $e) {
-            $errorMessage = 'Failed to create new quote';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
@@ -200,36 +106,6 @@ class CartItemController extends BaseController
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to create new quote';
-            Logger::error($errorMessage, $e);
-            return $this->sendError($errorMessage);
-        }
-    }
-
-    public function addItemsInExistingQuote(Request $request, string $quoteId): JsonResponse
-    {
-        $data = $request->all();
-        $validated = Validator::make($data, CartItem::saveItemsRule());
-
-        if ($validated->fails()) {
-            return $this->sendError('Validation Error.', $validated->errors());
-        }
-
-        try {
-            $saveItemsResponse = CartItemService::saveItems(
-                userId: $request->user->uuid,
-                tdmsProductId: $data['tdmsProductId'],
-                productPricesDetailsId: $data['productPricesDetailsId'],
-                timeId: $data['timeId'] ?? null,
-                bookingData: $data['bookingData'] ?? [],
-                startDate: $data['startDate'],
-                days: $data['days'],
-                selectedAvailableIndices: $data['selectedAvailableIndices'],
-                itemType: ItemType::quote($quoteId),
-                addToQuote: AddToQuote::existing(quoteId: $quoteId)
-            );
-            return $this->sendResponseFromService($saveItemsResponse);
-        } catch (Exception $e) {
-            $errorMessage = 'Failed to add items to quote';
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }

@@ -25,6 +25,9 @@ class ItemType
         null|int|string $subTypeId = null,
         $data = null
     ) {
+        if (app('agentType') ?? null) {
+            $this->agentBranchCode = app('agentType')->agent->branch_code;
+        }
         $this->type = $type;
         $this->typeId = $typeId;
         $this->subTypeId = $subTypeId;

@@ -20,3 +20,4 @@ composer.lock
 .DS_Store
 *credentials.json
 docker-compose.yml
+server_reference.txt

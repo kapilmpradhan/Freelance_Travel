@@ -5,6 +5,7 @@ namespace App\DTOs;
 class OrderItemRequestData
 {
     public $product;
+    public $fareprices;
     public $productLastUpdate;
     public $productBookingDetails;
     public $productAvailabilities;
@@ -16,6 +17,7 @@ class OrderItemRequestData
 
     public function __construct(
         $product,
+        $fareprices,
         $productLastUpdate,
         $productBookingDetails,
         $productAvailabilities,
@@ -25,7 +27,12 @@ class OrderItemRequestData
         $commences = null,
         $productPriceDetailsId = null,
     ) {
+        $productJson = $product->json;
+        $productJson['faresprices'] = $fareprices->json;
+        $product->json = $productJson;
+
         $this->product = $product;
+        $this->fareprices = $fareprices;
         $this->productLastUpdate = $productLastUpdate;
         $this->productBookingDetails = $productBookingDetails;
         $this->productAvailabilities = $productAvailabilities;

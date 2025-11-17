@@ -26,7 +26,8 @@ class HomeFeedProductFilter
 
     public static function fromRequest($request)
     {
-        $agentBranchCode = $request->agentBranchCode;
+        $agentType = app('agentType');
+        $agentBranchCode = $agentType->agent->branch_code;
         $countryId = $request->query('countryId');
         $filterBy = $request->query('filterBy');
 

@@ -3,14 +3,14 @@
 namespace App\Services;
 
 use App\Jobs\UpdateCartItemAvailabilityJob;
+use App\Models\Fareprice;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\DTOs\AddToQuote;
 use App\DTOs\ItemType;
-use App\DTOs\OrderItemRequestData;
 use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\CartCustomerDetail;
+use App\Models\FarepriceHistory;
 use App\Models\Product;
 use App\Models\ProductHistory;
 use App\Models\ProductPriceAvailability;
@@ -57,141 +57,135 @@ class CartItemService
         }
     }
 
-    public static function buildOrderItemRequestData(
-        string $userId,
-        int $tdmsProductId,
-        int $productPricesDetailsId,
-        string|null $timeId,
-        array $bookingData,
-        string $startDate,
-        int $days,
-        array $selectedAvailableIndices,
-    ): ServiceResponse {
+    public static function cacheProductV2($tdmsProductId, $agent, $productDetails = null)
+    {
+        $isProductNew = false;
+        $isFarepriceNew = false;
+        $productExistsInTdms = false;
+        $isProductDetailsOutdated = false;
+        $isProductFarepricesOutdated = false;
 
-        // Validate that all indices are natural numbers
-        foreach ($selectedAvailableIndices as $selectedIndex) {
-            if (!is_int($selectedIndex) || $selectedIndex < 0) {
-                return ServiceResponse::badRequest(
-                    message: 'Selected availability indices must be natural numbers',
-                );
-            }
+        $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)->first();
+        if (!$cachedProduct) {
+            $isProductNew = true;
         }
 
-        // If timeId is present use that, else use timeId from bookingData.
-        // If both not available set to 0.
-        // In future will only use timeId available in bookingData.
-        if ($timeId) {
-            $bookingData['timeId'] = $timeId;
-        } elseif (!isset($bookingData['timeId'])) {
-            $bookingData['timeId'] = '0';
+        $cachedFareprice = Fareprice::where('tdms_product_id', $tdmsProductId)->first();
+        if (!$cachedFareprice) {
+            $isFarepriceNew = true;
         }
 
-        $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
-        $userAgent = $userAgentResponse->data;
-        $defaultAgentAccessToken = $userAgent->access_token;
-
-        $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-        if (!$productDetailsResponse) {
-            return ServiceResponse::notFound(
-                message: 'Product not found',
-            );
-        }
-        $latestProductDetails = $productDetailsResponse['results'][0];
-        $product = Product::where('tdms_product_id', $tdmsProductId)
-                        ->orderBy('version', 'desc')
-                        ->first();
-        if (!$product || $product->json != $latestProductDetails) {
-            self::cacheProduct($product, $latestProductDetails);
+        $productLastUpdateDateResponse = ProductService::getProductsLastUpdateFromApi(
+            agentToken: $agent->access_token,
+            productIds: [$tdmsProductId]
+        );
+        if ($productLastUpdateDateResponse->isError()) {
+            return $productLastUpdateDateResponse;
         }
 
-        if (
-            $latestProductDetails['apiProviderId'] > 0
-            && $latestProductDetails['groupFaresForAvailabilityCheck'] == true
-        ) {
-            $farePrices = $latestProductDetails['faresprices'];
+        $productLastUpdate = $productLastUpdateDateResponse->data[$tdmsProductId];
+        if ($productLastUpdate != $cachedProduct->tdms_product_last_update_date) {
+            $isProductDetailsOutdated = true;
+        }
 
-            // Find fareTypeId for the given productPricesDetailsId
-            $fareTypeId = null;
-            foreach ($farePrices as $fare) {
-                if ($fare["productPricesDetailsId"] === $productPricesDetailsId) {
-                    $fareTypeId = $fare["fareTypeId"];
-                    break;
-                }
-            }
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
-                agentToken: $defaultAgentAccessToken,
-                fareTypeId: $fareTypeId,
-                productId: $tdmsProductId,
-                startDate: $startDate,
-                endDate: Carbon::parse($startDate)->addDays($days)->toDateString()
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found',
-                );
-            }
-
-            $productAvailabilities = $productAvailabilitiesResponse->data;
+        if ($productDetails) {
+            $lastestProductDetails = $productDetails;
         } else {
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
-                $defaultAgentAccessToken,
-                $productPricesDetailsId,
-                $bookingData['timeId'],
-                $startDate,
-                $days,
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found',
-                );
-            }
-            $productAvailabilities = $productAvailabilitiesResponse->data;
-        }
-
-        $maxIndex = max($selectedAvailableIndices);
-        if ($maxIndex >= count($productAvailabilities)) {
-            return ServiceResponse::badRequest(
-                message: 'Selected availability selectedIndex is out of bounds',
-            );
-        }
-
-        $bookingDetailsResponse = ProductService::getBookingDetails(
-            agentToken: $defaultAgentAccessToken,
-            productPricesDetailsId: $productPricesDetailsId,
-        );
-
-        if ($bookingDetailsResponse->isError()) {
-            if ($bookingDetailsResponse->responseCode != 404) {
-                return ServiceResponse::notFound('Booking details not found');
+            $lastestProductDetailsResponse = ProductService::getProductDetailsV2($agent->access_token, $tdmsProductId);
+            if ($lastestProductDetailsResponse->isError()) {
+                return $lastestProductDetailsResponse;
             }
 
-            $errorMessage = 'Failed to load booking details';
-            Logger::error("{$errorMessage}: {$bookingDetailsResponse->message}");
-            throw new ServiceException(message: $errorMessage);
-        }
-        $bookingDetails = $bookingDetailsResponse->data;
-
-        $productLastUpdate = ProductService::getProductsLastUpdateFromApi(
-            $defaultAgentAccessToken,
-            [$tdmsProductId],
-        );
-        if (!$productLastUpdate) {
-            throw new ServiceException(
-                message: 'Product last update not found',
-            );
+            $lastestProductDetails = $lastestProductDetailsResponse->data;
         }
 
-        $productLastUpdate = $productLastUpdate[$tdmsProductId];
+        if ($lastestProductDetails) {
+            $productExistsInTdms = true;
+            $latestFareprice = $lastestProductDetails['faresprices'];
+            if ($cachedFareprice && $latestFareprice != $cachedFareprice->json) {
+                $isProductFarepricesOutdated = true;
+            }
+        }
 
-        return ServiceResponse::success(data: new OrderItemRequestData(
-            product: $latestProductDetails,
-            productLastUpdate: $productLastUpdate,
-            productBookingDetails: $bookingDetails,
-            productAvailabilities: $productAvailabilities,
-            bookingData: $bookingData,
-        ));
+        if ($productExistsInTdms) {
+            if ($isProductNew) {
+                $latestCachedProduct = Product::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'json' => $lastestProductDetails,
+                    'tdms_product_last_update_date' => $productLastUpdate
+                ]);
+            }
+
+            if ($isFarepriceNew) {
+                $latestCachedFareprice = Fareprice::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'json' => $latestFareprice,
+                    'agent_branch' => $agent->branch_code
+                ]);
+            }
+
+            if ($isProductDetailsOutdated) {
+                ProductHistory::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'version' => $cachedProduct->version,
+                    'tdms_product_last_update_date' => $cachedProduct->tdms_product_last_update_date,
+                    'json' => $cachedProduct->json,
+                ]);
+
+                $latestCachedProduct = $cachedProduct->update([
+                    'json' => $lastestProductDetails,
+                    'tdms_product_last_update_date' => $productLastUpdate,
+                    'version' => $cachedProduct->version + 1,
+                ]);
+            } else {
+                $latestCachedProduct = $cachedProduct;
+            }
+
+            if ($isProductFarepricesOutdated) {
+                FarepriceHistory::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'json' => $cachedFareprice->json,
+                    'agent_branch' => $cachedFareprice->agent_branch,
+                    'version' => $cachedFareprice
+                ]);
+
+                $latestCachedFareprice = $cachedFareprice->update([
+                    'json' => $latestFareprice,
+                    'version' => $cachedFareprice->version + 1,
+                ]);
+            } else {
+                $latestCachedFareprice = $cachedFareprice;
+            }
+
+            return ServiceResponse::success([
+                'product' => $latestCachedProduct,
+                'fareprices' => $latestCachedFareprice
+            ]);
+        } else {
+            if ($cachedProduct) {
+                ProductHistory::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'version' => $cachedProduct->version,
+                    'tdms_product_last_update_date' => $cachedProduct->tdms_product_last_update_date,
+                    'json' => $cachedProduct->json,
+                ]);
+
+                $cachedProduct->delete();
+            }
+
+            if ($cachedFareprice) {
+                FarepriceHistory::create([
+                    'tdms_product_id' => $tdmsProductId,
+                    'json' => $cachedFareprice->json,
+                    'agent_branch' => $cachedFareprice->agent_branch,
+                    'version' => $cachedFareprice
+                ]);
+
+                $cachedFareprice->delete();
+            }
+
+            return ServiceResponse::notFound('Product details not found in TDMS');
+        }
     }
 
     public static function buildCartItemsData(
@@ -235,146 +229,9 @@ class CartItemService
         return $cartItemsData;
     }
 
-    /**
-     * @param string $userId
-     * @param int $tdmsProductId
-     * @param int $productPricesDetailsId
-     * @param string $timeId
-     * @param string $startDate
-     * @param int $days
-     * @param int[] $selectedAvailableIndices Array of integers
-     */
-    public static function saveItems(
-        string $userId,
-        int $tdmsProductId,
-        int $productPricesDetailsId,
-        string|null $timeId,
-        array $bookingData,
-        string $startDate,
-        int $days,
-        array $selectedAvailableIndices,
-        ItemType $itemType,
-        AddToQuote $addToQuote = null,
-        bool $isDryRun = false,
-    ) {
-        try {
-            $buildRequestDataResponse = self::buildOrderItemRequestData(
-                userId: $userId,
-                tdmsProductId: $tdmsProductId,
-                productPricesDetailsId: $productPricesDetailsId,
-                timeId: $timeId,
-                bookingData: $bookingData,
-                startDate: $startDate,
-                days: $days,
-                selectedAvailableIndices: $selectedAvailableIndices,
-            );
-            if (!$buildRequestDataResponse->isSuccess()) {
-                return $buildRequestDataResponse;
-            }
-            $requestData = $buildRequestDataResponse->data;
-            $product = $requestData->product;
-            $productLastUpdate = $requestData->productLastUpdate;
-            $productBookingDetails = $requestData->productBookingDetails;
-            $productAvailabilities = $requestData->productAvailabilities;
-            $bookingData = $requestData->bookingData;
-
-            $now = Carbon::now();
-            if ($isDryRun) {
-                $cartItemsData = self::buildCartItemsData(
-                    userId: $userId,
-                    tdmsProductId: $tdmsProductId,
-                    productVersion: null,
-                    productPricesDetailsId: $productPricesDetailsId,
-                    bookingData: $bookingData,
-                    startDate: $startDate,
-                    days: $days,
-                    selectedAvailableIndices: $selectedAvailableIndices,
-                    productAvailabilities: $productAvailabilities,
-                    availabilityLastUpdatedAt: $now,
-                    itemType: $itemType,
-                    productBookingDetails: $productBookingDetails,
-                    quote: null,
-                );
-                $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
-                                ->orderBy('version', 'desc')
-                                ->first();
-
-                $cartItemsData = array_map(
-                    fn ($cartItemData) => array_merge($cartItemData, ['product' => $cachedProduct]),
-                    $cartItemsData,
-                );
-
-                return ServiceResponse::success(data: $cartItemsData);
-            }
-
-            $cartItems = [];
-            $cartItems = DB::transaction(function () use (
-                $tdmsProductId,
-                $product,
-                $now,
-                $productLastUpdate,
-                $productAvailabilities,
-                $userId,
-                $productPricesDetailsId,
-                $bookingData,
-                $startDate,
-                $days,
-                $selectedAvailableIndices,
-                $cartItems,
-                $productBookingDetails,
-                $addToQuote,
-                $itemType,
-            ) {
-                $quote = null;
-                if (!is_null($addToQuote)) {
-                    if ($addToQuote->isNew) {
-                        $quote = Quote::create([
-                            'user_id' => $userId,
-                            'title' => $addToQuote->title,
-                        ]);
-                    } else {
-                        $quote = Quote::where('id', $addToQuote->quoteId)->first();
-                    }
-                }
-
-                $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
-                                ->orderBy('version', 'desc')
-                                ->first();
-                $productVersion = $cachedProduct->version;
-
-                $cartItemsData = self::buildCartItemsData(
-                    userId: $userId,
-                    tdmsProductId: $tdmsProductId,
-                    productVersion: $productVersion,
-                    productPricesDetailsId: $productPricesDetailsId,
-                    bookingData: $bookingData,
-                    startDate: $startDate,
-                    days: $days,
-                    selectedAvailableIndices: $selectedAvailableIndices,
-                    productAvailabilities: $productAvailabilities,
-                    availabilityLastUpdatedAt: $now,
-                    itemType: $itemType,
-                    productBookingDetails: $productBookingDetails,
-                    quote: $quote,
-                );
-
-                foreach ($cartItemsData as $cartItemData) {
-                    $newCartItem = CartItem::create($cartItemData);
-                    array_push($cartItems, $newCartItem);
-                }
-
-                return $cartItems;
-            });
-
-            return ServiceResponse::success(data: $cartItems);
-        } catch (ServiceException $e) {
-            Logger::error('Failed to save cart items', $e);
-            return $e->toServiceResponse();
-        }
-    }
-
-    public static function getItemAvailability($item, $product, $agent)
+    public static function getItemAvailability($item, $agent)
     {
+        $product = Product::where('tdms_product_id', $item->tdms_product_id)->first();
         $productData = $product->json;
         $productPricesDetailsId = $item->product_price_details_id;
         $agentToken = $agent->access_token;
@@ -443,19 +300,40 @@ class CartItemService
         $cartItems = CartItem::userItems($userId, $itemType);
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds);
+        $fareprices = Fareprice::whereIn('tdms_product_id', $productIds)
+            ->where('agent_branch', $itemType->agentBranchCode);
 
-        $needUpdateItems = [];
-        $cartItems->each(function ($cartItem) use ($products, &$needUpdateItems) {
+        $cartItems->each(function ($cartItem) use ($products, $fareprices, $itemType, &$needUpdateItems) {
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
-                                        ->where('version', $cartItem->product_version)
-                                        ->first();
+                ->where('version', $cartItem->product_version)
+                ->first();
+
             $isProductLatest = true;
             if (!$product) {
                 $product = ProductHistory::where('tdms_product_id', $cartItem->tdms_product_id)
-                                        ->where('version', $cartItem->product_version)
-                                        ->first();
+                    ->where('version', $cartItem->product_version)
+                    ->first();
                 $product->counter = 0;
                 $isProductLatest = false;
+            }
+
+            $fareprice = (clone $fareprices)->where('tdms_product_id', $cartItem->tdms_product_id)
+                ->where('version', $cartItem->fareprice_version)
+                ->first();
+
+            $isFarepriceLatest = true;
+            if (!$fareprice) {
+                $fareprice = FarepriceHistory::where('tdms_product_id', $cartItem->tdms_product_id)
+                    ->where('agent_branch', $itemType->agentBranchCode)
+                    ->where('version', $cartItem->fareprice_version)
+                    ->first();
+                $isFarepriceLatest = false;
+            }
+
+            if ($fareprice) {
+                $productJson = $product->json;
+                $productJson['faresprices'] = $fareprice->json;
+                $product->json = $productJson;
             }
 
             $availabilityLastUpdatedAt = $cartItem->availability_last_updated_at;
@@ -463,21 +341,14 @@ class CartItemService
                 !$availabilityLastUpdatedAt ||
                 Carbon::parse($availabilityLastUpdatedAt)->isBefore(Carbon::now()->subMinutes(5))
             ) {
-                $needUpdateItems[] = [
-                    "cartItem" => $cartItem,
-                    "product" => $product
-                ];
-
-                $cartItem->is_availability_latest = false;
-            } else {
-                $cartItem->is_availability_latest = true;
+                UpdateCartItemAvailabilityJob::dispatch($cartItem, app('agentType')->agent);
             }
             $cartItem->product = $product;
+            $cartItem->is_availability_latest = true;
             $cartItem->is_product_latest = $isProductLatest;
+            $cartItem->is_fareprice_latest = $isFarepriceLatest;
+            $cartItem->fareprice_branch = $fareprice->agent_branch;
         });
-        if (!empty($needUpdateItems)) {
-            UpdateCartItemAvailabilityJob::dispatch($needUpdateItems, app('agentType')->agent);
-        }
         return ServiceResponse::success(data: $cartItems);
     }
 
@@ -521,7 +392,7 @@ class CartItemService
             $items = CartItem::userItemsByQuoteId($user->uuid, ItemType::quote($quote->id));
 
             $hasPrimaryRedeemer = false;
-            foreach ($items as $item) {
+            foreach ($items->all() as $item) {
                 if ($item->booking_data) {
                     $redeemers = [];
                     foreach ($item->booking_data as $data) {
@@ -585,7 +456,7 @@ class CartItemService
             $items = CartItem::userItemsByQuoteId($user->uuid, ItemType::quote($quote->id));
 
             $hasPrimaryRedeemer = false;
-            foreach ($items as $item) {
+            foreach ($items->all() as $item) {
                 if ($item->booking_data) {
                     $redeemers = [];
                     foreach ($item->booking_data as $data) {
@@ -643,8 +514,10 @@ class CartItemService
         $items = CartItem::where('quote_id', $quoteId)->get();
         $productIds = $items->pluck('tdms_product_id')->unique();
         $products = Product::whereIn('tdms_product_id', $productIds);
+        $fareprices = Fareprice::whereIn('tdms_product_id', $productIds)
+            ->where('agent_branch', app('agentType')->agent->branch_code);
 
-        $items->each(function ($item) use ($products) {
+        $items->each(function ($item) use ($products, $fareprices) {
             $product = (clone $products)->where('tdms_product_id', $item->tdms_product_id)
                                         ->where('version', $item->product_version)
                                         ->first();
@@ -657,8 +530,28 @@ class CartItemService
                 $isProductLatest = true;
             }
 
+            $fareprice = (clone $fareprices)->where('tdms_product_id', $item->tdms_product_id)
+                ->where('version', $item->fareprice_version)
+                ->first();
+
+            $isFarepriceLatest = true;
+            if (!$fareprice) {
+                $fareprice = FarepriceHistory::where('tdms_product_id', $item->tdms_product_id)
+                    ->where('agent_branch', app('agentType')->agent->branch_code)
+                    ->where('version', $item->fareprice_version)
+                    ->first();
+                $isFarepriceLatest = false;
+            }
+
+            if ($fareprice) {
+                $productJson = $product->json;
+                $productJson['faresprices'] = $fareprice->json;
+                $product->json = $productJson;
+            }
+
             $item->is_availability_latest = true;
             $item->is_product_latest = $isProductLatest;
+            $item->is_fareprice_latest = $isFarepriceLatest;
             $item->product = $product;
         });
 
@@ -683,7 +576,7 @@ class CartItemService
                 }
             }
 
-            foreach ($cartItems as $cartItem) {
+            foreach ($cartItems->all() as $cartItem) {
                 $bookingData = $cartItem->booking_data;
                 if ($bookingData) {
                     $redeemers = [];
@@ -794,7 +687,7 @@ class CartItemService
             );
         }
 
-        foreach ($cartItems as $cartItem) {
+        foreach ($cartItems->all() as $cartItem) {
             $cartItem->delete();
         }
 
@@ -877,7 +770,7 @@ class CartItemService
             );
         }
 
-        foreach ($quoteItems as $quoteItem) {
+        foreach ($quoteItems->all() as $quoteItem) {
             $quoteItem->delete();
         }
 

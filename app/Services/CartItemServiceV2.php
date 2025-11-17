@@ -26,28 +26,17 @@ class CartItemServiceV2
         $itemType = null,
         $isDryRun = false
     ): ServiceResponse {
-        $userAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($userId);
-        $defaultAgentAccessToken = $userAgentResponse->data['access_token'];
+        $agentType = app('agentType');
+        $agent = $agentType->agent;
 
-        $product = Product::where('tdms_product_id', $tdmsProductId)
-            ->orderBy('version', 'desc')
-            ->first();
-
-        $productDetailsResponse = ProductService::getProductDetails($defaultAgentAccessToken, $tdmsProductId);
-        if (!$productDetailsResponse || empty($productDetailsResponse['results'])) {
-            return ServiceResponse::notFound(
-                message: 'Product not found',
-                data: ['tdmsProductId' => $tdmsProductId]
-            );
+        $latestCachedProductResponse = CartItemService::cacheProductV2($tdmsProductId, $agent);
+        if ($latestCachedProductResponse->isError()) {
+            return $latestCachedProductResponse;
         }
-        $latestProductDetails = $productDetailsResponse['results'][0];
 
-        if (!$product || $product->json != $latestProductDetails) {
-            CartItemService::cacheProduct(
-                product: $product,
-                latestProduct: $latestProductDetails
-            );
-        }
+        $latestCachedProduct = $latestCachedProductResponse->data['product'];
+        $latestCachedFareprice = $latestCachedProductResponse->data['fareprices'];
+
 
         $result = [];
         $existingUserCartItems = CartItem::userCartItems($userId);
@@ -58,7 +47,7 @@ class CartItemServiceV2
         }
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
-            $farePrices = $latestProductDetails['faresprices'];
+            $farePrices = $latestCachedFareprice->json;
 
             // Find fareTypeId for the given productPricesDetailsId
             $farePrice = null;
@@ -108,7 +97,7 @@ class CartItemServiceV2
 
             if (!$itemType->forDiscount) {
                 $bookingDetailsResponse = ProductService::getBookingDetails(
-                    agentToken: $defaultAgentAccessToken,
+                    agentToken: $agent->access_token,
                     productPricesDetailsId: $productPriceDetails['productPricesDetailsId'],
                 );
 
@@ -199,11 +188,11 @@ class CartItemServiceV2
                 }
 
                 if (
-                    $latestProductDetails['apiProviderId'] > 0
-                    && $latestProductDetails['groupFaresForAvailabilityCheck'] == true
+                    $latestCachedProduct->json['apiProviderId'] > 0
+                    && $latestCachedProduct->json['groupFaresForAvailabilityCheck'] == true
                 ) {
                     $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
-                        agentToken: $defaultAgentAccessToken,
+                        agentToken: $agent->access_token,
                         fareTypeId: $fareTypeId,
                         productId: $tdmsProductId,
                         startDate: $details['bookingDate'],
@@ -219,7 +208,7 @@ class CartItemServiceV2
                     $productAvailabilities = $productAvailabilitiesResponse->data;
                 } else {
                     $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
-                        $defaultAgentAccessToken,
+                        $agent->access_token,
                         $productPriceDetailsId,
                         $timeId,
                         $details['bookingDate'],
@@ -235,7 +224,8 @@ class CartItemServiceV2
                 }
 
                 $result[] = new OrderItemRequestData(
-                    product: $latestProductDetails,
+                    product: $latestCachedProduct,
+                    fareprices: $latestCachedFareprice,
                     productPriceDetailsId: $productPriceDetailsId,
                     productLastUpdate: Carbon::now(),
                     productBookingDetails: $bookingDetails ?? [],
@@ -284,6 +274,7 @@ class CartItemServiceV2
                 'tdms_product_id' => $tdmsProductId,
                 'group_id' => $groupId,
                 'product_version' => $productVersion,
+                'fareprice_version' => $orderItemData->fareprices->version,
                 'product_price_details_id' => $orderItemData->productPriceDetailsId,
                 'booking_date' => BaseService::stringToDate($availability['BookingDate']),
                 'booking_quantity' => $orderItemData->quantity,

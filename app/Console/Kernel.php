@@ -49,7 +49,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->job(new SendNotificationToInactiveUsers())->dailyAt("08:30");
 
-        $schedule->job(new HomeFeedCachedProductUpdate())->dailyAt("00:30");
+        $schedule->job(new HomeFeedCachedProductUpdate())->dailyAt("01:00");
     }
 
     /**
