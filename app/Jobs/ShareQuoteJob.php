@@ -38,10 +38,12 @@ class ShareQuoteJob implements ShouldQueue
 
         $quote = Quote::where('id', $this->shareQuote->quote_id)->first();
         $inviter = User::where('uuid', $this->shareQuote->shared_by_user_id)->first();
-        $receiver = User::where('email', $this->shareQuote->shared_to_email)->first();
-        if ($receiver) {
+        $invitee = User::where('email', $this->shareQuote->shared_to_email)->first();
+        if ($invitee) {
             $inviteeRegistered = true;
-            $inviteeName = $receiver->first_name . ' ' . $receiver->last_name;
+            $inviteeName = $invitee->first_name ?
+                $invitee->first_name . ' ' . $invitee->last_name :
+                $invitee->nickname;
         } else {
             $inviteeRegistered = false;
             $inviteeName = null;
@@ -77,8 +79,8 @@ class ShareQuoteJob implements ShouldQueue
         ];
         $emailService->sendMail($mailData);
 
-        if ($receiver) {
-            $tokens = $receiver->fcmTokens($this->platform);
+        if ($invitee) {
+            $tokens = $invitee->fcmTokens($this->platform);
             $pushNotificationData = [
                 'title' => "Quote Shared",
                 'body' => "{$quote->title} has been shared with you.",
