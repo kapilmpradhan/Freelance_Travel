@@ -39,6 +39,18 @@ class ShareQuoteJob implements ShouldQueue
         $quote = Quote::where('id', $this->shareQuote->quote_id)->first();
         $inviter = User::where('uuid', $this->shareQuote->shared_by_user_id)->first();
         $receiver = User::where('email', $this->shareQuote->shared_to_email)->first();
+        if ($receiver) {
+            $inviteeRegistered = true;
+            $inviteeName = $receiver->first_name . ' ' . $receiver->last_name;
+        } else {
+            $inviteeRegistered = false;
+            $inviteeName = null;
+        }
+
+        $inviterName = $inviter->first_name ?
+            $inviter->first_name . ' ' . $inviter->last_name :
+            $inviter->nickname;
+
         $webUrl = $this->platform === AgentBranchCode::DEFAULT
             ? config('app.web_url')
             : config('app.web_url_peterpans');
@@ -55,11 +67,13 @@ class ShareQuoteJob implements ShouldQueue
             ],
             'templateId' => (int) $templateId,
             'params' => [
-                'inviterName' => ($inviter->first_name . ' ' . $inviter->last_name),
+                'inviterName' => $inviterName,
+                'inviteeName' => $inviteeName,
+                'inviteeRegistered' => $inviteeRegistered,
                 'quoteName' => $quote->title,
+                'system' => $this->platform == AgentBranchCode::DEFAULT ? 'FreelanceTravel' : 'PeterPans',
                 'redirectUrl' => $webUrl . "/quotes/{$quote->id}?isPending=true"
             ]
-
         ];
         $emailService->sendMail($mailData);
 
