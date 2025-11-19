@@ -613,6 +613,11 @@ class CartItemServiceV2
             $quote = (clone $quotesQuery)->where('id', $sharedQuote->quote_id)
                 ->select(['id', 'title', 'created_at', 'updated_at'])
                 ->first();
+            if (!$quote) {
+                $sharedQuote->is_quote_deleted = true;
+                $sharedQuote->save();
+                continue;
+            }
             $noOfItems = CartItem::query()->where('quote_id', $quote->id)
                 ->count();
 

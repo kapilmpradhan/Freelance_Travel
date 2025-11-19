@@ -138,11 +138,12 @@ class CartItemService
                         'json' => $cachedProduct->json,
                     ]);
 
-                    $latestCachedProduct = $cachedProduct->update([
+                    $cachedProduct->update([
                         'json' => $lastestProductDetails,
                         'tdms_product_last_update_date' => $productLastUpdate,
                         'version' => $cachedProduct->version + 1,
                     ]);
+                    $latestCachedProduct = $cachedProduct;
                 } else {
                     $latestCachedProduct = $cachedProduct;
                 }
@@ -160,7 +161,7 @@ class CartItemService
                         'version' => $cachedFareprice->version + 1,
                     ]);
 
-                    $latestCachedProduct = $cachedFareprice;
+                    $latestCachedPrice = $cachedFareprice;
                 } else {
                     $latestCachedFareprice = $cachedFareprice;
                 }
