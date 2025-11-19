@@ -87,7 +87,7 @@ class CartItemService
             }
 
             $productLastUpdate = $productLastUpdateDateResponse->data[$tdmsProductId];
-            if ($productLastUpdate != $cachedProduct->tdms_product_last_update_date) {
+            if ($cachedProduct && $productLastUpdate != $cachedProduct->tdms_product_last_update_date) {
                 $isProductDetailsOutdated = true;
             }
 

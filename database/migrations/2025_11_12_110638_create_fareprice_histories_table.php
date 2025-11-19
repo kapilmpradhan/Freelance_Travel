@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Unique index for product + branch + version
-            $table->unique(['tdms_product_id', 'agent_branch'], 'fareprices_tdms_branch_unique');
+            $table->unique(['tdms_product_id', 'agent_branch', 'version'], 'fareprices_tdms_branch_unique');
 
             // Regular index for product + branch
             $table->index(['tdms_product_id', 'agent_branch'], 'fareprices_tdms_branch_index');

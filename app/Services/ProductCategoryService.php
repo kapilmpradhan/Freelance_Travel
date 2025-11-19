@@ -334,7 +334,7 @@ class ProductCategoryService
                     }
 
                     $productJson = $product->json;
-                    $productJson['faresprices'] = $fareprice;
+                    $productJson['faresprices'] = $fareprice->json;
                     $product->json = $productJson;
                     $product->fareprice_version = $fareprice->version;
                     $product->fareprice_branch = $fareprice->agent_branch;
