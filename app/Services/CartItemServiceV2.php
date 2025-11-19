@@ -413,7 +413,7 @@ class CartItemServiceV2
         $isQuantityChanged = false;
         DB::beginTransaction();
         foreach ($data as $item) {
-            $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+            $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
 
             $bookingDatas = [];
             foreach ($item['bookingData'] as $bookingData) {
@@ -449,7 +449,7 @@ class CartItemServiceV2
         $isQuantityChanged = false;
         DB::beginTransaction();
         foreach ($data as $item) {
-            $cartItem = clone($cartItems)->where('id', $item['cartItemId'])->first();
+            $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
 
             $bookingDatas = [];
             $numpax = $item['quantity'] / count($item['bookingData']);

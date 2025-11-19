@@ -155,10 +155,12 @@ class CartItemService
                         'version' => $cachedFareprice->version
                     ]);
 
-                    $latestCachedFareprice = $cachedFareprice->update([
+                    $cachedFareprice->update([
                         'json' => $latestFareprice,
                         'version' => $cachedFareprice->version + 1,
                     ]);
+
+                    $latestCachedProduct = $cachedFareprice;
                 } else {
                     $latestCachedFareprice = $cachedFareprice;
                 }
