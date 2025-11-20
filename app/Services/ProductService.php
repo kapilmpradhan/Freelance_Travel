@@ -27,10 +27,18 @@ class ProductService
                 responseCode: $response->status(),
             );
         } else {
+            $responseData = $response->json();
+            if (str_contains($responseData['message'], 'do not exist')) {
+                return HttpResponse::failed(
+                    message: 'One or more products do not exist',
+                    responseCode: 404,
+                    data: $response->json(),
+                );
+            }
             return HttpResponse::failed(
                 message: 'Failed to retrieve product last update',
                 responseCode: $response->status(),
-                data: $response->status(),
+                data: $response->json(),
             );
         }
     }

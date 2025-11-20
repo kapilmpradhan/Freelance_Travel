@@ -19,7 +19,6 @@ class CartItem extends Model
         'tdms_product_id',
         'group_id',
         'product_version',
-        'fareprice_version',
         'product_price_details_id',
         'time_id',
         'commences',

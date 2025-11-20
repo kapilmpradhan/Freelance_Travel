@@ -16,7 +16,7 @@ class FarepriceHistory extends Model
         'tdms_product_id',
         'json',
         'agent_branch',
-        'version'
+        'product_version'
     ];
 
     protected $casts = ['json' => 'array'];

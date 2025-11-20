@@ -246,7 +246,7 @@ class ProductCategoryService
                             CartItemService::cacheProductV2(
                                 tdmsProductId: $latestProductDetails['productId'],
                                 agent: $agent,
-                                productDetails: $latestProductDetails
+                                latestProductDetails: $latestProductDetails
                             );
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
@@ -298,7 +298,7 @@ class ProductCategoryService
                             CartItemService::cacheProductV2(
                                 tdmsProductId: $latestProductDetails['productId'],
                                 agent: $agent,
-                                productDetails: $latestProductDetails
+                                latestProductDetails: $latestProductDetails
                             );
                             $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
                         }
@@ -324,20 +324,17 @@ class ProductCategoryService
                     ->where('agent_branch', $agent->branch_code);
 
                 foreach ($products as $product) {
-                    $fareprice = (clone $fareprices)->where('tdms_product_id', $product->tdms_product_id)->first();
-                    if (!$fareprice) {
-                        $fareprice = Fareprice::create([
-                            'tdms_product_id' => $product->tdms_product_id,
-                            'agent_branch' => $agent->branch_code,
-                            'json' => $product->json['faresprices']
-                        ]);
+                    $fareprice = (clone $fareprices)->where('tdms_product_id', $product->tdms_product_id)
+                        ->where('product_version', $product->version)
+                        ->first();
+                    if ($fareprice) {
+                        $productJson = $product->json;
+                        $productJson['faresprices'] = $fareprice->json;
+                        $product->json = $productJson;
+                        $product->fareprice_branch = $fareprice->agent_branch;
+                    } else {
+                        $product->fareprice_branch = null;
                     }
-
-                    $productJson = $product->json;
-                    $productJson['faresprices'] = $fareprice->json;
-                    $product->json = $productJson;
-                    $product->fareprice_version = $fareprice->version;
-                    $product->fareprice_branch = $fareprice->agent_branch;
                 }
 
                 if ($productFilter->filterBy == 'destination') {

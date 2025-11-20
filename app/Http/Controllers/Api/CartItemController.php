@@ -1144,4 +1144,25 @@ class CartItemController extends BaseController
             ]
         );
     }
+
+    public function updateWithLatestDetails(Request $request): JsonResponse
+    {
+        $isCart = $request->query('isCart') == 1;
+        $quoteId = $request->query('quoteId');
+        if ($isCart) {
+            $itemType = ItemType::cart();
+        } elseif ($quoteId) {
+            $itemType = ItemType::quote($quoteId);
+        } else {
+            return $this->sendError('Invalid request. Please provide either isCart or quoteId parameter.');
+        }
+        try {
+            $updateItemsResponse = CartItemService::updateWithLatestDetails(user: $request->user, itemType: $itemType);
+            return $this->sendResponseFromService($updateItemsResponse);
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to update items in cart';
+            Logger::error($errorMessage, $e);
+            return $this->sendError($errorMessage);
+        }
+    }
 }

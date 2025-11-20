@@ -16,17 +16,17 @@ return new class extends Migration
             $table->integer('tdms_product_id');
             $table->json('json');
             $table->char('agent_branch');
-            $table->integer('version');
+            $table->integer('product_version');
             $table->timestamps();
 
             // Unique index for product + branch + version
-            $table->unique(['tdms_product_id', 'agent_branch', 'version'], 'fareprices_tdms_branch_unique');
+            $table->unique(['tdms_product_id', 'agent_branch', 'product_version'], 'fareprices_product_branch_version_unique');
 
             // Regular index for product + branch
             $table->index(['tdms_product_id', 'agent_branch'], 'fareprices_tdms_branch_index');
 
-            // Index for all product + branch + version
-            $table->index(['tdms_product_id', 'agent_branch', 'version'], 'fareprices_tdms_branch_version_index');
+            // Index for all product + branch + product_version
+            $table->index(['tdms_product_id', 'agent_branch', 'product_version'], 'fareprices_product_branch_version_index');
         });
     }
 

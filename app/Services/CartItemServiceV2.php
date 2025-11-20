@@ -12,6 +12,7 @@ use App\DTOs\OrderItemRequestData;
 use App\Jobs\ShareQuoteJob;
 use App\Logging\Logger;
 use App\Models\CartItem;
+use App\Models\Fareprice;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\User;
@@ -34,9 +35,13 @@ class CartItemServiceV2
             return $latestCachedProductResponse;
         }
 
-        $latestCachedProduct = $latestCachedProductResponse->data['product'];
-        $latestCachedFareprice = $latestCachedProductResponse->data['fareprices'];
+        $latestCachedProduct = Product::where('tdms_product_id', $tdmsProductId)
+            ->first();
 
+        $latestCachedFareprice = Fareprice::where('tdms_product_id', $tdmsProductId)
+            ->where('agent_branch', $agent->branch_code)
+            ->where('product_version', $latestCachedProduct->version)
+            ->first();
 
         $result = [];
         $existingUserCartItems = CartItem::userCartItems($userId);
@@ -73,14 +78,14 @@ class CartItemServiceV2
                 if ($sameItemsOnSameDate->isNotEmpty() && !$isDryRun) {
                     $productDetailsOfSameItem = Product::where(
                         'tdms_product_id',
-                        $sameItemsOnSameDate->first()->tdms_product_id
+                        (clone $sameItemsOnSameDate)->first()->tdms_product_id
                     )->first();
 
                     $isAccommodationProduct = $productDetailsOfSameItem->json['productClass'] == 'A';
 
                     if (!$isAccommodationProduct) {
                         $sameItems = [];
-                        foreach ($sameItemsOnSameDate as $sameItemOnSameDate) {
+                        foreach ($sameItemsOnSameDate->all() as $sameItemOnSameDate) {
                             $sameItems[] = [
                                 'cartItemId' => $sameItemOnSameDate->id,
                                 'productPriceDetailsId' => $productPriceDetailsId,
@@ -274,7 +279,6 @@ class CartItemServiceV2
                 'tdms_product_id' => $tdmsProductId,
                 'group_id' => $groupId,
                 'product_version' => $productVersion,
-                'fareprice_version' => $orderItemData->fareprices->version,
                 'product_price_details_id' => $orderItemData->productPriceDetailsId,
                 'booking_date' => BaseService::stringToDate($availability['BookingDate']),
                 'booking_quantity' => $orderItemData->quantity,

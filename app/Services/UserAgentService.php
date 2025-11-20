@@ -139,7 +139,7 @@ class UserAgentService
         if ($activeAgent) {
             $agent = $activeAgent;
         } else {
-            $agent = $userAgent->getDefaultAgent();
+            $agent = self::getDefaultAgent()->data;
         }
 
         $refreshAgent = self::refreshAgent($agent);
