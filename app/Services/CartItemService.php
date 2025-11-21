@@ -342,6 +342,7 @@ class CartItemService
                 $product->json = $productJson;
             }
 
+            $product->counter = 0; // Remove this later
             $cartItem->product = $product;
             $cartItem->is_availability_latest = true;
             $cartItem->is_product_latest = $isProductLatest;
@@ -359,7 +360,14 @@ class CartItemService
             $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
             $items->each(function ($item) use ($products) {
-                $item->product = $products->get($item->tdms_product_id);
+                $product = $products->get($item->tdms_product_id);
+                if (!$product) {
+                    $product = ProductHistory::where('tdms_product_id', $item->tdms_product_id)
+                                    ->where('version', $item->product_version)
+                                    ->first();
+                    $product->counter = 0; // Remove this later
+                }
+                $item->product = $product;
             });
 
             $numberOfShares = ShareQuote::where('quote_id', $quote->id)
@@ -423,7 +431,14 @@ class CartItemService
             $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
             $items->each(function ($item) use ($products) {
-                $item->product = $products->get($item->tdms_product_id);
+                $product = $products->get($item->tdms_product_id);
+                if (!$product) {
+                    $product = ProductHistory::where('tdms_product_id', $item->tdms_product_id)
+                        ->where('version', $item->product_version)
+                        ->first();
+                }
+                $product->counter = 0; // Remove this later
+                $item->product = $product;
             });
 
             $numberOfShares = ShareQuote::where('quote_id', $quote->id)
@@ -487,7 +502,14 @@ class CartItemService
             $products = Product::whereIn('tdms_product_id', $productIds)->get()->keyBy('tdms_product_id');
 
             $items->each(function ($item) use ($products) {
-                $item->product = $products->get($item->tdms_product_id);
+                $product = $products->get($item->tdms_product_id);
+                if (!$product) {
+                    $product = ProductHistory::where('tdms_product_id', $item->tdms_product_id)
+                                ->where('version', $item->product_version)
+                                ->first();
+                }
+                $product->counter = 0; // Remove this later
+                $item->product = $product;
             });
 
             $numberOfShares = ShareQuote::where('quote_id', $quote->id)
@@ -525,18 +547,18 @@ class CartItemService
                                         ->where('version', $item->product_version)
                                         ->first();
                 $product->counter = 0;
-                $isProductLatest = true;
+                $isProductLatest = false;
             }
 
             $fareprice = (clone $fareprices)->where('tdms_product_id', $item->tdms_product_id)
-                ->where('version', $item->fareprice_version)
+                ->where('product_version', $item->product_version)
                 ->first();
 
             $isFarepriceLatest = true;
             if (!$fareprice) {
                 $fareprice = FarepriceHistory::where('tdms_product_id', $item->tdms_product_id)
                     ->where('agent_branch', app('agentType')->agent->branch_code)
-                    ->where('version', $item->fareprice_version)
+                    ->where('product_version', $item->product_version)
                     ->first();
                 $isFarepriceLatest = false;
             }

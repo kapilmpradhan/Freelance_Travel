@@ -39,7 +39,7 @@ class UpdateCartItemAvailabilityJob
         $availabilityResponse = CartItemService::getItemAvailability($this->item, $this->agent);
         if ($availabilityResponse->isError()) {
             Logger::debug(
-                message: 'Error updating availability for item: ' . $this->item['cartItem']->id,
+                message: 'Error updating availability for item: ' . $this->item->id,
                 data: $availabilityResponse->data
             );
         } else {
