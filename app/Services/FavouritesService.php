@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Logging\Logger;
 use App\Models\Favourites;
 use App\Models\Product;
-use App\Models\UserAgent;
+use App\Models\ProductHistory;
 use Exception;
 
 class FavouritesService
@@ -22,6 +22,11 @@ class FavouritesService
         $favouriteProducts = [];
         foreach ($favourites as $favourite) {
             $favouriteProduct = $products->where('tdms_product_id', $favourite->tdms_product_id)->first();
+            if (!$favouriteProduct) {
+                $favouriteProduct = ProductHistory::where('tdms_product_id', $favourite->tdms_product_id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
             $favouriteProducts[] = $favouriteProduct;
         }
 
