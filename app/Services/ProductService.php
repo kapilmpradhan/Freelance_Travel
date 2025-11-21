@@ -162,10 +162,14 @@ class ProductService
                 responseCode: $response->status(),
             );
         } else {
+            Logger::debug(
+                message: 'Failed to retrieve availability',
+                data: $response->json(),
+            );
             return HttpResponse::failed(
                 message: 'Failed to retrieve availability',
                 responseCode: $response->status(),
-                data: $response->status(),
+                data: $response->json(),
             );
         }
     }
@@ -193,10 +197,14 @@ class ProductService
                 responseCode: $response->status(),
             );
         } else {
+            Logger::debug(
+                message: 'Failed to retrieve availability',
+                data: $response->json(),
+            );
             return HttpResponse::failed(
                 message: 'Failed to retrieve availability',
                 responseCode: $response->status(),
-                data: $response->status(),
+                data: $response->json(),
             );
         }
     }

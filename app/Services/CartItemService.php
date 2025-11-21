@@ -240,8 +240,8 @@ class CartItemService
                 agentToken: $agentToken,
                 fareTypeId: $fareTypeId,
                 productId: $product->tdms_product_id,
-                startDate: $item->start_date,
-                endDate: Carbon::parse($item->start_date)->addDays($item->days)->toDateString()
+                startDate: $item->booking_date,
+                endDate: Carbon::parse($item->start_date)->addDays(1)->toDateString()
             );
 
             if ($productAvailabilitiesResponse->isError()) {
@@ -256,8 +256,8 @@ class CartItemService
                 $agentToken,
                 $productPricesDetailsId,
                 $item->time_id,
-                $item->startDate,
-                $item->days,
+                $item->booking_date,
+                1,
             );
 
             if ($productAvailabilitiesResponse->isError()) {
@@ -275,13 +275,7 @@ class CartItemService
             );
         }
 
-        if ($item->selected_index >= count($productAvailabilities)) {
-            return ServiceResponse::badRequest(
-                message: 'Selected availability selectedIndex is out of bounds',
-            );
-        }
-
-        return ServiceResponse::success(data: $productAvailabilities[$item->selected_index]);
+        return ServiceResponse::success(data: $productAvailabilities[0]);
     }
 
     public static function getItemsInCartOrQuote($userId, ItemType $itemType)
@@ -339,13 +333,25 @@ class CartItemService
                         ->first();
                 }
 
-                // Check if availability needs to be updated
-                $availabilityLastUpdatedAt = $cartItem->availability_last_updated_at;
-                if (
-                    !$availabilityLastUpdatedAt ||
-                    Carbon::parse($availabilityLastUpdatedAt)->isBefore(Carbon::now()->subMinutes(5))
-                ) {
-                    UpdateCartItemAvailabilityJob::dispatch($cartItem, app('agentType')->agent);
+                // Get latest availability
+                $availabilityResponse = CartItemService::getItemAvailability($cartItem, app('agentType')->agent);
+                if ($availabilityResponse->isError()) {
+                    Logger::debug(
+                        message: 'Error updating availability for item: ' . $cartItem->id,
+                        data: $availabilityResponse->data
+                    );
+                } else {
+                    $cartItem->availability = $availabilityResponse->data;
+                    $cartItem->availability_last_updated_at = Carbon::now();
+                    $fillableFields = $cartItem->getFillable();
+
+                    foreach ($cartItem->getAttributes() as $key => $value) {
+                        if (!in_array($key, $fillableFields)) {
+                            unset($cartItem->$key);
+                        }
+                    }
+
+                    $cartItem->save();
                 }
 
                 if ($fareprice) {
