@@ -127,13 +127,6 @@ class CartItemService
                         'json' => $cachedProduct->json,
                     ]);
 
-                    FarepriceHistory::create([
-                        'tdms_product_id' => $tdmsProductId,
-                        'json' => $cachedFareprice->json,
-                        'agent_branch' => $cachedFareprice->agent_branch,
-                        'product_version' => $cachedFareprice->product_version,
-                    ]);
-
                     $cachedProduct->update([
                         'json' => $lastestProductDetails,
                         'tdms_product_last_update_date' => $productLastUpdate,
@@ -141,10 +134,26 @@ class CartItemService
                     ]);
                     $latestCachedProduct = $cachedProduct;
 
-                    $cachedFareprice->update([
-                        'json' => $lastestProductDetails['faresprices'],
-                        'product_version' => $latestCachedProduct->version,
-                    ]);
+                    if ($cachedFareprice) {
+                        FarepriceHistory::create([
+                            'tdms_product_id' => $tdmsProductId,
+                            'json' => $cachedFareprice->json,
+                            'agent_branch' => $cachedFareprice->agent_branch,
+                            'product_version' => $cachedFareprice->product_version,
+                        ]);
+
+                        $cachedFareprice->update([
+                            'json' => $lastestProductDetails['faresprices'],
+                            'product_version' => $latestCachedProduct->version,
+                        ]);
+                    } else {
+                        Fareprice::create([
+                            'tdms_product_id' => $tdmsProductId,
+                            'json' => $lastestProductDetails['faresprices'],
+                            'agent_branch' => $agent->branch_code,
+                            'product_version' => $latestCachedProduct->version,
+                        ]);
+                    }
                 } else {
                     $latestCachedProduct = Product::create([
                         'tdms_product_id' => $tdmsProductId,
