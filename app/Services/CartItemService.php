@@ -324,39 +324,44 @@ class CartItemService
                 $isProductLatest = false;
             }
 
-            // Check if fareprice is latest
-            $fareprice = (clone $fareprices)->where('tdms_product_id', $cartItem->tdms_product_id)
-                ->where('product_version', $product->version)
-                ->first();
-
-            if (!$fareprice) {
-                $fareprice = FarepriceHistory::where('tdms_product_id', $cartItem->tdms_product_id)
-                    ->where('agent_branch', $itemType->agentBranchCode)
+            if (!$product) {
+                $cartItem->delete();
+            } else {
+                // Check if fareprice is latest
+                $fareprice = (clone $fareprices)->where('tdms_product_id', $cartItem->tdms_product_id)
                     ->where('product_version', $product->version)
                     ->first();
-            }
 
-            // Check if availability needs to be updated
-            $availabilityLastUpdatedAt = $cartItem->availability_last_updated_at;
-            if (
-                !$availabilityLastUpdatedAt ||
-                Carbon::parse($availabilityLastUpdatedAt)->isBefore(Carbon::now()->subMinutes(5))
-            ) {
-                UpdateCartItemAvailabilityJob::dispatch($cartItem, app('agentType')->agent);
-            }
+                if (!$fareprice) {
+                    $fareprice = FarepriceHistory::where('tdms_product_id', $cartItem->tdms_product_id)
+                        ->where('agent_branch', $itemType->agentBranchCode)
+                        ->where('product_version', $product->version)
+                        ->first();
+                }
 
-            if ($fareprice) {
-                $productJson = $product->json;
-                $productJson['faresprices'] = $fareprice->json;
-                $product->json = $productJson;
-            }
+                // Check if availability needs to be updated
+                $availabilityLastUpdatedAt = $cartItem->availability_last_updated_at;
+                if (
+                    !$availabilityLastUpdatedAt ||
+                    Carbon::parse($availabilityLastUpdatedAt)->isBefore(Carbon::now()->subMinutes(5))
+                ) {
+                    UpdateCartItemAvailabilityJob::dispatch($cartItem, app('agentType')->agent);
+                }
 
-            $product->counter = 0; // Remove this later
-            $cartItem->product = $product;
-            $cartItem->is_availability_latest = true;
-            $cartItem->is_product_latest = $isProductLatest;
-            $cartItem->fareprice_branch = $fareprice ? $fareprice->agent_branch : null;
+                if ($fareprice) {
+                    $productJson = $product->json;
+                    $productJson['faresprices'] = $fareprice->json;
+                    $product->json = $productJson;
+                }
+
+                $product->counter = 0; // Remove this later
+                $cartItem->product = $product;
+                $cartItem->is_availability_latest = true;
+                $cartItem->is_product_latest = $isProductLatest;
+                $cartItem->fareprice_branch = $fareprice ? $fareprice->agent_branch : null;
+            }
         });
+
         return ServiceResponse::success(data: $cartItems);
     }
 
