@@ -110,14 +110,14 @@ class CartItemService
                 }
             } else {
                 if (is_null($latestProductDetails)) {
-                    $lastestProductDetailsResponse = ProductService::getProductDetailsV2(
+                    $latestProductDetailsResponse = ProductService::getProductDetailsV2(
                         agentToken: $agent->access_token,
                         productId: $tdmsProductId
                     );
-                    if ($lastestProductDetailsResponse->isError()) {
-                        return $lastestProductDetailsResponse;
+                    if ($latestProductDetailsResponse->isError()) {
+                        return $latestProductDetailsResponse;
                     }
-                    $lastestProductDetails = $lastestProductDetailsResponse->data;
+                    $latestProductDetails = $latestProductDetailsResponse->data;
                 }
                 if ($cachedProduct) {
                     ProductHistory::create([
@@ -128,7 +128,7 @@ class CartItemService
                     ]);
 
                     $cachedProduct->update([
-                        'json' => $lastestProductDetails,
+                        'json' => $latestProductDetails,
                         'tdms_product_last_update_date' => $productLastUpdate,
                         'version' => $cachedProduct->version + 1,
                     ]);
@@ -143,13 +143,13 @@ class CartItemService
                         ]);
 
                         $cachedFareprice->update([
-                            'json' => $lastestProductDetails['faresprices'],
+                            'json' => $latestProductDetails['faresprices'],
                             'product_version' => $latestCachedProduct->version,
                         ]);
                     } else {
                         Fareprice::create([
                             'tdms_product_id' => $tdmsProductId,
-                            'json' => $lastestProductDetails['faresprices'],
+                            'json' => $latestProductDetails['faresprices'],
                             'agent_branch' => $agent->branch_code,
                             'product_version' => $latestCachedProduct->version,
                         ]);
@@ -157,13 +157,13 @@ class CartItemService
                 } else {
                     $latestCachedProduct = Product::create([
                         'tdms_product_id' => $tdmsProductId,
-                        'json' => $lastestProductDetails,
+                        'json' => $latestProductDetails,
                         'tdms_product_last_update_date' => $productLastUpdate
                     ]);
 
                     Fareprice::create([
                         'tdms_product_id' => $tdmsProductId,
-                        'json' => $lastestProductDetails['faresprices'],
+                        'json' => $latestProductDetails['faresprices'],
                         'agent_branch' => $agent->branch_code,
                         'product_version' => $latestCachedProduct->version,
                     ]);
