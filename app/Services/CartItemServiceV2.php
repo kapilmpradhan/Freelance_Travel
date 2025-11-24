@@ -502,7 +502,6 @@ class CartItemServiceV2
     public static function updateAvailabilityBeforeOrder($agentToken, $cartItem)
     {
         $productDetails = Product::where('tdms_product_id', $cartItem->tdms_product_id)
-            ->where('version', $cartItem->product_version)
             ->first();
 
         if (!$productDetails) {
