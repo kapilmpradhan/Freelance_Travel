@@ -39,6 +39,9 @@ class SendBookingNotification implements ShouldQueue
     {
         $user = User::find($item->user_id);
         $tokens = $user->fcmTokens();
+        if (empty($tokens)) {
+            return null;
+        }
 
         $data = [
             'title' => 'Upcoming Booking Notification',
@@ -146,19 +149,21 @@ class SendBookingNotification implements ShouldQueue
 
                     $messageVersions[] = $messageVersion;
                 } catch (Exception $e) {
-                    Logger::error('Failed to send booking notification email to' . $notification->notify_to_email, $e);
+                    Logger::error('Failed to send booking notification of ' . $notification->notify_to_email, $e);
                 }
             }
 
             try {
                 $emailData['messageVersions'] = $messageVersions;
                 $emailService->sendMail($emailData);
-                foreach ($fcmNotificationData as $data) {
-                    $fcmService->sendNotification(
-                        token: $data['token'],
-                        data: $data['data'],
-                        topic: $data['topic']
-                    );
+                if ($fcmNotificationData) {
+                    foreach ($fcmNotificationData as $data) {
+                        $fcmService->sendNotification(
+                            token: $data['token'],
+                            data: $data['data'],
+                            topic: $data['topic']
+                        );
+                    }
                 }
 
                 $notificationIds = $notificationsInBatch->pluck('id');
