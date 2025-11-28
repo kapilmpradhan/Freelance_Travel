@@ -76,7 +76,7 @@ class HomeFeedProductByCategories implements ShouldQueue
                         continue;
                     }
                     $productIds = array_column($products, 'productId');
-                    $getProductAvailabilities = ProductService::getProductsLastUpdateFromApi($agentToken, $productIds);
+                    $getProductAvailabilities = ProductService::getProductsLastUpdate($agentToken, $productIds, false);
                     if ($getProductAvailabilities->isError()) {
                         Logger::error('Unable to fetch product last update');
                         continue;

@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\AppMetaDataController;
+use App\Http\Controllers\Api\CacheController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\DiscountController;
 use App\Http\Controllers\Api\HealthCheckController;
@@ -90,6 +91,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'app'], fun
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount', 'middleware' => 'auth.ifToken'], function () {
     Route::get('/active', [DiscountController::class, 'getDiscount']);
 });
+
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);

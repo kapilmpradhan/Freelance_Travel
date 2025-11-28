@@ -466,26 +466,6 @@ class BookingService
             Logger::debug("web app return url: {$webAppReturnUrl}");
         }
 
-        foreach ($cartItems as $cartItem) {
-            $updateItemAvailabilityResponse = CartItemServiceV2::updateAvailabilityBeforeOrder(
-                agentToken: $agent->access_token,
-                cartItem: $cartItem
-            );
-
-            if ($updateItemAvailabilityResponse->isError()) {
-                if ($itemType->forDiscount) {
-                    return ServiceResponse::success(
-                        data: [
-                            'branch' => $agent->branch_code,
-                            'commission' => 0,
-                            'pointsAvailable' => 0,
-                        ],
-                    );
-                }
-                return $updateItemAvailabilityResponse;
-            }
-        }
-
         $orderRequestData = self::buildOrderRequestData(
             userAgent: $agent,
             userId: $userId,
@@ -600,6 +580,7 @@ class BookingService
             data: $orderRequestData,
             userId: $userId,
         );
+        UserCacheService::removeCachedBookingReference();
 
         $orderResponseData = $placeOrderResponse->data;
         if ($placeOrderResponse->isError()) {

@@ -84,8 +84,14 @@ class TdmsService
         return null;
     }
 
-    public static function getBookingRefrence($agentToken)
+    public static function getBookingRefrence($agentToken, $getCached = true)
     {
+        if ($getCached) {
+            $cachedBookingReference = UserCacheService::getCachedBookingReference();
+            if ($cachedBookingReference->isSuccess()) {
+                return $cachedBookingReference->data;
+            }
+        }
         $url = config('vars.tdms_api_url') . "/bookingreference";
 
         $response = Http::withHeaders([
@@ -101,10 +107,16 @@ class TdmsService
         return null;
     }
 
-    public static function getPaymentMethods($agentToken)
+    public static function getPaymentMethods($agentToken, $getCached = true)
     {
-        $url = config('vars.tdms_api_url') . "/agent/paymentmethods";
+        if ($getCached) {
+            $cachePaymentMethodsResponse = UserCacheService::getCachedPaymentMethods();
+            if ($cachePaymentMethodsResponse->isSuccess()) {
+                return $cachePaymentMethodsResponse->data;
+            }
+        }
 
+        $url = config('vars.tdms_api_url') . "/agent/paymentmethods";
         $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$agentToken}"

@@ -8,6 +8,7 @@ use App\Jobs\SendMail;
 use App\Mail\SendShareToAgent;
 use App\Mail\SendShareToEmail;
 use App\Models\Order;
+use App\Services\HttpResponse;
 use App\Services\ServiceResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -54,7 +55,7 @@ class BaseController extends Controller
         return response()->json($response, 200);
     }
 
-    public function sendResponseFromService(ServiceResponse $serviceResponse)
+    public function sendResponseFromService(ServiceResponse|HttpResponse $serviceResponse)
     {
         $code = $serviceResponse->responseCode;
         $response = [

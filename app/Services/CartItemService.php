@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Jobs\UpdateCartItemAvailabilityJob;
 use App\Models\Fareprice;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -66,7 +65,7 @@ class CartItemService
                 ->where('product_version', $cachedProduct?->version)
                 ->first();
 
-            $productLastUpdateDateResponse = ProductService::getProductsLastUpdateFromApi(
+            $productLastUpdateDateResponse = ProductService::getProductsLastUpdate(
                 agentToken: $agent->access_token,
                 productIds: [$tdmsProductId]
             );
@@ -112,7 +111,7 @@ class CartItemService
                 if (is_null($latestProductDetails)) {
                     $latestProductDetailsResponse = ProductService::getProductDetailsV2(
                         agentToken: $agent->access_token,
-                        productId: $tdmsProductId
+                        productIds: $tdmsProductId
                     );
                     if ($latestProductDetailsResponse->isError()) {
                         return $latestProductDetailsResponse;
@@ -218,66 +217,6 @@ class CartItemService
         return $cartItemsData;
     }
 
-    public static function getItemAvailability($item, $agent)
-    {
-        $product = Product::where('tdms_product_id', $item->tdms_product_id)->first();
-        $productData = $product->json;
-        $productPricesDetailsId = $item->product_price_details_id;
-        $agentToken = $agent->access_token;
-
-        if ($productData['apiProviderId'] > 0 && $productData['groupFaresForAvailabilityCheck'] == true) {
-            $farePrices = $productData['faresprices'];
-
-            // Find fareTypeId for the given productPricesDetailsId
-            $fareTypeId = null;
-            foreach ($farePrices as $fare) {
-                if ($fare["productPricesDetailsId"] === $productPricesDetailsId) {
-                    $fareTypeId = $fare["fareTypeId"];
-                    break;
-                }
-            }
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
-                agentToken: $agentToken,
-                fareTypeId: $fareTypeId,
-                productId: $product->tdms_product_id,
-                startDate: $item->booking_date,
-                endDate: Carbon::parse($item->start_date)->addDays(1)->toDateString()
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found',
-                );
-            }
-
-            $productAvailabilities = $productAvailabilitiesResponse->data;
-        } else {
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
-                $agentToken,
-                $productPricesDetailsId,
-                $item->time_id,
-                $item->booking_date,
-                1,
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found',
-                );
-            }
-
-            $productAvailabilities = $productAvailabilitiesResponse->data;
-        }
-
-        if (empty($productAvailabilities)) {
-            return ServiceResponse::notFound(
-                message: 'Product availability not found',
-            );
-        }
-
-        return ServiceResponse::success(data: $productAvailabilities[0]);
-    }
-
     public static function getItemsInCartOrQuote($userId, ItemType $itemType)
     {
         $cartItems = CartItem::userItems($userId, $itemType);
@@ -286,7 +225,7 @@ class CartItemService
         }
         $productIds = $cartItems->pluck('tdms_product_id')->unique();
 
-        $productsLatestUpdatedDateResponse = ProductService::getProductsLastUpdateFromApi(
+        $productsLatestUpdatedDateResponse = ProductService::getProductsLastUpdate(
             productIds: $productIds->toArray(),
             agentToken: app('agentType')->agent->access_token
         );
@@ -334,25 +273,34 @@ class CartItemService
                 }
 
                 // Get latest availability
-                $availabilityResponse = CartItemService::getItemAvailability($cartItem, app('agentType')->agent);
+                $apiProvideId = $product->json['apiProviderId'];
+                $groupFaresForAvailabilityCheck = $product->json['groupFaresForAvailabilityCheck'];
+                $fareTypeId = null;
+                foreach ($product->json['faresprices'] as $fare) {
+                    if ($fare["productPricesDetailsId"] === $cartItem->product_price_details_id) {
+                        $fareTypeId = $fare["fareTypeId"];
+                        break;
+                    }
+                }
+
+                $availabilityResponse = ProductService::getFarepriceAvailability(
+                    agent: app('agentType')->agent,
+                    productId: $cartItem->tdms_product_id,
+                    productPricesDetailsId: $cartItem->product_price_details_id,
+                    apiProviderId: $apiProvideId,
+                    groupFaresForAvailabilityCheck: $groupFaresForAvailabilityCheck,
+                    fareTypeId: $fareTypeId,
+                    bookingDate: $cartItem->booking_date,
+                    timeId: $cartItem->time_id,
+                );
                 if ($availabilityResponse->isError()) {
                     Logger::debug(
-                        message: 'Error updating availability for item: ' . $cartItem->id,
+                        message: 'Error fetching availability for item: ' . $cartItem->id,
                         data: $availabilityResponse->data
                     );
-                } else {
-                    $cartItem->availability = $availabilityResponse->data;
-                    $cartItem->availability_last_updated_at = Carbon::now();
-                    $fillableFields = $cartItem->getFillable();
-
-                    foreach ($cartItem->getAttributes() as $key => $value) {
-                        if (!in_array($key, $fillableFields)) {
-                            unset($cartItem->$key);
-                        }
-                    }
-
-                    $cartItem->save();
+                    return ServiceResponse::badRequest('Unable to get availability');
                 }
+                $cartItem->availability = $availabilityResponse->data;
 
                 if ($fareprice) {
                     $productJson = $product->json;

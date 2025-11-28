@@ -9,6 +9,7 @@ use Exception;
 class UserAgentDTO
 {
     public $agent;
+    public $user;
     public $platform;
     public $isDefaultAgent;
     public $isPointsAgent;
@@ -16,12 +17,14 @@ class UserAgentDTO
 
     public function __construct(
         $agent,
+        $user,
         $platform,
         bool $isDefaultAgent = false,
         bool $isPointsAgent = false,
         bool $isCommissionAgent = false
     ) {
         $this->agent = $agent;
+        $this->user = $user;
         $this->platform = $platform;
         $this->isDefaultAgent = $isDefaultAgent;
         $this->isPointsAgent = $isPointsAgent;
@@ -55,6 +58,7 @@ class UserAgentDTO
 
         return new self(
             $agent,
+            $user,
             $platform,
             $isDefaultAgent,
             $isPointsAgent,

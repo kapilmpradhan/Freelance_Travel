@@ -52,9 +52,11 @@ class CartItemServiceV2
         }
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
-            $farePrices = $latestCachedFareprice->json;
+            $apiProviderId = $latestCachedProduct->json['apiProviderId'];
+            $groupFaresForAvailabilityCheck = $latestCachedProduct->json['groupFaresForAvailabilityCheck'];
 
             // Find fareTypeId for the given productPricesDetailsId
+            $farePrices = $latestCachedFareprice->json;
             $farePrice = null;
             foreach ($farePrices as $fare) {
                 if ((string) $fare["productPricesDetailsId"] === (string) $productPriceDetailsId) {
@@ -182,6 +184,7 @@ class CartItemServiceV2
                     }
                 }
                 $quantity = $quantityIndex * $numPax;
+                $bookingDate = $details['bookingDate'];
 
                 if (
                     isset($fare['fareQtyRestrictions'])
@@ -192,41 +195,21 @@ class CartItemServiceV2
                     );
                 }
 
-                if (
-                    $latestCachedProduct->json['apiProviderId'] > 0
-                    && $latestCachedProduct->json['groupFaresForAvailabilityCheck'] == true
-                ) {
-                    $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
-                        agentToken: $agent->access_token,
-                        fareTypeId: $fareTypeId,
-                        productId: $tdmsProductId,
-                        startDate: $details['bookingDate'],
-                        endDate: Carbon::parse($details['bookingDate'])->addDays(1)->toDateString()
-                    );
-
-                    if ($productAvailabilitiesResponse->isError()) {
-                        return ServiceResponse::notFound(
-                            message: 'Product availability not found',
-                        );
-                    }
-
-                    $productAvailabilities = $productAvailabilitiesResponse->data;
-                } else {
-                    $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
-                        $agent->access_token,
-                        $productPriceDetailsId,
-                        $timeId,
-                        $details['bookingDate'],
-                        1,
-                    );
-
-                    if ($productAvailabilitiesResponse->isError()) {
-                        return ServiceResponse::notFound(
-                            message: 'Product availability not found',
-                        );
-                    }
-                    $productAvailabilities = $productAvailabilitiesResponse->data;
+                $productAvailabilitiesResponse = ProductService::getFarepriceAvailability(
+                    agent: $agentType->agent,
+                    productId: $tdmsProductId,
+                    productPricesDetailsId: $productPriceDetailsId,
+                    apiProviderId: $apiProviderId,
+                    groupFaresForAvailabilityCheck: $groupFaresForAvailabilityCheck,
+                    fareTypeId: $fareTypeId,
+                    bookingDate: $bookingDate,
+                    timeId: $timeId
+                );
+                if ($productAvailabilitiesResponse->isError()) {
+                    return ServiceResponse::badRequest('Availability not found');
                 }
+
+                $productAvailabilities = $productAvailabilitiesResponse->data;
 
                 $result[] = new OrderItemRequestData(
                     product: $latestCachedProduct,
@@ -234,7 +217,7 @@ class CartItemServiceV2
                     productPriceDetailsId: $productPriceDetailsId,
                     productLastUpdate: Carbon::now(),
                     productBookingDetails: $bookingDetails ?? [],
-                    productAvailabilities: $productAvailabilities[0],
+                    productAvailabilities: $productAvailabilities,
                     bookingData: $bookingData,
                     quantity: $quantity,
                     timeId: $timeId,
@@ -497,66 +480,6 @@ class CartItemServiceV2
             message: 'Cart items updated successfully',
             data: ['isQuantityChanged' => $isQuantityChanged]
         );
-    }
-
-    public static function updateAvailabilityBeforeOrder($agentToken, $cartItem)
-    {
-        $productDetails = Product::where('tdms_product_id', $cartItem->tdms_product_id)
-            ->first();
-
-        if (!$productDetails) {
-            return ServiceResponse::notFound(
-                message: 'Product not found for cart item: ' . $cartItem->id,
-            );
-        }
-
-        $product = $productDetails->json;
-        if ($product['apiProviderId'] > 0 && $product['groupFaresForAvailabilityCheck'] == true) {
-            $farePrices = $product['faresprices'];
-
-            // Find fareTypeId for the given productPricesDetailsId
-            $fareTypeId = null;
-            foreach ($farePrices as $fare) {
-                if ($fare["productPricesDetailsId"] === $cartItem->product_price_details_id) {
-                    $fareTypeId = $fare["fareTypeId"];
-                    break;
-                }
-            }
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesByProductAndRange(
-                agentToken: $agentToken,
-                fareTypeId: $fareTypeId,
-                productId: $product['productId'],
-                startDate: $cartItem->booking_date,
-                endDate: Carbon::parse($cartItem->booking_date)->addDays(1)->toDateString()
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found for cart item: ' . $cartItem->id,
-                );
-            }
-
-            $productAvailabilities = $productAvailabilitiesResponse->data;
-        } else {
-            $productAvailabilitiesResponse = ProductService::getProductAvailabilitiesFromApi(
-                $agentToken,
-                $cartItem->product_price_details_id,
-                $cartItem->time_id,
-                $cartItem->booking_date,
-                1,
-            );
-
-            if ($productAvailabilitiesResponse->isError()) {
-                return ServiceResponse::notFound(
-                    message: 'Product availability not found for cart item: ' . $cartItem->id,
-                );
-            }
-
-            $productAvailabilities = $productAvailabilitiesResponse->data;
-        }
-
-        $cartItem->availability = $productAvailabilities[0];
-        return ServiceResponse::success();
     }
 
     public static function shareQuote($sharedByUserId, $sharedToEmail, $quoteId)
