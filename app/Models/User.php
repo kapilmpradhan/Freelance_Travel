@@ -186,7 +186,6 @@ class User extends Authenticatable
     public function getSsoEmailUser($email)
     {
         return $this->where('email', $email)
-                    ->where('sso_type', 'email')
                     ->first();
     }
 

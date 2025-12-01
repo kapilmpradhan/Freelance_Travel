@@ -27,6 +27,10 @@ class OtpController extends BaseController
             return $this->sendError('Email not registered');
         }
 
+        if ($user->sso_type !== 'email') {
+            return $this->sendError('SSO registered email cannot perform this action.');
+        }
+
         // Generate OTP
         $generatedOtp = OtpService::generateOtp($user);
         if ($generatedOtp['success'] == false) {
