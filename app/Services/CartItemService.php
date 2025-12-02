@@ -663,6 +663,8 @@ class CartItemService
             $cartItems = CartItem::userCartItem($userId, $type->typeId);
         } elseif ($type->isProduct) {
             $cartItems = CartItem::userCartItemsByProduct($userId, $type->typeId);
+        } elseif ($type->isSession) {
+            $cartItems = CartItem::userItems($userId, $type);
         } else {
             return ServiceResponse::badRequest(
                 message: 'Invalid type',

@@ -35,6 +35,7 @@ class CartItem extends Model
         'user_order_id',
         'quote_id',
         'is_direct_purchase',
+        'session_id'
     ];
     protected $casts = [
         'availability' => 'array',
@@ -257,10 +258,11 @@ class CartItem extends Model
         return $this->create($data);
     }
 
-    public static function userItems(string $userId, ItemType $itemType): Collection
+    public static function userItems(string|null $userId, ItemType $itemType): Collection
     {
         return CartItem::query()
-            ->where('user_id', $userId)
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
+            ->when($itemType->isSession, fn ($query) => $query->where('session_id', $itemType->typeId))
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))

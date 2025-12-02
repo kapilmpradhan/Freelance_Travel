@@ -10,6 +10,7 @@ class ItemType
     public $subTypeId;
     public $data;
     public $isCart = false;
+    public $isSession = false;
     public $isCartItem = false;
     public $isGroup = false;
     public $isQuote = false;
@@ -38,6 +39,14 @@ class ItemType
     {
         $cart = new ItemType('cart');
         $cart->isCart = true;
+        return $cart;
+    }
+
+    public static function session($sessionId)
+    {
+        $cart = new ItemType('session');
+        $cart->isSession = true;
+        $cart->typeId = $sessionId;
         return $cart;
     }
 

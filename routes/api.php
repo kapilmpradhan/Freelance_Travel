@@ -15,7 +15,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GoogleLoginController;
 use App\Http\Controllers\Api\AppleLoginController;
 use App\Http\Controllers\Api\AppMetaDataController;
-use App\Http\Controllers\Api\CacheController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\DiscountController;
 use App\Http\Controllers\Api\HealthCheckController;
@@ -92,14 +91,16 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount',
     Route::get('/active', [DiscountController::class, 'getDiscount']);
 });
 
-
-Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.ifToken'], function () {
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
     Route::get('items', [CartItemController::class, 'getItemsInCart']);
+    Route::delete('remove/items', [CartItemController::class, 'removeItemsFromCart']);
+});
+
+Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
     Route::put('items/v2', [CartItemController::class, 'setBookingDataV2']);
     Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
-    Route::delete('/remove/items', [CartItemController::class, 'removeItemsFromCart']);
     Route::put('customers', [CartItemController::class, 'setCustomers']);
     Route::get('customers', [CartItemController::class, 'getCustomers']);
     Route::get('redeemers', [RedeemerController::class, 'listRedeemers']);
@@ -118,6 +119,7 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
     Route::get('discount/', [CartItemController::class, 'getDiscountPercentage']);
     Route::post('discount/v2', [CartItemController::class, 'getDiscountPercentageV2']);
     Route::put('items/update', [CartItemController::class, 'updateWithLatestDetails']);
+    Route::put('convert/session/{sessionId}', [CartItemController::class, 'convertSessionItemsToCartItems']);
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'quotes', 'middleware' => 'auth.jwt'], function () {

@@ -24,6 +24,7 @@ use App\Services\ServiceException;
 use App\Services\ServiceResponse;
 use App\Services\TdmsService;
 use App\Services\UserOrderCommissionService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CartItemController extends BaseController
@@ -31,19 +32,30 @@ class CartItemController extends BaseController
     public function addItemsToCartV2(Request $request): JsonResponse
     {
         $data = $request->all();
-        $agentBranchCode = $request->agentBranchCode;
-        $validator = Validator::make($data, CartItem::saveItemsV2Rule());
 
+        $validator = Validator::make($data, CartItem::saveItemsV2Rule());
         if ($validator->fails()) {
             return $this->sendError('Validation Error.', $validator->errors());
         }
-        try {
-            $isDryRun = $request->query('dry') == 1;
-            $itemType = $isDryRun ? ItemType::dry($data) : ItemType::cart();
-            $itemType->agentBranchCode = $agentBranchCode;
 
+        $agentBranchCode = $request->agentBranchCode;
+        $isDryRun = $request->query('dry') == 1;
+        $sessionId = $request->query('sessionId');
+
+        if (!$request->user && !$sessionId) {
+            return $this->sendError('Unauthorized user', [], 401);
+        }
+
+        if (!$request->user) {
+            $itemType = ItemType::session($sessionId);
+        } else {
+            $itemType = $isDryRun ? ItemType::dry($data) : ItemType::cart();
+        }
+        $itemType->agentBranchCode = $agentBranchCode;
+
+        try {
             $saveItemsResponse = CartItemServiceV2::saveItems(
-                userId: $request->user->uuid,
+                userId: $request->user ? $request->user->uuid : null,
                 tdmsProductId: $data['tdmsProductId'],
                 startDate: $data['startDate'],
                 days: $data['days'],
@@ -388,9 +400,16 @@ class CartItemController extends BaseController
 
     public function getItemsInCart(Request $request): JsonResponse
     {
-        $userId = $request->user->uuid;
+        $userId = $request->user ? $request->user->uuid : null;
+        $sessionId = $request->query('sessionId');
+
+        if (!$userId && !$sessionId) {
+            return $this->sendError('Unauthorized user', [], 401);
+        }
+
+        $itemType = $userId ? ItemType::cart() : ItemType::session($sessionId);
         try {
-            $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, itemType: ItemType::cart());
+            $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, itemType: $itemType);
             return $this->sendResponseFromService($getCartItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to get items in cart';
@@ -687,11 +706,16 @@ class CartItemController extends BaseController
 
     public function removeItemsFromCart(Request $request): JsonResponse
     {
-        $userId = $request->user->uuid;
+        $userId = $request->user ? $request->user->uuid : null;
         $isCart = $request->query('isCart') == 1;
         $cartItemId = $request->query('cartItemId');
         $groupId = $request->query('groupId');
         $productId = $request->query('productId');
+        $sessionId = $request->query('sessionId');
+
+        if (!$userId && $sessionId) {
+            return $this->sendError('Unauthorized user', [], 401);
+        }
 
         if ($isCart) {
             $type = ItemType::cart();
@@ -701,6 +725,8 @@ class CartItemController extends BaseController
             $type = ItemType::cartItem($cartItemId);
         } elseif ($productId) {
             $type = ItemType::product($productId);
+        } elseif ($sessionId) {
+            $type = ItemType::session($sessionId);
         } else {
             return $this->sendError('Invalid request');
         }
@@ -1164,5 +1190,32 @@ class CartItemController extends BaseController
             Logger::error($errorMessage, $e);
             return $this->sendError($errorMessage);
         }
+    }
+
+    public function convertSessionItemsToCartItems(Request $request, $sessionId)
+    {
+        $userId = $request->user->uuid;
+        $sessionItems = CartItem::userItems(null, ItemType::session($sessionId));
+        $cartItems = CartItem::where('user_id', $userId)
+            ->whereNull('user_order_id')
+            ->whereNull('quote_id')
+            ->select('tdms_product_id', 'product_price_details_id', 'booking_date');
+
+        foreach ($sessionItems as $item) {
+            $itemExistsInCart = (clone $cartItems)
+                ->where('tdms_product_id', $item->tdms_product_id)
+                ->where('product_price_details_id', $item->product_price_details_id)
+                ->whereDate('booking_date', Carbon::parse($item->booking_date)->format('Y-m-d'))
+                ->exists();
+            if ($itemExistsInCart) {
+                $item->delete();
+            } else {
+                $item->session_id = null;
+                $item->user_id = $userId;
+                $item->save();
+            }
+        }
+
+        return $this->sendResponse('Operation successful');
     }
 }

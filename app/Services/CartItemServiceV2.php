@@ -21,12 +21,12 @@ use Illuminate\Support\Str;
 class CartItemServiceV2
 {
     public static function buildOrderItemRequestData(
-        string $userId,
+        string|null $userId,
         int $tdmsProductId,
         array $productPricesDetails,
         $itemType = null,
         $isDryRun = false
-    ): ServiceResponse {
+    ): ServiceResponse|HttpResponse {
         $agentType = app('agentType');
         $agent = $agentType->agent;
 
@@ -44,12 +44,7 @@ class CartItemServiceV2
             ->first();
 
         $result = [];
-        $existingUserCartItems = CartItem::userCartItems($userId);
-        if ($itemType->isDirect) {
-            $existingUserCartItems = CartItem::userDirectPurchaseItems($userId);
-        } if ($itemType->isQuote) {
-            $existingUserCartItems = CartItem::userQuoteItems($userId, $itemType);
-        }
+        $existingUserCartItems = CartItem::userItems($userId, $itemType);
         foreach ($productPricesDetails as $productPriceDetails) {
             $productPriceDetailsId = $productPriceDetails['productPricesDetailsId'];
             $apiProviderId = $latestCachedProduct->json['apiProviderId'];
@@ -230,7 +225,7 @@ class CartItemServiceV2
     }
 
     public static function buildCartItemsData(
-        string $userId,
+        string|null $userId,
         int $tdmsProductId,
         int|null $productVersion,
         string $startDate,
@@ -275,6 +270,7 @@ class CartItemServiceV2
                 'selected_index' => array_shift($selectedAvailableIndices),
                 'booking_data' => $bookingData,
                 'is_direct_purchase' => $itemType->isDirect,
+                'session_id' => $itemType->isSession ? $itemType->typeId : null
             ];
             if (!is_null($quote)) {
                 $newCartData['quote_id'] = $quote->id;
@@ -285,7 +281,7 @@ class CartItemServiceV2
     }
 
     public static function saveItems(
-        string $userId,
+        string|null $userId,
         int $tdmsProductId,
         string $startDate,
         int $days,
@@ -358,7 +354,7 @@ class CartItemServiceV2
                         $cartItemData['product'] = $cachedProduct->toArray();
                     }
                     return $cartItemsData;
-                } else {
+                } elseif ($userId) {
                     $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
                         $userId,
                         $itemType
