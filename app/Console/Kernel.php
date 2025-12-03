@@ -43,8 +43,6 @@ class Kernel extends ConsoleKernel
             return config('app.mode') == 'test';
         });
 
-        $schedule->job(new ScheduledProductCacheJob())->dailyAt("00:00");
-
         $schedule->job(new DeleteAccountPermanentlyJob())->dailyAt("00:20");
 
         $schedule->job(new SendNotificationToInactiveUsers())->dailyAt("08:30");
