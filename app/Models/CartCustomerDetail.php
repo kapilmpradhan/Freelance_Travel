@@ -15,6 +15,7 @@ class CartCustomerDetail extends Model
     protected $table = 'cart_customer_details';
     protected $fillable = [
         'user_id',
+        'session_id',
         'title',
         'first_name',
         'last_name',
@@ -30,11 +31,6 @@ class CartCustomerDetail extends Model
         'is_deleted',
         'is_primary'
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     protected function dateOfBirth(): Attribute
     {

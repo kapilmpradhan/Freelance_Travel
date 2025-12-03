@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Services\UserCacheService;
 use App\Services\ProductService;
 use App\Services\TdmsService;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 
 class CacheController extends BaseController
@@ -133,10 +134,15 @@ class CacheController extends BaseController
 
     public function cacheUserResources(Request $request)
     {
-        $userId = $request->user->uuid;
+        $user = $request->user;
+        $session = App::bound('sessionId');
+        if (!$user && !$session) {
+            $this->sendError('Unauthorized user');
+        }
         $agent = app('agentType')->agent;
 
-        $itemsQ = CartItem::where('user_id', $userId)
+        $itemsQ = CartItem::when($user, fn ($query) => $query->where('user_id', $user->uuid))
+            ->when(is_null($user) && $session, fn ($query) => $query->where('session_id', app('sessionId')))
             ->where('is_direct_purchase', false)
             ->whereNull('user_order_id');
 

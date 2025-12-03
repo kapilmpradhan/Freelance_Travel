@@ -578,19 +578,25 @@ class CartItemController extends BaseController
     {
         $user = $request->user;
         $quoteId = $request->query('quoteId');
+        $sessionId = $request->query('sessionId');
+
+        if (!$user && !$sessionId) {
+            return $this->sendError('Unauthenticated user', [], 401);
+        }
 
         if ($quoteId) {
             $itemType = ItemType::quote($quoteId);
             $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
         } else {
-            $itemType = ItemType::cart();
-            $cartItems = CartItem::userCartItems($user->uuid);
+            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
+            $cartItems = CartItem::userItems($user ? $user->uuid : null, $itemType);
         }
 
         $data = json_decode($request->getContent(), true);
         $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
 
         $validator->after(function ($validator) use ($data, $user, $itemType, $cartItems) {
+            $userId = $user ? $user->uuid : null;
             $cartItemIds = $cartItems->pluck('id')->toArray();
             if (empty($cartItemIds)) {
                 $validator->errors()->add('cartItems', 'No cart items found');
@@ -599,7 +605,7 @@ class CartItemController extends BaseController
             $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
             $products = Product::whereIn('tdms_product_id', $productIds);
 
-            $userRedeemersResponse = RedeemerService::listActiveRedeemers($user->uuid, $itemType);
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
             foreach ($data as $item) {
@@ -713,7 +719,7 @@ class CartItemController extends BaseController
         $productId = $request->query('productId');
         $sessionId = $request->query('sessionId');
 
-        if (!$userId && $sessionId) {
+        if (!$userId && !$sessionId) {
             return $this->sendError('Unauthorized user', [], 401);
         }
 
@@ -1154,7 +1160,7 @@ class CartItemController extends BaseController
 
             $itemType->data = $datas;
             $commissionResponse = UserOrderCommissionService::getCommissionForDry(
-                userId: $request->user->uuid,
+                userId: $request->user ? $request->user->uuid : null,
                 itemType: $itemType
             );
         }

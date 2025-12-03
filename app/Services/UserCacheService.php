@@ -35,12 +35,18 @@ class UserCacheService
 
     public static function addUserCachedData($type, $data, $expireInSeconds = 600)
     {
-        $userId = app('agentType')->user->uuid;
+        $user = app('agentType')->user;
+        $session = App::bound('sessionId');
+        if (!$user && !$session) {
+            throw new ServiceException('Unauthorized user');
+        }
+
+        $key = $user ? $user->uuid : app('sessionId');
 
         // Atomic save to avoid overwriting
-        Redis::watch($userId);
+        Redis::watch($key);
         Redis::multi();
-        Redis::set("{$userId}:{$type}", json_encode($data), 'EX', $expireInSeconds);
+        Redis::set("{$key}:{$type}", json_encode($data), 'EX', $expireInSeconds);
         Redis::exec();
     }
 

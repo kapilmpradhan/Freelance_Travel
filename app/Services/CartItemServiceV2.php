@@ -292,6 +292,18 @@ class CartItemServiceV2
         bool $isDryRun = false,
     ) {
         try {
+            $quote = null;
+            if (!is_null($addToQuote)) {
+                if ($addToQuote->isNew) {
+                    $quote = Quote::create([
+                        'user_id' => $userId,
+                        'title' => $addToQuote->title
+                    ]);
+                } else {
+                    $quote = Quote::where('id', $addToQuote->quoteId)->first();
+                }
+                $itemType->typeId = $quote->id;
+            }
             $buildRequestDataResponse = self::buildOrderItemRequestData(
                 userId: $userId,
                 tdmsProductId: $tdmsProductId,
@@ -315,22 +327,9 @@ class CartItemServiceV2
                 $selectedAvailableIndices,
                 $orderItemsData,
                 $cartItems,
-                $addToQuote,
+                $quote,
                 $itemType,
             ) {
-                $quote = null;
-                if (!is_null($addToQuote)) {
-                    if ($addToQuote->isNew) {
-                        $quote = Quote::create([
-                            'user_id' => $userId,
-                            'title' => $addToQuote->title
-                        ]);
-                    } else {
-                        $quote = Quote::where('id', $addToQuote->quoteId)->first();
-                    }
-                    $itemType->typeId = $quote->id;
-                }
-
                 $cachedProduct = Product::where('tdms_product_id', $tdmsProductId)
                                 ->orderBy('version', 'desc')
                                 ->first();

@@ -331,7 +331,7 @@ class BookingService
 
     public static function buildOrderRequestData(
         UserAgent $userAgent,
-        string $userId,
+        ?string $userId,
         bool $processAsQuote,
         string|null $bookingReference,
         string|null $paymentMethodCode,
@@ -418,7 +418,7 @@ class BookingService
     }
 
     public static function basePostOrder(
-        string $userId,
+        ?string $userId,
         string $intent,
         ?float $pointsApplied,
         ?float $commissionApplied,
@@ -670,7 +670,7 @@ class BookingService
     }
 
     public static function postOrder(
-        string $userId,
+        ?string $userId,
         string $intent,
         ?float $pointsApplied,
         ?float $commissionApplied,

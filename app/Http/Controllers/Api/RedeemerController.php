@@ -14,7 +14,13 @@ class RedeemerController extends BaseController
     public function addRedeemer(Request $request)
     {
         $data = $request->all();
-        $userId = $request->user->uuid;
+        $userId = $request->user ? $request->user->uuid : null;
+        $sessionId = $request->get('sessionId');
+
+        if (!$userId && !$sessionId) {
+            return $this->sendError('Unauthenticated user', [], 401);
+        }
+
         $quoteId = $request->get('quoteId');
         $isDirectPurchase = $request->get('isDirectPurchase', false);
 
@@ -29,7 +35,7 @@ class RedeemerController extends BaseController
         } elseif ($isDirectPurchase) {
             $itemType = ItemType::direct();
         } else {
-            $itemType = ItemType::cart();
+            $itemType = $userId ? ItemType::cart() : ItemType::session($sessionId);
         }
 
         $addRedeemerResponse = RedeemerService::addNewRedeemer(
@@ -43,6 +49,13 @@ class RedeemerController extends BaseController
 
     public function listRedeemers(Request $request)
     {
+        $user = $request->user;
+        $sessoinId = $request->get('sessionId');
+
+        if (!$user && !$sessoinId) {
+            return $this->sendError('Unauthenticated user', [], 401);
+        }
+
         $quoteId = $request->get('quoteId');
         $isDirectPurchase = $request->get('isDirectPurchase', false);
 
@@ -51,10 +64,10 @@ class RedeemerController extends BaseController
         } elseif ((int) $isDirectPurchase == 1) {
             $itemType = ItemType::direct();
         } else {
-            $itemType = ItemType::cart();
+            $itemType = $user ? ItemType::cart() : ItemType::session($sessoinId);
         }
 
-        $userId = $request->user->uuid;
+        $userId = $user ? $user->uuid : null;
         $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
 
         return $this->sendResponseFromService($listRedeemersResponse);
@@ -62,10 +75,15 @@ class RedeemerController extends BaseController
 
     public function removeRedeemer(Request $request, $redeemerId)
     {
-        $userId = $request->user->uuid;
+        $userId = $request->user ? $request->user->uuid : null;
+        $sessionId = $request->get('sessionId');
+        if (!$userId && !$sessionId) {
+            return $this->sendError('Unauthenticated user', [], 401);
+        }
 
         $removeRedeemerResponse = RedeemerService::removeRedeemer(
             userId: $userId,
+            sessionId: $sessionId,
             redeemerId: $redeemerId
         );
 

@@ -10,7 +10,9 @@ class RedeemerService
 {
     public static function addNewRedeemer($userId, $redeemerData, ItemType $itemType)
     {
-        $userRedeemers = CartCustomerDetail::where('user_id', $userId)
+        $userRedeemers = CartCustomerDetail::query()
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
+            ->when($itemType->isSession, fn ($query) => $query->where('session_id', $itemType->typeId))
             ->where('is_deleted', false)
             ->where(function ($query) use ($itemType) {
                 if ($itemType->isQuote) {
@@ -35,23 +37,13 @@ class RedeemerService
                 preg_match('/^' . preg_quote($redeemerData['lastName'], '/') . '([0-9]*)?$/', $redeemer->last_name);
         });
 
-        // Filter for same email redeemers
-        // $sameEmailRedeemers = $userRedeemers->filter(function ($redeemer) use ($redeemerData) {
-        //     return $redeemer->email === $redeemerData['email'];
-        // });
-
-        // if ($sameEmailRedeemers->count() > 0) {
-        //     return ServiceResponse::badRequest(
-        //         message: 'A redeemer with this email already exists.'
-        //     );
-        // }
-
         if ($sameNameRedeemers->count() > 0) {
             $redeemerData['lastName'] .= $sameNameRedeemers->count();
         }
 
         $redeemer = CartCustomerDetail::create([
             'user_id' => $userId,
+            'session_id' => $itemType->isSession ? $itemType->typeId : null,
             'title' => $redeemerData['title'],
             'first_name' => $redeemerData['firstName'],
             'last_name' => $redeemerData['lastName'],
@@ -84,10 +76,15 @@ class RedeemerService
         return ServiceResponse::success($primaryRedeemer);
     }
 
-    public static function listActiveRedeemers($userId, ItemType $itemType)
+    public static function listActiveRedeemers(string|null $userId, ItemType $itemType)
     {
         $query = CartCustomerDetail::where('user_order_id', null)
             ->where('is_deleted', false);
+
+        if ($itemType->isSession) {
+            $redeemers = (clone $query)->where('session_id', $itemType->typeId)->get();
+            return ServiceResponse::success($redeemers);
+        }
 
         $primaryRedeemer = (clone $query)->where('is_primary', true)
             ->where('user_id', $userId)
@@ -133,9 +130,11 @@ class RedeemerService
         return ServiceResponse::success($redeemers);
     }
 
-    public static function removeRedeemer($userId, $redeemerId)
+    public static function removeRedeemer(string|null $userId, string|null $sessionId, $redeemerId)
     {
-        $redeemer = CartCustomerDetail::where('user_id', $userId)
+        $redeemer = CartCustomerDetail::query()
+                                    ->when($userId, fn ($query) => $query->where('user_id', $userId))
+                                    ->when($sessionId, fn ($query) => $query->where('session_id', $sessionId))
                                     ->where('id', $redeemerId)
                                     ->first();
         if (!$redeemer) {
