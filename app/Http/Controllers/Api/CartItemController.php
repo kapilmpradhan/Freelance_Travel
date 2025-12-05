@@ -455,13 +455,18 @@ class CartItemController extends BaseController
     {
         $user = $request->user;
         $quoteId = $request->query('quoteId');
+        $sessionId = $request->query('sessionId');
+
+        if (!$user && !$sessionId) {
+            return $this->sendError('Unauthenticated user', [], 401);
+        }
 
         if ($quoteId) {
             $itemType = ItemType::quote($quoteId);
             $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
         } else {
-            $itemType = ItemType::cart();
-            $cartItems = CartItem::userCartItems($user->uuid);
+            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
+            $cartItems = CartItem::userItems($user ? $user->uuid : null, $itemType);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -550,125 +555,6 @@ class CartItemController extends BaseController
 
         try {
             $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingData(
-                data: $validator->validated()
-            );
-            $isQuantityChanged = $updateItemBookingDataResponse->data['isQuantityChanged'];
-            if ($isQuantityChanged) {
-                $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
-                    $user->uuid,
-                    $itemType
-                );
-                if ($orderCommissionResponse->isSuccess()) {
-                    $orderCommission = $orderCommissionResponse->data; /** @var UserOrderCommission $orderCommission */
-                    $orderCommission->percentage = null;
-                    $orderCommission->points_available = null;
-                    $orderCommission->save();
-                }
-            }
-
-            return $this->sendResponseFromService($updateItemBookingDataResponse);
-        } catch (Exception $e) {
-            $errorMessage = 'Failed to set booking data';
-            Logger::error($errorMessage, $e);
-            return $this->sendError($errorMessage);
-        }
-    }
-
-    public function setBookingDataV2(Request $request): JsonResponse
-    {
-        $user = $request->user;
-        $quoteId = $request->query('quoteId');
-        $sessionId = $request->query('sessionId');
-
-        if (!$user && !$sessionId) {
-            return $this->sendError('Unauthenticated user', [], 401);
-        }
-
-        if ($quoteId) {
-            $itemType = ItemType::quote($quoteId);
-            $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
-        } else {
-            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
-            $cartItems = CartItem::userItems($user ? $user->uuid : null, $itemType);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $validator = Validator::make($data, CartItem::updateItemBookingDataV2Rule());
-
-        $validator->after(function ($validator) use ($data, $user, $itemType, $cartItems) {
-            $userId = $user ? $user->uuid : null;
-            $cartItemIds = $cartItems->pluck('id')->toArray();
-            if (empty($cartItemIds)) {
-                $validator->errors()->add('cartItems', 'No cart items found');
-                return;
-            }
-            $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
-            $products = Product::whereIn('tdms_product_id', $productIds);
-
-            $userRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
-            $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
-
-            foreach ($data as $item) {
-                $cartItem = $cartItems->where('id', $item['cartItemId'])->first();
-                // Check if cartItemId provided exists in user cart
-                if (!$cartItem) {
-                    $validator->errors()->add(
-                        $item['cartItemId'],
-                        'Cart item not found'
-                    );
-                    continue;
-                };
-
-                $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)->first();
-                $farePrices = $product->json['faresprices'];
-
-                foreach ($farePrices as $fare) {
-                    if ((string) $fare["productPricesDetailsId"] === (string) $cartItem->product_price_details_id) {
-                        break;
-                    }
-                }
-
-                if (
-                    isset($fare['fareQtyRestrictions'])
-                    && (int) $item['quantity'] % (int) $fare['fareQtyRestrictions'] != 0
-                ) {
-                    $validator->errors()->add(
-                        $item['cartItemId'],
-                        'Quantity must be multiple of ' . $fare['fareQtyRestrictions']
-                    );
-                }
-
-                // Check if number of bookingData provided is same as quantity
-                if (
-                    isset($item['quantity']) && isset($item['bookingData'])
-                    && $item['quantity'] !== count($item['bookingData'])
-                ) {
-                    $validator->errors()->add(
-                        $item['cartItemId'] . '.bookingData',
-                        'Invalid number of bookingData items provided'
-                    );
-                }
-
-                // Check if redeemers with provided id are available
-                foreach ($item['bookingData'] as $bookingData) {
-                    $notAvailableRedeemers = array_diff($bookingData['redeemers'] ?? [], $userRedeemerIds);
-                    if (!empty($notAvailableRedeemers)) {
-                        $bookingDataIndex = array_search($bookingData, $item['bookingData']);
-                        $validator->errors()->add(
-                            $item['cartItemId'] . '.bookingData.redeemers.' . $bookingDataIndex,
-                            "redeemer id" . json_encode($notAvailableRedeemers) . " not available"
-                        );
-                    }
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        try {
-            $updateItemBookingDataResponse = CartItemServiceV2::updateItemBookingDataV2(
                 data: $validator->validated()
             );
             $isQuantityChanged = $updateItemBookingDataResponse->data['isQuantityChanged'];
@@ -1143,6 +1029,9 @@ class CartItemController extends BaseController
             $itemType->typeId = $request->query('quoteId');
         } elseif ($request->query('dry') ?? null) {
             $itemType->isDry = true;
+        } elseif ($request->query('sessionId') ?? null) {
+            $itemType->isSession = true;
+            $itemType->typeId = $request->get('sessionId');
         } else {
             return $this->sendError('isCart, quoteId or dry parameter is required');
         }
@@ -1152,7 +1041,7 @@ class CartItemController extends BaseController
                 userId: $request->user->uuid,
                 itemType: $itemType
             );
-        } elseif ($itemType->isDry) {
+        } elseif ($itemType->isDry || $itemType->isSession) {
             $validator = Validator::make($datas, CartItem::calculateCommissionRule());
             if ($validator->fails() || empty($datas)) {
                 return $this->sendError("Get discount percentage failed", $validator->errors());
@@ -1207,6 +1096,13 @@ class CartItemController extends BaseController
             ->whereNull('quote_id')
             ->select('tdms_product_id', 'product_price_details_id', 'booking_date');
 
+        DB::beginTransaction();
+        CartCustomerDetail::where('session_id', $sessionId)
+            ->update([
+                'sessionId' => null,
+                'user_id' => $userId
+            ]);
+
         foreach ($sessionItems as $item) {
             $itemExistsInCart = (clone $cartItems)
                 ->where('tdms_product_id', $item->tdms_product_id)
@@ -1221,6 +1117,8 @@ class CartItemController extends BaseController
                 $item->save();
             }
         }
+
+        DB::commit();
 
         return $this->sendResponse('Operation successful');
     }

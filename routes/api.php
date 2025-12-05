@@ -94,8 +94,8 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'discount',
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.ifToken'], function () {
     Route::post('items/v2', [CartItemController::class, 'addItemsToCartV2']);
     Route::get('items', [CartItemController::class, 'getItemsInCart']);
+    Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('remove/items', [CartItemController::class, 'removeItemsFromCart']);
-    Route::put('items/v2', [CartItemController::class, 'setBookingDataV2']);
     Route::get('redeemers', [RedeemerController::class, 'listRedeemers']);
     Route::post('redeemers', [RedeemerController::class, 'addRedeemer']);
     Route::delete('redeemers/{redeemerId}', [RedeemerController::class, 'removeRedeemer']);
@@ -103,7 +103,6 @@ Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'mi
 });
 
 Route::group(['namespace' => 'App\Http\Controllers\Api', 'prefix' => 'cart', 'middleware' => 'auth.jwt'], function () {
-    Route::put('items', [CartItemController::class, 'setBookingData']);
     Route::delete('items/{cartItemId}', [CartItemController::class, 'removeItemFromCart']);
     Route::put('customers', [CartItemController::class, 'setCustomers']);
     Route::get('customers', [CartItemController::class, 'getCustomers']);
