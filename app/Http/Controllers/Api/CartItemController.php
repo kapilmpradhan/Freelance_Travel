@@ -481,7 +481,7 @@ class CartItemController extends BaseController
             $productIds = $cartItems->unique()->pluck('tdms_product_id')->toArray();
             $products = Product::whereIn('tdms_product_id', $productIds);
 
-            $userRedeemersResponse = RedeemerService::listActiveRedeemers($user->uuid, $itemType);
+            $userRedeemersResponse = RedeemerService::listActiveRedeemers($user ? $user->uuid : null, $itemType);
             $userRedeemerIds = $userRedeemersResponse->data->pluck('id')->toArray();
 
             foreach ($data as $item) {
@@ -558,7 +558,7 @@ class CartItemController extends BaseController
                 data: $validator->validated()
             );
             $isQuantityChanged = $updateItemBookingDataResponse->data['isQuantityChanged'];
-            if ($isQuantityChanged) {
+            if ($isQuantityChanged && !$itemType->isSession) {
                 $orderCommissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
                     $user->uuid,
                     $itemType
@@ -1099,7 +1099,7 @@ class CartItemController extends BaseController
         DB::beginTransaction();
         CartCustomerDetail::where('session_id', $sessionId)
             ->update([
-                'sessionId' => null,
+                'session_id' => null,
                 'user_id' => $userId
             ]);
 
