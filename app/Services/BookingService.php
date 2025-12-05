@@ -656,6 +656,7 @@ class BookingService
                     "redirectUrl" => $getPaymentGatewayUriResponse['data']['redirectUrl'],
                     "quoteUrl" => $getPaymentGatewayUriResponse['data']['quoteUrl']
                 ] : null,
+            sessionId: $itemType->isSession ? $itemType->typeId : null
         ));
 
         if ($intent == 'pay-now') {

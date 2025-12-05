@@ -33,6 +33,7 @@ class CleanCartItems
             paymentGateway: $event->paymentGateway,
             userAgentId: $event->userAgentId,
             quoteId: $event->quoteId,
+            sessionId: $event->sessionId
         );
         Logger::info("Cached orders of user {$event->userId}");
     }

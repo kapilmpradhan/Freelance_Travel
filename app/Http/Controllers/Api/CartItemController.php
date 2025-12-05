@@ -407,7 +407,7 @@ class CartItemController extends BaseController
             return $this->sendError('Unauthorized user', [], 401);
         }
 
-        $itemType = $userId ? ItemType::cart() : ItemType::session($sessionId);
+        $itemType = $sessionId ? ItemType::session($sessionId) : ItemType::cart();
         try {
             $getCartItemsResponse = CartItemService::getItemsInCartOrQuote(userId: $userId, itemType: $itemType);
             return $this->sendResponseFromService($getCartItemsResponse);
@@ -465,7 +465,7 @@ class CartItemController extends BaseController
             $itemType = ItemType::quote($quoteId);
             $cartItems = CartItem::userQuoteItems($user->uuid, $itemType);
         } else {
-            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
+            $itemType = $sessionId ? ItemType::session($sessionId) : ItemType::cart();
             $cartItems = CartItem::userItems($user ? $user->uuid : null, $itemType);
         }
 
