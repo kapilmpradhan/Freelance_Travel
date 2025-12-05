@@ -727,6 +727,7 @@ class CartItemController extends BaseController
     public function submitOrder(Request $request): JsonResponse
     {
         $data = $request->all();
+        $sessionId = $request->get('sessionId');
         $validate = Validator::make($data, [
             "paymentType" => "required|in:email-quote,pay-now",
             "pointsApplied" => "nullable|numeric",
@@ -736,7 +737,7 @@ class CartItemController extends BaseController
         if ($validate->fails()) {
             return $this->sendError("Place order failed", $validate->errors());
         }
-        $itemType = ItemType::cart();
+        $itemType = !is_null($sessionId) ? ItemType::session($sessionId) : ItemType::cart();
         $itemType->agentBranchCode = $request->agentBranchCode;
 
         try {
@@ -1099,7 +1100,6 @@ class CartItemController extends BaseController
         DB::beginTransaction();
         CartCustomerDetail::where('session_id', $sessionId)
             ->update([
-                'session_id' => null,
                 'user_id' => $userId
             ]);
 
@@ -1112,7 +1112,6 @@ class CartItemController extends BaseController
             if ($itemExistsInCart) {
                 $item->delete();
             } else {
-                $item->session_id = null;
                 $item->user_id = $userId;
                 $item->save();
             }

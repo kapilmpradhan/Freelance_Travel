@@ -440,7 +440,7 @@ class BookingService
         } else {
             $cartItems = (
                 !$itemType->isQuote
-                ? CartItem::userCartItems($userId)
+                ? CartItem::userItems($userId, $itemType)
                 : CartItem::userItemsByQuoteId($userId, $itemType)
             );
         }
