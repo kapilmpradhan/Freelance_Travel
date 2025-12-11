@@ -75,7 +75,8 @@ class SharedPaymentController extends BaseController
             pointsApplied: $requestData['pointsApplied'] ?? 0,
             commissionApplied: $requestData['commissionApplied'] ?? 0,
             processAsQuote: true,
-            itemType: $itemType
+            itemType: $itemType,
+            agentType: app('agentType')
         );
 
         if ($postOrderResponse->isError()) {

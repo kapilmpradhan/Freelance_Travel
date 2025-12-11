@@ -134,16 +134,23 @@ class TdmsService
         return null;
     }
 
-    public static function placeOrder($agentToken, $data, $userId)
+    public static function placeOrder($agentToken, $data, $userId, $previewMode = null)
     {
         $url = config('vars.tdms_api_url') . "/order";
+
+        $query = [];
+        if (!is_null($previewMode)) {
+            $query['isPreview'] = $previewMode;
+        }
+
+        $finalUrl = $url . (!empty($query) ? '?' . http_build_query($query) : '');
 
         $response = Http::timeout(60)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$agentToken}"
             ])
             ->withBody(json_encode($data))
-            ->post($url);
+            ->post($finalUrl);
 
         $data = $response->json();
         if ($response->successful()) {
@@ -928,5 +935,20 @@ class TdmsService
             . self::CURRENCY_ID_AUD
             . now()->format('Ym')
         ;
+    }
+
+    public static function getReferralSourcesOfAgent($accessToken, $getCached = true)
+    {
+        $url = config('vars.tdms_api_url') . 'apiv1/referralsources';
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$accessToken}"
+        ])->get($url);
+
+        if (!$response->successful()) {
+            return ServiceResponse::badRequest(data: $response->json());
+        }
+
+        return ServiceResponse::success($response->json());
     }
 }

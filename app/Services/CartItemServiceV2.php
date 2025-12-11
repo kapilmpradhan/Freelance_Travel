@@ -477,7 +477,7 @@ class CartItemServiceV2
         );
     }
 
-    public static function shareQuote($sharedByUserId, $sharedToEmail, $quoteId)
+    public static function shareQuote($sharedByUserId, $sharedToEmail, $quoteId, $agentType)
     {
         $quote = Quote::where('user_id', $sharedByUserId)
             ->where('id', $quoteId)
@@ -502,8 +502,9 @@ class CartItemServiceV2
         );
 
         ShareQuoteJob::dispatch(
-            platform: app('platform'),
-            shareQuote: $shareQuote
+            shareQuote: $shareQuote,
+            agentType: $agentType,
+            itemType: ItemType::quote($quoteId)
         );
 
         return ServiceResponse::success(data: $shareQuote, message: 'Invitation sent');

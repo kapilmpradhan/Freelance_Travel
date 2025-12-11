@@ -2,12 +2,15 @@
 
 namespace App\Jobs;
 
+use App\DTOs\ItemType;
 use App\Enums\AgentBranchCode;
 use App\Logging\Logger;
 use App\Models\Quote;
 use App\Models\User;
+use App\Services\BookingService;
 use App\Services\FcmService;
 use App\Services\IEmailService;
+use App\Services\ServiceException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,11 +25,13 @@ class ShareQuoteJob implements ShouldQueue
     use SerializesModels;
 
     public $shareQuote;
-    public $platform;
-    public function __construct($shareQuote, $platform)
+    public $agentType;
+    public $itemType;
+    public function __construct($shareQuote, $agentType, $itemType)
     {
         $this->shareQuote = $shareQuote;
-        $this->platform = $platform;
+        $this->agentType = $agentType;
+        $this->itemType = $itemType;
     }
 
     /**
@@ -53,13 +58,25 @@ class ShareQuoteJob implements ShouldQueue
             $inviter->first_name . ' ' . $inviter->last_name :
             $inviter->nickname;
 
-        $webUrl = $this->platform === AgentBranchCode::DEFAULT
-            ? config('app.web_url')
-            : config('app.web_url_peterpans');
-
-        $templateId = $this->platform === AgentBranchCode::DEFAULT
+        $templateId = $this->agentType->platform === AgentBranchCode::DEFAULT
             ? config('vars.share_quote_template_id')
             : config('vars.peterpans_share_quote_template_id');
+
+        $this->itemType->forPreview = true;
+        $postOrderResponse = BookingService::basePostOrder(
+            userId: $inviter->uuid,
+            intent: 'pay-now',
+            pointsApplied: null,
+            commissionApplied: null,
+            itemType: $this->itemType,
+            agentType: $this->agentType
+        );
+
+        if ($postOrderResponse->isError()) {
+            throw new ServiceException('Unable to get quote link for share quote', $postOrderResponse->data);
+        }
+
+        $postOrderData = $postOrderResponse->data;
 
         $mailData = [
             'to' => [
@@ -73,14 +90,14 @@ class ShareQuoteJob implements ShouldQueue
                 'inviteeName' => $inviteeName,
                 'inviteeRegistered' => $inviteeRegistered,
                 'quoteName' => $quote->title,
-                'system' => $this->platform == AgentBranchCode::DEFAULT ? 'FreelanceTravel' : 'PeterPans',
-                'redirectUrl' => $webUrl . "/quotes/{$quote->id}?isPending=true"
+                'system' => $this->agentType->platform == AgentBranchCode::DEFAULT ? 'FreelanceTravel' : 'PeterPans',
+                'redirectUrl' => $postOrderData['quoteUrl']
             ]
         ];
         $emailService->sendMail($mailData);
 
         if ($invitee) {
-            $tokens = $invitee->fcmTokens($this->platform);
+            $tokens = $invitee->fcmTokens($this->agentType->platform);
             $pushNotificationData = [
                 'title' => "Quote Shared",
                 'body' => "{$quote->title} has been shared with you.",

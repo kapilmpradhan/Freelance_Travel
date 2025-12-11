@@ -45,6 +45,7 @@ class DiscountService
     public static function getOrderCommission(
         ItemType $itemType,
         $userId,
+        $agentType,
         ?int $pointsApplied = null
     ): ServiceResponse {
         $items = CartItem::userItems($userId, $itemType);
@@ -76,7 +77,7 @@ class DiscountService
             $items = CartItem::userItems(userId: $userId, itemType: $itemType);
 
             $bookingReference = TdmsService::getBookingRefrence($agent->access_token);
-            $onlinePaymentMethod = BookingService::getOnlinePaymentMethod($agent->access_token);
+            $onlinePaymentMethod = BookingService::getOnlinePaymentMethod($agent->access_token, $agentType->platform);
             if (is_null($onlinePaymentMethod)) {
                 throw new ServiceException('Missing online payment method');
             }
@@ -92,7 +93,7 @@ class DiscountService
                 pointsApplied: $pointsApplied,
                 cartItems: $items,
                 customers: [],
-                forDiscount: $itemType->forDiscount
+                itemType: $itemType
             );
 
             $validateOrderDataResponse = TdmsService::validateOrderData(
@@ -128,13 +129,13 @@ class DiscountService
     // e.g. If active discount is 10% and commission is 15%, the overall discount will be 10%
     // e.g. If active discount is 10% and commission is 12%, the overall discount will be 7% (12% - 5% threshold)
     // Reference link: blob:https://websitetravel.atlassian.net/854bd471-24c8-48b2-a606-745b19d8fa2e#media-blob-url=true&id=c0b28879-aa4e-4615-8fc6-7ec45200a9dd&collection=&contextId=22708&width=855&height=335&alt=
-    public static function calcuateOverallDiscount($commissionPercentage, $threshold = 5, $user = null)
+    public static function calcuateOverallDiscount($commissionPercentage, $platform, $threshold = 5, $user = null)
     {
         if (Feature::for($user)->active('tester')) {
             $activeDiscount = Discount::where('is_test', true)->first();
         } else {
             $activeDiscount = Discount::where('is_active', true)
-                ->where('platform', app('platform'))
+                ->where('platform', $platform)
                 ->first();
         }
 
@@ -160,6 +161,7 @@ class DiscountService
     public static function getItemsDiscount(
         ItemType $itemType,
         $userId,
+        $agentType,
         ?int $pointsApplied = null
     ): ServiceResponse {
         $activeDiscount = Discount::where('is_active', true)->first();
@@ -169,7 +171,7 @@ class DiscountService
             );
         }
 
-        $orderCommissionResponse = self::getOrderCommission($itemType, $userId, $pointsApplied);
+        $orderCommissionResponse = self::getOrderCommission($itemType, $userId, $agentType, $pointsApplied);
         if ($orderCommissionResponse->isError()) {
             return $orderCommissionResponse;
         }
@@ -183,6 +185,7 @@ class DiscountService
 
         $applicableDiscount = self::calcuateOverallDiscount(
             commissionPercentage: $orderCommissionResponse->data->percentage,
+            platform: $agentType->platform
         );
 
         return ServiceResponse::success(

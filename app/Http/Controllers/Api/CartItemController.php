@@ -257,6 +257,10 @@ class CartItemController extends BaseController
     public function shareQuote(Request $request, string $quoteId): JsonResponse
     {
         $user = $request->user;
+        $agentType = app('agentType');
+        if ($agentType->isDefaultAgent) {
+            return $this->sendError('Default agent users cannot share quote');
+        }
 
         $data = $request->all();
         $isRedeemer = $request->query->has('isRedeemer') && $request->query('isRedeemer');
@@ -292,10 +296,12 @@ class CartItemController extends BaseController
         }
 
         try {
+            $agentType = app('agentType');
             $shareQuoteResponse = CartItemServiceV2::shareQuote(
                 sharedByUserId: $user->uuid,
                 sharedToEmail: $shareToEmail,
-                quoteId: $quoteId
+                quoteId: $quoteId,
+                agentType: $agentType
             );
             return $this->sendResponseFromService($shareQuoteResponse);
         } catch (Exception $e) {
@@ -747,7 +753,8 @@ class CartItemController extends BaseController
                 pointsApplied: $data['pointsApplied'] ?? null,
                 commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
-                itemType: $itemType
+                itemType: $itemType,
+                agentType: app('agentType')
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
@@ -778,7 +785,8 @@ class CartItemController extends BaseController
                 pointsApplied: $data['pointsApplied'] ?? null,
                 commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
-                itemType: $itemType
+                itemType: $itemType,
+                agentType: app('agentType')
             );
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
@@ -851,7 +859,8 @@ class CartItemController extends BaseController
                 pointsApplied: $data['pointsApplied'] ?? null,
                 commissionApplied: $data['commissionApplied'] ?? null,
                 processAsQuote: true,
-                itemType: $itemType
+                itemType: $itemType,
+                agentType: app('agentType')
             );
 
             if (!$postOrderResponse->isSuccess()) {
@@ -1012,6 +1021,7 @@ class CartItemController extends BaseController
         $orderDiscountResponse = DiscountService::getItemsDiscount(
             itemType: $itemType,
             userId: $userId,
+            agentType: app('agentType'),
             pointsApplied: $pointsApplied
         );
 
@@ -1040,7 +1050,8 @@ class CartItemController extends BaseController
         if ($itemType->isCart || $itemType->isQuote) {
             $commissionResponse = UserOrderCommissionService::getOrSetCommissionOfUserCartOrQuote(
                 userId: $request->user->uuid,
-                itemType: $itemType
+                itemType: $itemType,
+                agentType: app('agentType')
             );
         } elseif ($itemType->isDry || $itemType->isSession) {
             $validator = Validator::make($datas, CartItem::calculateCommissionRule());
@@ -1051,7 +1062,8 @@ class CartItemController extends BaseController
             $itemType->data = $datas;
             $commissionResponse = UserOrderCommissionService::getCommissionForDry(
                 userId: $request->user ? $request->user->uuid : null,
-                itemType: $itemType
+                itemType: $itemType,
+                agentType: app('agentType')
             );
         }
 
@@ -1060,6 +1072,7 @@ class CartItemController extends BaseController
             data: [
                 'applicableDiscount' => round(DiscountService::calcuateOverallDiscount(
                     commissionPercentage: $commissionResponse->data['commission'],
+                    platform: app('agentType')->platform,
                     user: $request->user
                 ), 2),
                 'pointsAvailable' => $commissionResponse->data['pointsAvailable'] ?? 0,

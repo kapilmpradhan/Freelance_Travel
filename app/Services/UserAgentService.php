@@ -315,4 +315,27 @@ class UserAgentService
             throw new ServiceException('Could not update agent bank details');
         }
     }
+
+    public static function getReferralSource($referredToBranch, $referredByBranch)
+    {
+        $agentResponse = self::getUserAgentByBranch($referredToBranch);
+        if ($agentResponse->isError()) {
+            return $agentResponse;
+        }
+
+        $referredToAgent = $agentResponse->data;
+
+        $referralSourcesResponse = TdmsService::getReferralSourcesOfAgent($referredToAgent->access_token);
+        if ($referralSourcesResponse->isError()) {
+            return $referralSourcesResponse;
+        }
+        $referralSource = collect($referralSourcesResponse->data)
+            ->first(fn ($source) => $source['referralName'] === $referredByBranch);
+
+        if (empty($referralSource)) {
+            return ServiceResponse::badRequest('Referral source not found');
+        }
+
+        return ServiceResponse::success($referralSource);
+    }
 }

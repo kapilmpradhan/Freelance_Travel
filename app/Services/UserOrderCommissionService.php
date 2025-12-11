@@ -30,7 +30,7 @@ class UserOrderCommissionService
         return ServiceResponse::notFound();
     }
 
-    public static function getOrSetCommissionOfUserCartOrQuote($userId, ItemType $itemType): ServiceResponse
+    public static function getOrSetCommissionOfUserCartOrQuote($userId, ItemType $itemType, $agentType): ServiceResponse
     {
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             $userId,
@@ -58,7 +58,8 @@ class UserOrderCommissionService
             intent: 'pay-now',
             pointsApplied: null,
             commissionApplied: null,
-            itemType: $itemType
+            itemType: $itemType,
+            agentType: $agentType
         );
 
         if ($orderCommissionResponse->isError()) {
@@ -92,7 +93,7 @@ class UserOrderCommissionService
         ]);
     }
 
-    public static function getCommissionForDry($userId, ItemType $itemType): ServiceResponse
+    public static function getCommissionForDry($userId, ItemType $itemType, $agentType): ServiceResponse
     {
         $overallCartData = [];
         foreach ($itemType->data as $data) {
@@ -118,7 +119,8 @@ class UserOrderCommissionService
             intent: 'pay-now',
             pointsApplied: null,
             commissionApplied: null,
-            itemType: $itemType
+            itemType: $itemType,
+            agentType: $agentType
         );
 
         if ($orderCommissionResponse->isError()) {

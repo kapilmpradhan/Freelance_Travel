@@ -22,7 +22,7 @@ class CartCustomerDetailFactory extends Factory
             'email' => $this->faker->unique()->safeEmail,
             'postal_code' => $this->faker->postcode,
             'customer_index' => $this->faker->randomNumber(),
-            'country_code' => $this->faker->countryCode,
+            'country_code' => '020',
             'phone_number' => $this->faker->phoneNumber,
             'quote_id' => null,
             'user_order_id' => null,

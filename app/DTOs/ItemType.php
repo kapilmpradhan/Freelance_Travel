@@ -19,6 +19,7 @@ class ItemType
     public $isProduct = false;
     public $isDry = false;
     public $forDiscount = false;
+    public $forPreview = false;
 
     public function __construct(
         string $type,

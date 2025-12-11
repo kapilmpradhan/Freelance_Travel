@@ -50,7 +50,7 @@ class BookingService
         return $totalQuantity;
     }
 
-    public static function getOnlinePaymentMethod($agentToken)
+    public static function getOnlinePaymentMethod($agentToken, $platform)
     {
         $availablePaymentMethods = TdmsService::getPaymentMethods($agentToken);
 
@@ -58,9 +58,9 @@ class BookingService
             $supportsOnlinePayment = $paymentMethod['supportsOnlinePayment'] ?? false;
             $redirectUrl = $paymentMethod['paymentReturnUrl'] ?? null;
 
-            if (app('platform') == AgentBranchCode::PETERPANS) {
+            if ($platform == AgentBranchCode::PETERPANS) {
                 $platformName = AgentBranchCode::PETERPANS_NAME;
-            } elseif (app('platform') == AgentBranchCode::DEFAULT) {
+            } elseif ($platform == AgentBranchCode::DEFAULT) {
                 $platformName = AgentBranchCode::DEFAULT_NAME;
             } else {
                 return null;
@@ -134,7 +134,7 @@ class BookingService
     public static function buildRedeemersDataV2($cartItems, $userId, $itemType)
     {
         $userRedeemers = RedeemerService::listActiveRedeemers($userId, $itemType)->data;
-        if ($itemType->forDiscount) {
+        if ($itemType->forDiscount || $itemType->forPreview) {
             $fakeRedeemer = CartCustomerDetail::factory(count: 1)->make()->first();
         }
 
@@ -148,10 +148,10 @@ class BookingService
                             : null;
 
             foreach ($bookingDatas as $bookingData) {
-                if (!$itemType->forDiscount) {
-                    $redeemerIds = $bookingData['redeemers'] ?? [];
-                } else {
+                if ($itemType->forDiscount || $itemType->forPreview) {
                     $redeemerIds = [$fakeRedeemer->id];
+                } else {
+                    $redeemerIds = $bookingData['redeemers'] ?? [];
                 }
                 if (empty($redeemerIds)) {
                     throw new ServiceException('Redeemer not found', data: [
@@ -161,10 +161,10 @@ class BookingService
                 }
 
                 $redeemerId = $redeemerIds[0];
-                if (!$itemType->forDiscount) {
-                    $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
-                } else {
+                if ($itemType->forDiscount || $itemType->forPreview) {
                     $userRedeemer = $fakeRedeemer;
+                } else {
+                    $userRedeemer = $userRedeemers->where('id', $redeemerId)->first();
                 }
 
                 $isNewRedeemer = true;
@@ -371,12 +371,42 @@ class BookingService
             $orderData["cashbackApplied"] = $pointsApplied;
         }
 
-        if (
-            $userAgent->referral_source_id
-            && $userAgent->created_at
-                ->isAfter(now()->subMonths(config('vars.referral_source_id_period_months')))
-        ) {
-            $orderData['referralSourceId'] = $userAgent->referral_source_id;
+        if (!$itemType->forDiscount) {
+            $referralSourceId = null;
+
+            // Check if the user's referral_source_id is valid within the configured period
+            $referralSourceValid = $userAgent->referral_source_id
+                && $userAgent->created_at->isAfter(
+                    now()->subMonths(config('vars.referral_source_id_period_months'))
+                );
+
+            if ($referralSourceValid) {
+                $referralSourceId = $userAgent->referral_source_id;
+            }
+
+            // Handle quote-specific referral logic
+            if ($itemType->isQuote) {
+                $quote = Quote::where('id', $itemType->typeId)->first();
+                if (!$quote) {
+                    throw new ServiceException('Quote not found');
+                }
+
+                $sharedByEmail = $quote->shared_by_email;
+                if ($sharedByEmail) {
+                    $referredToAgent = UserAgent::where('email', $sharedByEmail)->first();
+                    if ($referredToAgent) {
+                        $referralSourcesResponse = UserAgentService::getReferralSource(
+                            $referredToAgent->branch_code,
+                            $userAgent->branch_code
+                        );
+                        if ($referralSourcesResponse->isSuccess()) {
+                            $referralSourceId = $referralSourcesResponse->data['referralSourceId'];
+                        }
+                    }
+                }
+            }
+
+            $orderData['referralSourceId'] = $referralSourceId;
         }
 
         Logger::debug('Order request data', $orderData);
@@ -424,9 +454,13 @@ class BookingService
         ?float $commissionApplied,
         ItemType $itemType,
         bool $processAsQuote = true,
-        array $customers = []
+        array $customers = [],
+        $agentType = null
     ) {
-        $getAgentResponse = UserAgentService::getUserAgentByBranch(app('agentType')->agent->branch_code);
+        if (!$agentType) {
+            $agentType = app('agentType');
+        }
+        $getAgentResponse = UserAgentService::getUserAgentByBranch($agentType->agent->branch_code);
         if ($getAgentResponse->isError()) {
             return $getAgentResponse;
         }
@@ -453,7 +487,10 @@ class BookingService
             $bookingReference = null;
             $onlinePaymentMethod = null;
         } else {
-            $onlinePaymentMethod = self::getOnlinePaymentMethod($agent->access_token);
+            $onlinePaymentMethod = self::getOnlinePaymentMethod(
+                $agent->access_token,
+                $agentType->platform
+            );
             if (is_null($onlinePaymentMethod)) {
                 throw new ServiceException('Missing online payment method');
             }
@@ -522,9 +559,10 @@ class BookingService
 
             $discount = DiscountService::calcuateOverallDiscount(
                 commissionPercentage: $commissionPercentage,
+                platform: $agentType->platform,
                 user: User::find($userId)
             );
-            $agentType = app('agentType');
+
             if ($agentType->isDefaultAgent) {
                 $orderRequestData['totalCharged'] -= $orderRequestData['totalCharged'] * $discount / 100;
                 $orderRequestData['totalCharged'] = round((float) $orderRequestData['totalCharged'], 2);
@@ -575,16 +613,25 @@ class BookingService
             $orderRequestData['totalCharged'] -= $commissionApplied;
         }
 
+        $previewMode = null;
+        if ($itemType->forPreview) {
+            $previewMode = $agentType->platform == AgentBranchCode::DEFAULT ? 1 : 2;
+        }
         $placeOrderResponse = TdmsService::placeOrder(
             agentToken: $agent->access_token,
             data: $orderRequestData,
             userId: $userId,
+            previewMode: $previewMode
         );
         UserCacheService::removeCachedBookingReference();
 
         $orderResponseData = $placeOrderResponse->data;
         if ($placeOrderResponse->isError()) {
             throw new ServiceException($orderResponseData['message']);
+        }
+
+        if ($itemType->forPreview) {
+            return $placeOrderResponse;
         }
 
         if (!$agentType->isDefaultAgent) {
@@ -676,6 +723,7 @@ class BookingService
         ?float $pointsApplied,
         ?float $commissionApplied,
         ItemType $itemType,
+        $agentType,
         bool $processAsQuote = true
     ): ?ServiceResponse {
         try {
@@ -692,7 +740,8 @@ class BookingService
                 pointsApplied: $pointsApplied,
                 commissionApplied: $commissionApplied,
                 itemType: $itemType,
-                processAsQuote: $processAsQuote
+                processAsQuote: $processAsQuote,
+                agentType: $agentType
             );
         } catch (ServiceException $e) {
             throw $e;
