@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Exception;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redis;
 
 class UserCacheService
@@ -14,10 +16,21 @@ class UserCacheService
 
     public static function getUserCachedData($type)
     {
-        $userId = app('agentType')->user->uuid;
-        $cachedUserData = Redis::get("{$userId}:{$type}");
+        try {
+            $agentType = App::bound('agentType');
+            $session = App::bound('sessionId');
+            if (!$agentType && !$session) {
+                return [];
+            }
 
-        return $cachedUserData ? json_decode($cachedUserData, true) : [];
+            $user = app('agentType')->user;
+            $key = $user ? $user->uuid : app('sessionId');
+
+            $cachedUserData = Redis::get("{$key}:{$type}");
+            return $cachedUserData ? json_decode($cachedUserData, true) : [];
+        } catch (Exception) {
+            return [];
+        }
     }
 
     public static function addUserCachedData($type, $data, $expireInSeconds = 600)
@@ -33,8 +46,14 @@ class UserCacheService
 
     public static function removeUserCachedData($type)
     {
-        $userId = app('agentType')->user->uuid;
-        Redis::del("{$userId}:{$type}");
+        $agentType = App::bound('agentType');
+        $session = App::bound('sessionId');
+        if ($agentType || $session) {
+            $user = $agentType ? app('agentType')->user : null;
+
+            $key = $user ? $user->uuid : app('sessionId');
+            Redis::del("{$key}:{$type}");
+        }
     }
 
     public static function cacheProductLastUpdateDate($tdmsProductId, $lastUpdateData)
