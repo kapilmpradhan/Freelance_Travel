@@ -239,6 +239,7 @@ class CartItemService
         $fareprices = Fareprice::whereIn('tdms_product_id', $productIds)
             ->where('agent_branch', $itemType->agentBranchCode);
 
+        Logger::debug('count' , $cartItems->count());
         $cartItems->each(function ($cartItem) use ($productLatestUpdatedDates, $products, $fareprices, $itemType) {
             $isProductAvailableInTdms = isset($productLatestUpdatedDates[$cartItem->tdms_product_id]);
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)
@@ -254,11 +255,8 @@ class CartItemService
                 $product = ProductHistory::where('tdms_product_id', $cartItem->tdms_product_id)
                     ->where('version', $cartItem->product_version)
                     ->first();
+                $fareprice = null;
                 $isProductLatest = false;
-            }
-
-            if (!$product) {
-                $cartItem->delete();
             } else {
                 // Check if fareprice is latest
                 $fareprice = (clone $fareprices)->where('tdms_product_id', $cartItem->tdms_product_id)
@@ -294,26 +292,25 @@ class CartItemService
                     timeId: $cartItem->time_id,
                 );
                 if ($availabilityResponse->isError()) {
-                    Logger::debug(
+                    Logger::error(
                         message: 'Error fetching availability for item: ' . $cartItem->id,
                         data: $availabilityResponse->data
                     );
-                    return ServiceResponse::badRequest('Unable to get availability');
+                } else {
+                    $cartItem->availability = $availabilityResponse->data;
                 }
-                $cartItem->availability = $availabilityResponse->data;
 
                 if ($fareprice) {
                     $productJson = $product->json;
                     $productJson['faresprices'] = $fareprice->json;
                     $product->json = $productJson;
                 }
-
-                $product->counter = 0; // Remove this later
-                $cartItem->product = $product;
-                $cartItem->is_availability_latest = true;
-                $cartItem->is_product_latest = $isProductLatest;
-                $cartItem->fareprice_branch = $fareprice ? $fareprice->agent_branch : null;
             }
+
+            $cartItem->product = $product;
+            $cartItem->is_availability_latest = true;
+            $cartItem->is_product_latest = $isProductLatest;
+            $cartItem->fareprice_branch = $fareprice ? $fareprice->agent_branch : null;
         });
 
         return ServiceResponse::success(data: $cartItems);
