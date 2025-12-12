@@ -243,12 +243,14 @@ class ProductCategoryService
                             $numberOfRegions -= 1;
                         }
                         foreach ($products as $latestProductDetails) {
-                            CartItemService::cacheProductV2(
-                                tdmsProductId: $latestProductDetails['productId'],
-                                agent: $agent,
-                                latestProductDetails: $latestProductDetails
-                            );
-                            $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
+                            if (!empty($latestProductDetails['departureDates'])){
+                                CartItemService::cacheProductV2(
+                                    tdmsProductId: $latestProductDetails['productId'],
+                                    agent: $agent,
+                                    latestProductDetails: $latestProductDetails
+                                );
+                                $tdmsProductIdsByLabels[$typeLabel['label']][] = $latestProductDetails['productId'];
+                            }
                         }
 
                         if ($numberOfRegions < 0) {
@@ -280,10 +282,12 @@ class ProductCategoryService
                             $productData = $productsResponse->data;
 
                             $filteredProducts = array_filter($productData, function ($product) use ($productFilter) {
-                                if ($productFilter->filterBy === 'accommodation') {
-                                    return $product['productClass'] === 'A';
+                                if (!empty($product['departureDates'])) {
+                                    if ($productFilter->filterBy === 'accommodation') {
+                                        return ($product['productClass'] === 'A');
+                                    }
+                                    return $product;
                                 }
-                                return $product;
                             });
 
                             $products = array_merge($products, $filteredProducts);
