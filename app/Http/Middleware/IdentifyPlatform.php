@@ -15,7 +15,9 @@ class IdentifyPlatform
     public function handle(Request $request, Closure $next)
     {
         $url = $request->url();
-        if (str_contains($url, 'api/peterpans')) {
+        if ($request->get('platform') ? $request->get('platform') == 'PTX' : false ||
+            str_contains($url, 'api/peterpans')
+        ) {
             $platform = AgentBranchCode::PETERPANS;
             $request->merge(['agentBranchCode' => AgentBranchCode::PETERPANS]);
         } else {
