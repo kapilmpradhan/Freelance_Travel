@@ -239,7 +239,7 @@ class CartItemService
         $fareprices = Fareprice::whereIn('tdms_product_id', $productIds)
             ->where('agent_branch', $itemType->agentBranchCode);
 
-        Logger::debug('count' , $cartItems->count());
+        Logger::debug('count', $cartItems->count());
         $cartItems->each(function ($cartItem) use ($productLatestUpdatedDates, $products, $fareprices, $itemType) {
             $isProductAvailableInTdms = isset($productLatestUpdatedDates[$cartItem->tdms_product_id]);
             $product = (clone $products)->where('tdms_product_id', $cartItem->tdms_product_id)

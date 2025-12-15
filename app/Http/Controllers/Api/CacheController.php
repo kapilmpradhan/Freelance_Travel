@@ -161,45 +161,44 @@ class CacheController extends BaseController
                 productIds: $tdmsProductIds,
                 getCached: false
             );
-            if ($productsLastUpdateResponse->isError()) {
-                return $this->sendError('Error fetching products last update', $productsLastUpdateResponse->data);
-            }
-
-            $productDetailsResponse = ProductService::getProductDetailsV2(
-                agentToken: $agent->access_token,
-                productIds: $tdmsProductIds,
-                getCached: false
-            );
-            if ($productDetailsResponse->isError()) {
-                $productsDetailsData = [];
-            }
-            $productsDetailsData = $productDetailsResponse->data;
-            $productsLastUpdate = $productsLastUpdateResponse->data;
-
-            foreach ($productsLastUpdate as $tdmsProductId => $lastUpdate) {
-                UserCacheService::cacheProductLastUpdateDate(
-                    tdmsProductId: $tdmsProductId,
-                    lastUpdateData: [$tdmsProductId => $lastUpdate]
+            if ($productsLastUpdateResponse->isSuccess()) {
+                $productDetailsResponse = ProductService::getProductDetailsV2(
+                    agentToken: $agent->access_token,
+                    productIds: $tdmsProductIds,
+                    getCached: false
                 );
+                if ($productDetailsResponse->isError()) {
+                    $productsDetailsData = [];
+                }
+                $productsDetailsData = $productDetailsResponse->data;
+                $productsLastUpdate = $productsLastUpdateResponse->data;
 
-                $latestProducDetails = null;
-                $product = (clone $productsQ)->firstWhere('tdms_product_id', $tdmsProductId);
-                if (!$product || $product->tdms_product_last_update_date != $lastUpdate) {
+                foreach ($productsLastUpdate as $tdmsProductId => $lastUpdate) {
+                    UserCacheService::cacheProductLastUpdateDate(
+                        tdmsProductId: $tdmsProductId,
+                        lastUpdateData: [$tdmsProductId => $lastUpdate]
+                    );
+
                     $latestProducDetails = null;
-                    foreach ($productsDetailsData as $pdd) {
-                        if ($pdd['productId'] == $tdmsProductId) {
-                            $latestProducDetails = $pdd;
-                            break;
+                    $product = (clone $productsQ)->firstWhere('tdms_product_id', $tdmsProductId);
+                    if (!$product || $product->tdms_product_last_update_date != $lastUpdate) {
+                        $latestProducDetails = null;
+                        foreach ($productsDetailsData as $pdd) {
+                            if ($pdd['productId'] == $tdmsProductId) {
+                                $latestProducDetails = $pdd;
+                                break;
+                            }
+                        }
+                        if (is_null($latestProducDetails)) {
+                            continue;
                         }
                     }
-                    if (is_null($latestProducDetails)) {
-                        continue;
-                    }
+                    UserCacheService::cacheProduct(
+                        tdmsProductId: $tdmsProductId,
+                        productDetailsData: !empty($latestProducDetails) ? $latestProducDetails : null
+                    );
                 }
-                UserCacheService::cacheProduct(
-                    tdmsProductId: $tdmsProductId,
-                    productDetailsData: !empty($latestProducDetails) ? $latestProducDetails : null
-                );
+
             }
         }
 

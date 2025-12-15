@@ -52,7 +52,10 @@ class ProductService
             );
         } else {
             $responseData = $response->json();
-            if (str_contains($responseData['message'], 'do not exist')) {
+            if (
+                !$responseData ||
+                str_contains($responseData['message'], 'do not exist')
+            ) {
                 return HttpResponse::failed(
                     message: 'One or more products do not exist',
                     responseCode: 404,

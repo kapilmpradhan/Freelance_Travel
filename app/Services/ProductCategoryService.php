@@ -243,7 +243,7 @@ class ProductCategoryService
                             $numberOfRegions -= 1;
                         }
                         foreach ($products as $latestProductDetails) {
-                            if (!empty($latestProductDetails['departureDates'])){
+                            if (!empty($latestProductDetails['departureDates'])) {
                                 CartItemService::cacheProductV2(
                                     tdmsProductId: $latestProductDetails['productId'],
                                     agent: $agent,
