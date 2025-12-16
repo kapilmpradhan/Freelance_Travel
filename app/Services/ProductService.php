@@ -136,7 +136,7 @@ class ProductService
                 return ServiceResponse::success($cachedProductsData);
             }
             return HttpResponse::success(
-                data: is_array($productIds) ? $data[0] : $data,
+                data: is_array($productIds) ? $data : $data[0],
                 responseCode: $response->status(),
             );
         } else {

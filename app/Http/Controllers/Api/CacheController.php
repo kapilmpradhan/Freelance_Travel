@@ -198,7 +198,6 @@ class CacheController extends BaseController
                         productDetailsData: !empty($latestProducDetails) ? $latestProducDetails : null
                     );
                 }
-
             }
         }
 
