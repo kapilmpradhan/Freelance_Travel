@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "doctrine/dbal": "^3.9",
+        "fakerphp/faker": "^1.23",
         "firebase/php-jwt": "^6.10",
         "fruitcake/laravel-cors": "dev-develop",
         "google/apiclient": "^2.18",
@@ -20,9 +21,9 @@
         "league/csv": "^9.21",
         "monolog/monolog": "^3.8",
         "predis/predis": "^2.3",
+        "promphp/prometheus_client_php": "^2.14",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
-        "symfony/mailer": "^6.3",
-        "fakerphp/faker": "^1.23"
+        "symfony/mailer": "^6.3"
     },
     "require-dev": {
         "behat/behat": "^3.14",

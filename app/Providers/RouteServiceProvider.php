@@ -56,6 +56,11 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
+
+            // Prometheus metrics endpoint (no middleware for internal access)
+            Route::prefix('api/metrics')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/metrics.php'));
         });
     }
 
