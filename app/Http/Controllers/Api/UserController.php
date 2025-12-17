@@ -319,7 +319,9 @@ class UserController extends BaseController
             'is_test_user' => $isTestUser,
             'is_default_agent' => $isDefaultAgent,
             'is_points_agent' => $isPointsAgent,
-            'is_commission_agent' => $isCommissionAgent
+            'is_commission_agent' => $isCommissionAgent,
+            'is_commission_enabled' => true,
+            'is_upgrade_to_commission_enabled' => true
         ];
 
         return $this->sendResponse('User meta data', $data);
