@@ -873,7 +873,7 @@ class TdmsService
             );
 
             throw new ServiceException(
-                message: 'Error upgrading User to Agent',
+                message: 'Error updating agent details',
                 data: $response->json(),
                 code: $response->status()
             );

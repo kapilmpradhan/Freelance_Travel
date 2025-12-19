@@ -256,6 +256,26 @@ class UserAgentController extends BaseController
             'tradingName' => 'required|string',
         ]);
 
+        $validator->after(function ($validator) use ($data) {
+            $bankAccount = $data['bankAccount'] ?? '';
+            $countryCode = strtoupper($data['bankCountryShortCode'] ?? '');
+            $accountLength = strlen($bankAccount);
+
+            if ($countryCode === 'AU') {
+                if ($accountLength < 6 || $accountLength > 9) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 8 digits for AU.');
+                }
+            } elseif ($countryCode === 'NZ') {
+                if ($accountLength < 6 || $accountLength > 10) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 9 digits for NZ.');
+                }
+            } else {
+                if ($accountLength < 6 || $accountLength > 19) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 19 digits.');
+                }
+            }
+        });
+
         if ($validator->fails()) {
             return $this->sendError('Error occurred', $validator->errors(), 400);
         }
