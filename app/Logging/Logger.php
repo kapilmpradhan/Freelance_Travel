@@ -64,35 +64,44 @@ class Logger
 
     public static function debug($message, $data = null)
     {
-        $data = [
+        $logPayload = [
             "message" => $message,
             "data" => $data,
         ];
-        Log::stack(['console', 'single'])->debug(json_encode($data ?? []));
+        Log::stack(['console', 'single'])->debug(json_encode($logPayload ?? []));
+        // Debug level always writes to file when log_file is provided
+        if (\is_array($data) && isset($data['log_file'])) {
+            $data['status'] = 'Debug';
+            self::writeToFile($data);
+        }
     }
 
-    public static function error($message, $exception = null, $extra = null, $write = false, $data = null)
+    public static function error($message, $exception = null, $extra = null, $data = null)
     {
         Log::stack(['console', 'retack', 'single'])->error(
             $message,
             ['exception' => $exception ?? $message, 'extra' => $extra ?? []]
         );
-        if ($write) {
-            $data['status'] = 'Failed';
+        // Write to file if flag is enabled or data contains log_file
+        $shouldWrite = config('logging.write_errors_to_file', false);
+        if ($shouldWrite && \is_array($data) && isset($data['log_file'])) {
+            $data['status'] = 'Error';
+            $data['exception'] = $exception ? $exception->getMessage() : $message;
             self::writeToFile($data);
         }
     }
 
-    public static function exception($message, $data = [], $exception = null, $write = false)
+    public static function exception($message, $data = [], $exception = null)
     {
         Log::stack(['console', 'retack', 'single'])->critical(
             $message,
             ['exception' => $exception, 'data' => $data]
         );
-
-        if ($write) {
+        // Write to file if flag is enabled or data contains log_file
+        $shouldWrite = config('logging.write_errors_to_file', false);
+        if ($shouldWrite && \is_array($data) && isset($data['log_file'])) {
             $data['status'] = 'Exception';
-            $data['exception'] = $exception->getMessage();
+            $data['exception'] = $exception ? $exception->getMessage() : $message;
             self::writeToFile($data);
         }
     }

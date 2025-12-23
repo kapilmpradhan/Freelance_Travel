@@ -23,14 +23,22 @@ class PointsEarnedNotification
      */
     public function handle(CompleteOrderEvent $event): void
     {
-        $className = get_class($this);
-        Logger::debug("[{$className}] Received points earned notification event");
+        Logger::debug('Points earned notification event received', [
+            'log_file' => config('logging.log_files.notifications'),
+            'user_order_id' => $event->userOrder->id,
+            'action' => 'points_earned_event_received',
+        ]);
 
         $userId = $event->userOrder->user_id;
         $agentType = UserAgentDTO::getUserAgent(User::find($userId), app('platform'));
 
         SendPointsEarnedNotificationJob::dispatch($event->userOrder, app('platform'), $agentType);
 
-        Logger::debug("[{$className}] Dispatched job to send complete order mail");
+        Logger::debug('Points earned notification job dispatched', [
+            'log_file' => config('logging.log_files.notifications'),
+            'user_id' => $userId,
+            'user_order_id' => $event->userOrder->id,
+            'action' => 'points_earned_notification_dispatched',
+        ]);
     }
 }

@@ -84,24 +84,21 @@ class SendProfileEmailOtp implements ShouldQueue
             ];
 
             if ($sendMailResponse->isSuccess()) {
-                Logger::info(
-                    message: 'Account verification email sent successfully.',
-                    data: $logData,
-                    write: true
+                Logger::debug(
+                    'Account verification email sent successfully.',
+                    $logData
                 );
             } else {
                 Logger::error(
                     message: 'Failed to send account verification email.',
-                    data: $logData,
-                    write: true
+                    data: $logData
                 );
             }
         } catch (Throwable $e) {
             Logger::exception(
                 message: 'Failed to send account verification email.',
                 data: $logData ?? [],
-                exception: $e,
-                write: true
+                exception: $e
             );
             throw $e;
         }

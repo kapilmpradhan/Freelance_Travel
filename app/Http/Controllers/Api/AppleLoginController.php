@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\BaseController;
 use Illuminate\Support\Facades\Validator;
 use App\Services\OtpService;
 use App\Jobs\SendProfileEmailOtp;
+use App\Logging\Logger;
 
 class AppleLoginController extends BaseController
 {
@@ -82,6 +83,7 @@ class AppleLoginController extends BaseController
                     'verified_email' => $requires_real_email ? null : $email,
                 ]);
         }
+        $isNewUser = !$user->wasRecentlyCreated ? false : true;
         $data = [
             "accessToken" => $jwtService->generateAccessToken($user),
             "refreshToken" => $jwtService->generateRefreshToken(
@@ -89,6 +91,17 @@ class AppleLoginController extends BaseController
                 $request->header('User-Agent')
             )
         ];
+
+        $action = $isNewUser ? 'signup_apple' : 'login_apple';
+        Logger::debug('User ' . ($isNewUser ? 'signup' : 'login') . ' via Apple', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => $action,
+            'platform' => app('platform'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
 
         return $this->sendResponse('successfully', $data);
     }

@@ -34,6 +34,16 @@ class UserController extends BaseController
         SendProfileEmailOtp::dispatch($new_user, app('platform'));
         $return_data = $userResource->userDetail($new_user);
 
+        Logger::debug('User signup via email', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $new_user->uuid,
+            'user_email' => $new_user->email,
+            'action' => 'signup_email',
+            'platform' => app('platform'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
+
         return $this->sendResponse('successfully', $return_data);
     }
 
@@ -83,6 +93,17 @@ class UserController extends BaseController
                 'accessToken' => $accessToken,
                 'refreshToken' => $refreshToken
             ];
+
+            Logger::debug('User login via email', [
+                'log_file' => config('logging.log_files.user_activity'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'login_email',
+                'platform' => app('platform'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
             return $this->sendResponse('Access and Refresh tokens', $data);
         } else {
             return $this->sendError('Invalid Credentials');
@@ -111,6 +132,17 @@ class UserController extends BaseController
         } else {
             $user->password = Hash::make($data['new_password']);
             $user->save();
+
+            Logger::debug('User changed password', [
+                'log_file' => config('logging.log_files.user_activity'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'change_password',
+                'platform' => app('platform'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
             return $this->sendResponse('Password changed');
         }
     }
@@ -144,6 +176,17 @@ class UserController extends BaseController
                 $user->save();
             }
             $user->updatePassword($data['new_password']);
+
+            Logger::debug('User reset password via OTP', [
+                'log_file' => config('logging.log_files.user_activity'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'reset_password_otp',
+                'platform' => app('platform'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
             return $this->sendResponse('Password changed successfully');
         } catch (Exception $e) {
             $errorMessage = "Failed to reset password";
@@ -230,6 +273,17 @@ class UserController extends BaseController
         try {
             $updateUserProfileResponse = UserService::updateUserProfile($user, $validatedData);
             RedeemerService::addOrUpdatePrimaryRedeemer($user);
+
+            Logger::debug('User updated profile', [
+                'log_file' => config('logging.log_files.user_activity'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'update_profile',
+                'platform' => app('platform'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
             return $this->sendResponseFromService($updateUserProfileResponse);
         } catch (ServiceException $e) {
             return $this->sendResponseFromService($e->toServiceResponse());
@@ -272,6 +326,17 @@ class UserController extends BaseController
             token: $validatedData['fcmToken'],
             clientUserAgent: $validatedData['userAgentInfo']
         );
+
+        Logger::debug('User added FCM token', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'add_fcm_token',
+            'platform' => app('platform'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
+
         return $this->sendResponseFromService($addFcmToken);
     }
 
@@ -282,6 +347,17 @@ class UserController extends BaseController
         $checkFcmResponse = UserService::checkIfFcmTokenExistsForUser($user, $fcmToken);
         if ($checkFcmResponse->isSuccess()) {
             $removeFcmToken = UserService::removeFcmToken($user, $fcmToken);
+
+            Logger::debug('User removed FCM token', [
+                'log_file' => config('logging.log_files.user_activity'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'remove_fcm_token',
+                'platform' => app('platform'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
             return $this->sendResponseFromService($removeFcmToken);
         }
 

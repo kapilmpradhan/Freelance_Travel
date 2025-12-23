@@ -10,10 +10,19 @@ class ProductService
 {
     public static function getProductsLastUpdate($agentToken, array|int $productIds, $getCached = true)
     {
+        $productIdsArray = is_array($productIds) ? $productIds : [$productIds];
+
+        Logger::debug('Getting products last update', [
+            'log_file' => config('logging.log_files.products'),
+            'product_ids' => implode(',', $productIdsArray),
+            'get_cached' => $getCached,
+            'action' => 'get_products_last_update_start',
+        ]);
+
         $cachedProductsLastUpdate = [];
         $notCachedProductsLastUpdate = [];
         if ($getCached) {
-            foreach (is_array($productIds) ? $productIds : [$productIds] as $productId) {
+            foreach ($productIdsArray as $productId) {
                 $cachedProductsLastUpdateResponse = UserCacheService::getCachedProductLastUpdate($productId);
                 if ($cachedProductsLastUpdateResponse->isSuccess()) {
                     $cachedProductsLastUpdate += $cachedProductsLastUpdateResponse->data;
@@ -22,6 +31,11 @@ class ProductService
                 }
             }
             if (empty($notCachedProductsLastUpdate)) {
+                Logger::debug('Products last update retrieved from cache', [
+                    'log_file' => config('logging.log_files.products'),
+                    'product_ids' => implode(',', $productIdsArray),
+                    'action' => 'products_last_update_cache_hit',
+                ]);
                 return ServiceResponse::success($cachedProductsLastUpdate);
             } else {
                 $productIds = $notCachedProductsLastUpdate;
@@ -41,6 +55,12 @@ class ProductService
         $getData = $response->json();
         // Check if the response is successful
         if ($response->successful()) {
+            Logger::debug('Products last update retrieved from API', [
+                'log_file' => config('logging.log_files.products'),
+                'product_ids' => $productIdsFormatted,
+                'action' => 'products_last_update_api_success',
+            ]);
+
             if ($getCached && !empty($notCachedProductsLastUpdate)) {
                 $cachedProductsLastUpdate += $response->json();
                 return ServiceResponse::success($cachedProductsLastUpdate);
@@ -56,12 +76,23 @@ class ProductService
                 !$responseData ||
                 str_contains($responseData['message'], 'do not exist')
             ) {
+                Logger::debug('Products do not exist', [
+                    'log_file' => config('logging.log_files.products'),
+                    'product_ids' => $productIdsFormatted,
+                    'action' => 'products_not_found',
+                ]);
                 return HttpResponse::failed(
                     message: 'One or more products do not exist',
                     responseCode: 404,
                     data: $response->json(),
                 );
             }
+            Logger::error('Failed to retrieve product last update', data: [
+                'log_file' => config('logging.log_files.products'),
+                'product_ids' => $productIdsFormatted,
+                'response' => $responseData,
+                'action' => 'products_last_update_api_failed',
+            ]);
             return HttpResponse::failed(
                 message: 'Failed to retrieve product last update',
                 responseCode: $response->status(),
@@ -79,6 +110,11 @@ class ProductService
 
     public static function getProductDetails($agentToken, $productId)
     {
+        Logger::debug('Getting product details', [
+            'log_file' => config('logging.log_files.products'),
+            'product_id' => $productId,
+            'action' => 'get_product_details_start',
+        ]);
 
         $requestUrl = config('vars.tdms_api_url');
         $curl = curl_init();
@@ -93,17 +129,37 @@ class ProductService
         $response = json_decode($response, true);
 
         if (!isset($response['results'])) {
+            Logger::debug('Product details not found', [
+                'log_file' => config('logging.log_files.products'),
+                'product_id' => $productId,
+                'action' => 'product_details_not_found',
+            ]);
             return null;
         }
+
+        Logger::debug('Product details retrieved', [
+            'log_file' => config('logging.log_files.products'),
+            'product_id' => $productId,
+            'action' => 'product_details_retrieved',
+        ]);
         return $response;
     }
 
     public static function getProductDetailsV2($agentToken, int|array $productIds, $getCached = true)
     {
+        $productIdsArray = is_array($productIds) ? $productIds : [$productIds];
+
+        Logger::debug('Getting product details V2', [
+            'log_file' => config('logging.log_files.products'),
+            'product_ids' => implode(',', $productIdsArray),
+            'get_cached' => $getCached,
+            'action' => 'get_product_details_v2_start',
+        ]);
+
         $cachedProductsData = [];
         $notCachedProducts = [];
         if ($getCached) {
-            foreach (is_array($productIds) ? $productIds : [$productIds] as $productId) {
+            foreach ($productIdsArray as $productId) {
                 $cachedProductsResponse = UserCacheService::getCachedProductDetails($productId);
                 if ($cachedProductsResponse->isSuccess()) {
                     $cachedProductsData += $cachedProductsResponse->data;
@@ -112,6 +168,11 @@ class ProductService
                 }
             }
             if (empty($notCachedProducts)) {
+                Logger::debug('Product details retrieved from cache', [
+                    'log_file' => config('logging.log_files.products'),
+                    'product_ids' => implode(',', $productIdsArray),
+                    'action' => 'product_details_v2_cache_hit',
+                ]);
                 return ServiceResponse::success($cachedProductsData);
             } else {
                 $productIds = $notCachedProducts;
@@ -131,6 +192,12 @@ class ProductService
         // Check if the response is successful
         $data = $response->json()['results'];
         if ($response->successful() && count($data) > 0) {
+            Logger::debug('Product details V2 retrieved from API', [
+                'log_file' => config('logging.log_files.products'),
+                'product_ids' => $productIdsFormatted,
+                'action' => 'product_details_v2_api_success',
+            ]);
+
             if ($getCached && !empty($notCachedProductsLastUpdate)) {
                 $cachedProductsData += $response->json();
                 return ServiceResponse::success($cachedProductsData);
@@ -140,6 +207,11 @@ class ProductService
                 responseCode: $response->status(),
             );
         } else {
+            Logger::error('Failed to retrieve product details V2', data: [
+                'log_file' => config('logging.log_files.products'),
+                'product_ids' => $productIdsFormatted,
+                'action' => 'product_details_v2_api_failed',
+            ]);
             return HttpResponse::failed(
                 message: 'Failed to retrieve product details',
                 responseCode: 400,
@@ -150,11 +222,23 @@ class ProductService
 
     public static function getBookingDetails($agentToken, $productPricesDetailsId, $getCached = true)
     {
+        Logger::debug('Getting booking details', [
+            'log_file' => config('logging.log_files.products'),
+            'ppdid' => $productPricesDetailsId,
+            'get_cached' => $getCached,
+            'action' => 'get_booking_details_start',
+        ]);
+
         if ($getCached) {
             $cachedBookingDetailsResponse = UserCacheService::getCachedProductPriceBookingDetails(
                 ppdid: $productPricesDetailsId
             );
             if ($cachedBookingDetailsResponse->isSuccess()) {
+                Logger::debug('Booking details retrieved from cache', [
+                    'log_file' => config('logging.log_files.products'),
+                    'ppdid' => $productPricesDetailsId,
+                    'action' => 'booking_details_cache_hit',
+                ]);
                 return ServiceResponse::success($cachedBookingDetailsResponse->data);
             }
         }
@@ -167,11 +251,21 @@ class ProductService
 
         // Check if the response is successful
         if ($response->successful()) {
+            Logger::debug('Booking details retrieved from API', [
+                'log_file' => config('logging.log_files.products'),
+                'ppdid' => $productPricesDetailsId,
+                'action' => 'booking_details_api_success',
+            ]);
             return HttpResponse::success(
                 data: $response->json(),
                 responseCode: $response->status(),
             );
         } else {
+            Logger::error('Failed to retrieve booking details', data: [
+                'log_file' => config('logging.log_files.products'),
+                'ppdid' => $productPricesDetailsId,
+                'action' => 'booking_details_api_failed',
+            ]);
             return HttpResponse::failed(
                 message: 'Failed to retrieve booking details',
                 responseCode: $response->status(),
@@ -187,6 +281,15 @@ class ProductService
         $startDate,
         $days,
     ) {
+        Logger::debug('Getting product availabilities from API', [
+            'log_file' => config('logging.log_files.products'),
+            'ppdid' => $productPricesDetailsId,
+            'time_id' => $timeId,
+            'start_date' => $startDate,
+            'days' => $days,
+            'action' => 'get_availabilities_api_start',
+        ]);
+
         $requestUrl = config('vars.tdms_api_url')
                     . "/checkavailabilityrange/{$productPricesDetailsId}/{$timeId}/{$startDate}/$days";
         $response = Http::withToken($agentToken)
@@ -196,15 +299,25 @@ class ProductService
             ])
             ->get($requestUrl);
         if ($response->successful()) {
+            Logger::debug('Product availabilities retrieved', [
+                'log_file' => config('logging.log_files.products'),
+                'ppdid' => $productPricesDetailsId,
+                'time_id' => $timeId,
+                'start_date' => $startDate,
+                'action' => 'get_availabilities_api_success',
+            ]);
             return HttpResponse::success(
                 data: $response->json(),
                 responseCode: $response->status(),
             );
         } else {
-            Logger::debug(
-                message: 'Failed to retrieve availability',
-                data: $response->json(),
-            );
+            Logger::error('Failed to retrieve availability', data: [
+                'log_file' => config('logging.log_files.products'),
+                'ppdid' => $productPricesDetailsId,
+                'time_id' => $timeId,
+                'start_date' => $startDate,
+                'action' => 'get_availabilities_api_failed',
+            ]);
             return HttpResponse::failed(
                 message: 'Failed to retrieve availability',
                 responseCode: $response->status(),
@@ -220,6 +333,15 @@ class ProductService
         $startDate,
         $endDate,
     ) {
+        Logger::debug('Getting product availabilities by range', [
+            'log_file' => config('logging.log_files.products'),
+            'product_id' => $productId,
+            'fare_type_id' => $fareTypeId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'action' => 'get_availabilities_by_range_start',
+        ]);
+
         $requestUrl = config('vars.tdms_api_url')
                     . "/checkAvailabilityByProductAndRange/{$productId}/{$fareTypeId}/{$startDate}/{$endDate}";
 
@@ -231,15 +353,23 @@ class ProductService
             ->post($requestUrl);
 
         if ($response->successful()) {
+            Logger::debug('Product availabilities by range retrieved', [
+                'log_file' => config('logging.log_files.products'),
+                'product_id' => $productId,
+                'fare_type_id' => $fareTypeId,
+                'action' => 'get_availabilities_by_range_success',
+            ]);
             return HttpResponse::success(
                 data: $response->json(),
                 responseCode: $response->status(),
             );
         } else {
-            Logger::debug(
-                message: 'Failed to retrieve availability',
-                data: $response->json(),
-            );
+            Logger::error('Failed to retrieve availability by range', data: [
+                'log_file' => config('logging.log_files.products'),
+                'product_id' => $productId,
+                'fare_type_id' => $fareTypeId,
+                'action' => 'get_availabilities_by_range_failed',
+            ]);
             return HttpResponse::failed(
                 message: 'Failed to retrieve availability',
                 responseCode: $response->status(),
@@ -259,6 +389,16 @@ class ProductService
         $timeId,
         $getCached = true
     ) {
+        Logger::debug('Getting fare price availability', [
+            'log_file' => config('logging.log_files.products'),
+            'product_id' => $productId,
+            'ppdid' => $productPricesDetailsId,
+            'booking_date' => $bookingDate,
+            'time_id' => $timeId,
+            'get_cached' => $getCached,
+            'action' => 'get_fareprice_availability_start',
+        ]);
+
         if ($getCached) {
             $cachedAvailabilityResponse = UserCacheService::getCachedProductPriceAvailability(
                 ppdid: $productPricesDetailsId,
@@ -266,6 +406,12 @@ class ProductService
                 timeId: $timeId
             );
             if ($cachedAvailabilityResponse->isSuccess()) {
+                Logger::debug('Fare price availability retrieved from cache', [
+                    'log_file' => config('logging.log_files.products'),
+                    'ppdid' => $productPricesDetailsId,
+                    'booking_date' => $bookingDate,
+                    'action' => 'fareprice_availability_cache_hit',
+                ]);
                 return ServiceResponse::success($cachedAvailabilityResponse->data);
             }
         }
@@ -279,6 +425,12 @@ class ProductService
             );
 
             if ($productAvailabilitiesResponse->isError()) {
+                Logger::debug('Product availability not found (by range)', [
+                    'log_file' => config('logging.log_files.products'),
+                    'product_id' => $productId,
+                    'booking_date' => $bookingDate,
+                    'action' => 'fareprice_availability_not_found',
+                ]);
                 return ServiceResponse::notFound(
                     message: 'Product availability not found',
                 );
@@ -295,6 +447,12 @@ class ProductService
             );
 
             if ($productAvailabilitiesResponse->isError()) {
+                Logger::debug('Product availability not found (from API)', [
+                    'log_file' => config('logging.log_files.products'),
+                    'ppdid' => $productPricesDetailsId,
+                    'booking_date' => $bookingDate,
+                    'action' => 'fareprice_availability_not_found',
+                ]);
                 return ServiceResponse::notFound(
                     message: 'Product availability not found',
                 );
@@ -304,11 +462,23 @@ class ProductService
         }
 
         if (empty($productAvailabilities)) {
+            Logger::debug('Product availability empty', [
+                'log_file' => config('logging.log_files.products'),
+                'product_id' => $productId,
+                'ppdid' => $productPricesDetailsId,
+                'action' => 'fareprice_availability_empty',
+            ]);
             return ServiceResponse::notFound(
                 message: 'Product availability not found',
             );
         }
 
+        Logger::debug('Fare price availability retrieved', [
+            'log_file' => config('logging.log_files.products'),
+            'product_id' => $productId,
+            'ppdid' => $productPricesDetailsId,
+            'action' => 'fareprice_availability_success',
+        ]);
         return ServiceResponse::success(data: $productAvailabilities[0]);
     }
 }

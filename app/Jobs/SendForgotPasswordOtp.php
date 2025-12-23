@@ -64,24 +64,21 @@ class SendForgotPasswordOtp implements ShouldQueue
             ];
 
             if ($sendMailResponse->isSuccess()) {
-                Logger::info(
-                    message: 'Forgot password OTP email sent successfully.',
-                    data: $logData,
-                    write: true
+                Logger::debug(
+                    'Forgot password OTP email sent successfully.',
+                    $logData
                 );
             } else {
                 Logger::error(
                     message: 'Failed to send forgot password OTP email.',
-                    data: $logData,
-                    write: true
+                    data: $logData
                 );
             }
         } catch (Throwable $e) {
             Logger::exception(
                 message: 'Failed to send forgot password OTP email.',
-                data: $logData,
-                exception: $e,
-                write: true
+                data: $logData ?? [],
+                exception: $e
             );
             throw $e;
         }

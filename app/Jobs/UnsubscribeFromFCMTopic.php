@@ -34,9 +34,16 @@ class UnsubscribeFromFCMTopic implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info("Unsubscribing from FCM topic $this->topic");
-
         $service = new FcmService();
+
+        $logData = [
+            'log_file' => config('logging.log_files.fcm_subscription'),
+            'user_id' => $this->user->uuid,
+            'user_email' => $this->user->email,
+            'type' => 'unsubscribe',
+            'fcm_token' => $this->fcmToken,
+            'topic' => $this->topic,
+        ];
 
         try {
             $unsubscribeResponse = $service->unsubscribeTokensFromTopic(
@@ -44,36 +51,22 @@ class UnsubscribeFromFCMTopic implements ShouldQueue
                 topic: $this->topic
             );
 
-            $logData = [
-                'log_file' => config('logging.log_files.fcm_subscription'),
-                'user_id' => $this->user->uuid,
-                'user_email' => $this->user->email,
-                'type' => 'unsubscribe',
-                'fcm_token' => $this->fcmToken,
-                'topic' => $this->topic,
-                'response' => json_encode($unsubscribeResponse->data),
-            ];
+            $logData['response'] = json_encode($unsubscribeResponse->data);
 
             if ($unsubscribeResponse->success()) {
-                Logger::info(
-                    message: 'Unsubsribed to FCM topic',
-                    data: $logData,
-                    write: true
-                );
+                Logger::debug('Unsubscribed from FCM topic', $logData);
             } else {
                 Logger::error(
-                    message: 'Error subscribing to FCM topic',
-                    data: array_merge($logData, ['response' => $unsubscribeResponse->data]),
-                    write: true
+                    message: 'Error unsubscribing from FCM topic',
+                    data: $logData
                 );
             }
             return;
         } catch (Throwable $e) {
             Logger::exception(
-                message: 'Error subscribing to FCM topic',
-                data: $logData ?? [],
-                exception: $e,
-                write: true
+                message: 'Error unsubscribing from FCM topic',
+                data: $logData,
+                exception: $e
             );
             return;
         }

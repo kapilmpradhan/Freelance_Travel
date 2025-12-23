@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Logging\Logger;
 use App\Models\User;
 use App\Models\UserAgent;
 use App\Services\TdmsService;
@@ -20,6 +21,13 @@ class UserAgentController extends BaseController
     public function addUserAgent(Request $request, UserAgent $userAgent)
     {
         $userId = $request->user->uuid;
+
+        Logger::debug('Add user agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $userId,
+            'action' => 'add_user_agent_request',
+        ]);
+
         if ($userAgent->getActiveAgent($userId)) {
             return $this->sendError('Agent already integrated');
         }
@@ -44,6 +52,13 @@ class UserAgentController extends BaseController
     public function getUserAgent(Request $request, UserAgent $userAgent)
     {
         $userId = $request->user->uuid;
+
+        Logger::debug('Get user agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $userId,
+            'action' => 'get_user_agent_request',
+        ]);
+
         $agent = $userAgent->getActiveAgent($userId);
         if (!$agent) {
             return $this->sendError('Needs agent integration');
@@ -57,6 +72,13 @@ class UserAgentController extends BaseController
     public function updateUserAgent(Request $request, UserAgent $userAgent)
     {
         $userId = $request->user->uuid;
+
+        Logger::debug('Update user agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $userId,
+            'action' => 'update_user_agent_request',
+        ]);
+
         $agent = $userAgent->getActiveAgent($userId);
         if (!$agent) {
             return $this->sendError('No agent integrated');
@@ -167,6 +189,13 @@ class UserAgentController extends BaseController
     public function unlinkUserAgent(Request $request, UserAgent $userAgent)
     {
         $userId = $request->user->uuid;
+
+        Logger::debug('Unlink user agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $userId,
+            'action' => 'unlink_user_agent_request',
+        ]);
+
         $agent = $userAgent->getActiveAgent($userId);
         if (!$agent) {
             return $this->sendError('No agent integrated');
@@ -181,6 +210,12 @@ class UserAgentController extends BaseController
     {
         $referrerEmail = $request->get('referrer');
         $user = $request->user; /** @var User $user */
+
+        Logger::debug('Upgrade to agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $user->uuid,
+            'action' => 'upgrade_to_agent_request',
+        ]);
 
         if (Feature::for($user)->active('tester')) {
             return $this->sendError('This test account cannot be upgraded to an agent.');
@@ -242,6 +277,12 @@ class UserAgentController extends BaseController
     public function upgradeToCommissionAgent(Request $request): JsonResponse
     {
         $user = $request->user; /** @var User $user */
+
+        Logger::debug('Upgrade to commission agent request', [
+            'log_file' => config('logging.log_files.agent'),
+            'user_id' => $user->uuid,
+            'action' => 'upgrade_to_commission_agent_request',
+        ]);
 
         if (Feature::for($user)->active('tester')) {
             return $this->sendError('This test account cannot be upgraded to an agent.');

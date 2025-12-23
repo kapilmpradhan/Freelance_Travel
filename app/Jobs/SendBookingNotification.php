@@ -149,7 +149,11 @@ class SendBookingNotification implements ShouldQueue
 
                     $messageVersions[] = $messageVersion;
                 } catch (Exception $e) {
-                    Logger::error('Failed to send booking notification of ' . $notification->notify_to_email, $e);
+                    Logger::error('Failed to send booking notification', $e, data: [
+                        'log_file' => config('logging.log_files.errors'),
+                        'notify_to_email' => $notification->notify_to_email,
+                        'action' => 'booking_notification_failed',
+                    ]);
                 }
             }
 
@@ -169,7 +173,12 @@ class SendBookingNotification implements ShouldQueue
                 $notificationIds = $notificationsInBatch->pluck('id');
                 $dailyBookingNotification->whereIn('id', $notificationIds)->update(['is_notified' => true]);
 
-                Logger::info('Notification mail sent for ' . $batchNumber . ' batch');
+                Logger::debug('Booking notification batch sent', [
+                    'log_file' => config('logging.log_files.notifications'),
+                    'batch_number' => $batchNumber,
+                    'notifications_count' => $notificationsInBatch->count(),
+                    'action' => 'booking_notification_batch_sent',
+                ]);
             } catch (ServiceException $e) {
                 throw $e;
             }

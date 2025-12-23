@@ -30,6 +30,13 @@ class SendShareMailJob
      */
     public function handle(IEmailService $emailService)
     {
+        Logger::debug('Processing share mail job', [
+            'log_file' => config('logging.log_files.email'),
+            'agent_email' => $this->data['agent']['emailAddress'] ?? null,
+            'redeemer_email' => $this->data['redeemers'][0]['emailAddress'] ?? null,
+            'action' => 'share_mail_job_start',
+        ]);
+
         try {
             $agentData = [
                 'sender' => [
@@ -62,9 +69,17 @@ class SendShareMailJob
             $emailService->sendMail($customerData);
 
 
-            Logger::info('Payment email sent to agent and redeemer.');
+            Logger::debug('Payment email sent to agent and redeemer', [
+                'log_file' => config('logging.log_files.email'),
+                'agent_email' => $this->data['agent']['emailAddress'] ?? null,
+                'redeemer_email' => $this->data['redeemers'][0]['emailAddress'] ?? null,
+                'action' => 'share_mail_job_sent',
+            ]);
         } catch (Exception $e) {
-            Logger::error('Failed to send email.', $e);
+            Logger::error('Failed to send share email', $e, data: [
+                'log_file' => config('logging.log_files.email'),
+                'action' => 'share_mail_job_exception',
+            ]);
             throw $e;
         }
     }

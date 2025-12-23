@@ -37,11 +37,17 @@ class HomeFeedProductByCategories implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info('Starting HomeFeedProductByCategories job');
+        Logger::debug('Starting HomeFeedProductByCategories job', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_feed_products_job_start',
+        ]);
 
         $agentResponse = UserAgentService::getDefaultAgentToken();
         if ($agentResponse->isError()) {
-            Logger::error('Unable to retrieve default agent');
+            Logger::error('Unable to retrieve default agent', data: [
+                'log_file' => config('logging.log_files.products'),
+                'action' => 'home_feed_products_no_agent',
+            ]);
             return;
         }
         $agentToken = $agentResponse->data['access_token'];
@@ -50,7 +56,11 @@ class HomeFeedProductByCategories implements ShouldQueue
 
         $tempCategories = ProductCategory::all();
         foreach ($categoryTypes as $type) {
-            Logger::info('Caching for ' . $type);
+            Logger::debug('Caching products for category type', [
+                'log_file' => config('logging.log_files.products'),
+                'type' => $type,
+                'action' => 'home_feed_products_caching_type',
+            ]);
             try {
                 $categoriesResponse = TdmsService::getCategoriesByType(type: $type, agentToken: $agentToken);
                 if ($categoriesResponse->isError()) {
@@ -106,15 +116,30 @@ class HomeFeedProductByCategories implements ShouldQueue
                     }
                 }
             } catch (ServiceException $e) {
-                Logger::error('Failed to cache some products of ' . $type, $e);
+                Logger::error('Failed to cache some products', $e, data: [
+                    'log_file' => config('logging.log_files.products'),
+                    'type' => $type,
+                    'action' => 'home_feed_products_cache_error',
+                ]);
                 continue;
             } catch (Exception $e) {
-                Logger::error('Failed to cache some products of ' . $type, $e);
+                Logger::error('Failed to cache some products', $e, data: [
+                    'log_file' => config('logging.log_files.products'),
+                    'type' => $type,
+                    'action' => 'home_feed_products_cache_error',
+                ]);
                 continue;
             }
-            Logger::info('Caching complete for ' . $type);
+            Logger::debug('Caching complete for category type', [
+                'log_file' => config('logging.log_files.products'),
+                'type' => $type,
+                'action' => 'home_feed_products_type_complete',
+            ]);
         }
-        Logger::info('HomeFeedProductByCategories job complete');
+        Logger::debug('HomeFeedProductByCategories job complete', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_feed_products_job_complete',
+        ]);
         return;
     }
 }

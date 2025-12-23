@@ -22,8 +22,23 @@ class OtpService
             $availableOtp->otp == $otp
         ) {
             $availableOtp->delete();
+
+            Logger::debug('OTP verified for password update', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_password_update_verified',
+            ]);
+
             return ['success' => true];
         }
+
+        Logger::debug('OTP verification failed for password update', [
+            'log_file' => config('logging.log_files.user_otp'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'otp_password_update_failed',
+        ]);
 
         return ['success' => false, 'error' => 'Unable to update password'];
     }
@@ -40,6 +55,14 @@ class OtpService
             // New otp can be generated after 60 seconds
             $timeDifferenceInSeconds = Carbon::now()->diffInSeconds($otp->created_timestamp);
             if ($timeDifferenceInSeconds < 60) {
+                Logger::debug('OTP generation throttled', [
+                    'log_file' => config('logging.log_files.user_otp'),
+                    'user_id' => $user->uuid,
+                    'user_email' => $user->email,
+                    'action' => 'otp_generation_throttled',
+                    'wait_seconds' => 60 - $timeDifferenceInSeconds,
+                ]);
+
                 return [
                     'success' => false,
                     'error' => 'New otp can be generated after ' . 60 - $timeDifferenceInSeconds . 'seconds.'];
@@ -51,31 +74,70 @@ class OtpService
             $otp->is_verified = false;
             $otp->save();
 
+            Logger::debug('OTP regenerated for user', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_regenerated',
+            ]);
+
             return ['success' => true, 'otpDetails' => $otp];
         }
 
         try {
             $newOtp = Otp::create(['user_id' => $user->uuid,'otp' => $otpValue]);
+
+            Logger::debug('OTP generated for user', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_generated',
+            ]);
+
             return ['success' => true, 'otpDetails' => $newOtp];
         } catch (\Exception $e) {
-            Logger::error("Generate OTP exception", $e);
+            Logger::error(
+                "Generate OTP exception",
+                $e,
+                null,
+                [
+                    'log_file' => config('logging.log_files.errors'),
+                    'user_id' => $user->uuid,
+                    'user_email' => $user->email,
+                    'action' => 'otp_generation_failed',
+                ]
+            );
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
     public static function verifyOtp(User $user, string $otp)
     {
-        $otp = Otp::where('user_id', $user->uuid)
+        $otpRecord = Otp::where('user_id', $user->uuid)
                             ->where('otp', $otp)
                             ->first();
-        if (!$otp or $otp->is_verified) {
+        if (!$otpRecord or $otpRecord->is_verified) {
+            Logger::debug('OTP verification failed - invalid OTP', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_verify_invalid',
+            ]);
+
             return ['success' => false, 'error' => 'Invalid OTP'];
-        } elseif (Carbon::now()->diffInSeconds($otp->expire_timestamp) < 0) {
+        } elseif (Carbon::now()->diffInSeconds($otpRecord->expire_timestamp) < 0) {
+            Logger::debug('OTP verification failed - expired OTP', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_verify_expired',
+            ]);
+
             return ['success' => false, 'error' => 'Expired OTP'];
         } else {
-            DB::transaction(function () use ($otp, $user) {
-                $otp->is_verified = true;
-                $otp->save();
+            DB::transaction(function () use ($otpRecord, $user) {
+                $otpRecord->is_verified = true;
+                $otpRecord->save();
 
                 $user->is_email_verified = true;
                 if ($user->profile_status === 'require_real_email') {
@@ -83,6 +145,14 @@ class OtpService
                 }
                 $user->save();
             });
+
+            Logger::debug('OTP verified successfully', [
+                'log_file' => config('logging.log_files.user_otp'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'otp_verified',
+            ]);
+
             return ['success' => true];
         }
     }

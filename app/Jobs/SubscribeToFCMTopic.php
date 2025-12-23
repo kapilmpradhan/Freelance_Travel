@@ -34,9 +34,16 @@ class SubscribeToFCMTopic implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info("Subscribing to FCM topic '$this->topic'");
-
         $service = new FcmService();
+
+        $logData = [
+            'log_file' => config('logging.log_files.fcm_subscription'),
+            'user_id' => $this->user->uuid,
+            'user_email' => $this->user->email,
+            'type' => 'subscribe',
+            'fcm_token' => $this->fcmToken,
+            'topic' => $this->topic,
+        ];
 
         try {
             $subscribeResponse = $service->subscribeTokensToTopic(
@@ -44,36 +51,22 @@ class SubscribeToFCMTopic implements ShouldQueue
                 topic: $this->topic
             );
 
-            $logData = [
-                'log_file' => config('logging.log_files.fcm_subscription'),
-                'user_id' => $this->user->uuid,
-                'user_email' => $this->user->email,
-                'type' => 'subscribe',
-                'fcm_token' => $this->fcmToken,
-                'topic' => $this->topic,
-                'response' => json_encode($subscribeResponse->data),
-            ];
+            $logData['response'] = json_encode($subscribeResponse->data);
 
             if ($subscribeResponse->success()) {
-                Logger::info(
-                    message: 'Subscribed to FCM topic',
-                    data: $logData,
-                    write: true
-                );
+                Logger::debug('Subscribed to FCM topic', $logData);
             } else {
                 Logger::error(
                     message: 'Error subscribing to FCM topic',
-                    data: array_merge($logData, ['response' => $subscribeResponse->data]),
-                    write: true
+                    data: $logData
                 );
             }
             return;
         } catch (Throwable $e) {
             Logger::exception(
                 message: 'Error subscribing to FCM topic',
-                data: $logData ?? [],
-                exception: $e,
-                write: true
+                data: $logData,
+                exception: $e
             );
             return;
         }

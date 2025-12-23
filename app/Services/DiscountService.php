@@ -16,6 +16,12 @@ class DiscountService
 {
     public static function getActiveDiscountData($user = null)
     {
+        Logger::debug('Getting active discount data', [
+            'log_file' => config('logging.log_files.discount'),
+            'user_id' => $user?->uuid,
+            'action' => 'get_active_discount_data_start',
+        ]);
+
         if ($user && Feature::for($user)->active('tester')) {
             $activeDiscount = Discount::where('is_test', true)->first();
         } else {
@@ -29,12 +35,22 @@ class DiscountService
                 'description' => null,
                 'discount' => 0
             ];
+            Logger::debug('No active discount found', [
+                'log_file' => config('logging.log_files.discount'),
+                'action' => 'no_active_discount',
+            ]);
         } else {
             $data = [
                 'title' => $activeDiscount->title,
                 'description' => $activeDiscount->description,
                 'discount' => $activeDiscount->percentage
             ];
+            Logger::debug('Active discount data retrieved', [
+                'log_file' => config('logging.log_files.discount'),
+                'discount_id' => $activeDiscount->id,
+                'percentage' => $activeDiscount->percentage,
+                'action' => 'active_discount_retrieved',
+            ]);
         }
 
         return ServiceResponse::success(
@@ -48,8 +64,20 @@ class DiscountService
         $agentType,
         ?int $pointsApplied = null
     ): ServiceResponse {
+        Logger::debug('Getting order commission', [
+            'log_file' => config('logging.log_files.discount'),
+            'user_id' => $userId,
+            'item_type' => $itemType->isCart ? 'cart' : 'quote',
+            'action' => 'get_order_commission_start',
+        ]);
+
         $items = CartItem::userItems($userId, $itemType);
         if (count($items) == 0) {
+            Logger::debug('No items available for commission calculation', [
+                'log_file' => config('logging.log_files.discount'),
+                'user_id' => $userId,
+                'action' => 'no_items_for_commission',
+            ]);
             return ServiceResponse::notFound('No items available');
         }
 
@@ -121,6 +149,13 @@ class DiscountService
                 $agent->points_multiplier
             );
             $orderCommission->save();
+
+            Logger::debug('Order commission calculated', [
+                'log_file' => config('logging.log_files.discount'),
+                'user_id' => $userId,
+                'commission_percentage' => $commissionPercentage,
+                'action' => 'order_commission_calculated',
+            ]);
         }
         return ServiceResponse::success($orderCommission);
     }
@@ -222,14 +257,31 @@ class DiscountService
 
     public static function addDiscount(array $data)
     {
+        Logger::debug('Adding discount', [
+            'log_file' => config('logging.log_files.discount'),
+            'title' => $data['title'] ?? null,
+            'percentage' => $data['percentage'] ?? null,
+            'action' => 'add_discount_start',
+        ]);
+
         try {
             $data['platform'] = app('platform');
             $discount = Discount::create($data);
+
+            Logger::debug('Discount added', [
+                'log_file' => config('logging.log_files.discount'),
+                'discount_id' => $discount->id,
+                'action' => 'add_discount_success',
+            ]);
         } catch (Exception $e) {
             Logger::error(
                 message: 'Failed to create discount',
                 exception: $e,
-                extra: ['data' => $data]
+                extra: ['data' => $data],
+                data: [
+                    'log_file' => config('logging.log_files.discount'),
+                    'action' => 'add_discount_exception',
+                ]
             );
             throw new ServiceException(
                 message: 'Failed to create discount',
@@ -257,10 +309,21 @@ class DiscountService
 
     public static function updateDiscount($discountId, array $data)
     {
+        Logger::debug('Updating discount', [
+            'log_file' => config('logging.log_files.discount'),
+            'discount_id' => $discountId,
+            'action' => 'update_discount_start',
+        ]);
+
         try {
             $discount = Discount::getDiscountById($discountId);
 
             if (!$discount) {
+                Logger::debug('Discount not found for update', [
+                    'log_file' => config('logging.log_files.discount'),
+                    'discount_id' => $discountId,
+                    'action' => 'update_discount_not_found',
+                ]);
                 return ServiceResponse::notFound(message: 'Discount not found');
             }
 
@@ -271,6 +334,12 @@ class DiscountService
                 && isset($data['is_active'])
                 && $data['is_active']
             ) {
+                Logger::debug('Another discount already active', [
+                    'log_file' => config('logging.log_files.discount'),
+                    'discount_id' => $discountId,
+                    'active_discount_id' => $activeDiscount->id,
+                    'action' => 'update_discount_conflict',
+                ]);
                 return ServiceResponse::badRequest(
                     message: 'Another discount is already active',
                     data: ['active_discount' => $activeDiscount]
@@ -278,11 +347,22 @@ class DiscountService
             }
 
             $discount->update($data);
+
+            Logger::debug('Discount updated', [
+                'log_file' => config('logging.log_files.discount'),
+                'discount_id' => $discountId,
+                'action' => 'update_discount_success',
+            ]);
         } catch (Exception $e) {
             Logger::error(
                 message: 'Failed to update discount',
                 exception: $e,
-                extra: ['data' => $data]
+                extra: ['data' => $data],
+                data: [
+                    'log_file' => config('logging.log_files.discount'),
+                    'discount_id' => $discountId,
+                    'action' => 'update_discount_exception',
+                ]
             );
             throw new ServiceException(
                 message: 'Failed to update discount',
@@ -297,9 +377,20 @@ class DiscountService
 
     public static function deleteDiscount($discountId)
     {
+        Logger::debug('Deleting discount', [
+            'log_file' => config('logging.log_files.discount'),
+            'discount_id' => $discountId,
+            'action' => 'delete_discount_start',
+        ]);
+
         $discount = Discount::getDiscountById($discountId);
 
         if (!$discount) {
+            Logger::debug('Discount not found for deletion', [
+                'log_file' => config('logging.log_files.discount'),
+                'discount_id' => $discountId,
+                'action' => 'delete_discount_not_found',
+            ]);
             return ServiceResponse::notFound(
                 message: 'Discount not found'
             );
@@ -308,6 +399,11 @@ class DiscountService
         $discount->is_deleted = true;
         $discount->save();
 
+        Logger::debug('Discount deleted', [
+            'log_file' => config('logging.log_files.discount'),
+            'discount_id' => $discountId,
+            'action' => 'delete_discount_success',
+        ]);
         return ServiceResponse::success(
             message: 'Discount deleted successfully'
         );

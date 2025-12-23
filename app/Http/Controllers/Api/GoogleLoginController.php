@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Services\GoogleService;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Api\BaseController;
-use App\Jobs\UserProfileAgentJob;
+use App\Logging\Logger;
 
 class GoogleLoginController extends BaseController
 {
@@ -118,6 +118,17 @@ class GoogleLoginController extends BaseController
                 $request->header('User-Agent')
             )
         ];
+
+        $action = $existing_user ? 'login_google' : 'signup_google';
+        Logger::debug('User ' . ($existing_user ? 'login' : 'signup') . ' via Google', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => $action,
+            'platform' => app('platform'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
 
         return $this->sendResponse('JWT tokens', $data);
     }

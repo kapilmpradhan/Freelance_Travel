@@ -26,6 +26,11 @@ class ProductCategoryService
 
     public static function getCategories()
     {
+        Logger::debug('Fetching product categories', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'get_categories',
+        ]);
+
         // Fetch all categories that have a non-null category value
         $categories = ProductCategory::whereNotNull('category')
             ->get();
@@ -50,6 +55,11 @@ class ProductCategoryService
 
     public static function getProductByCategoriesWithLabel()
     {
+        Logger::debug('Fetching products by categories with label', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'get_products_by_categories_with_label',
+        ]);
+
         try {
             $keys = Redis::keys('home_feed_product_label:*');
             $result = [];
@@ -88,6 +98,11 @@ class ProductCategoryService
 
     public static function getProductSchemaByCategoriesWithLabel()
     {
+        Logger::debug('Fetching product schema by categories with label', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'get_product_schema_by_categories_with_label',
+        ]);
+
         $resultOrder = [
             'Experiences',
             'Destinations',
@@ -185,6 +200,14 @@ class ProductCategoryService
 
     public static function getProductByCategoriesWithLabelV2(HomeFeedProductFilter $productFilter, $isJobRun = false)
     {
+        Logger::debug('Fetching products by categories with label V2', [
+            'log_file' => config('logging.log_files.products'),
+            'country_id' => $productFilter->countryId,
+            'filter_by' => $productFilter->filterBy,
+            'is_job_run' => $isJobRun,
+            'action' => 'get_products_by_categories_with_label_v2',
+        ]);
+
         $agentResponse = UserAgentService::getUserAgentByBranch($productFilter->agentBranchCode);
         if ($agentResponse->isError()) {
             return $agentResponse;

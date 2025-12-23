@@ -36,11 +36,20 @@ class TdmsService
             Logger::error("Failed to get agent token", extra: [
                 'userId' => $userId,
                 'username' => $username,
-                'password' => $password,
                 'responseStatusCode' => $response->status(),
+            ], data: [
+                'log_file' => config('logging.log_files.tdms'),
+                'action' => 'agent_token_failed',
+                'user_id' => $userId,
             ]);
             return ServiceResponse::badRequest('Failed to get Agent details');
         }
+
+        Logger::debug('Agent token retrieved', [
+            'log_file' => config('logging.log_files.tdms'),
+            'user_id' => $userId,
+            'action' => 'agent_token_success',
+        ]);
 
         return ServiceResponse::success($response->json());
     }
@@ -152,25 +161,31 @@ class TdmsService
             ->withBody(json_encode($data))
             ->post($finalUrl);
 
-        $data = $response->json();
+        $responseData = $response->json();
         if ($response->successful()) {
+            Logger::debug('Order placed in TDMS', [
+                'log_file' => config('logging.log_files.tdms'),
+                'user_id' => $userId,
+                'booking_reference' => $data['bookingReference'] ?? null,
+                'action' => 'tdms_order_placed',
+            ]);
+
             return ServiceResponse::success(
                 message: "Order placed",
-                data: $data
+                data: $responseData
             );
         }
         Logger::error("Failed to create order", extra: [
             'userId' => $userId,
-            'requestData' => $data,
-            'responseData' => [
-                "statusCode" => $response->status(),
-                "headers" => $response->headers(),
-                "body" => $response->body(),
-            ]
+            'responseStatusCode' => $response->status(),
+        ], data: [
+            'log_file' => config('logging.log_files.tdms'),
+            'user_id' => $userId,
+            'action' => 'tdms_order_failed',
         ]);
         return ServiceResponse::badRequest(
             message: "Failed to create order",
-            data: $data
+            data: $responseData
         );
     }
 
@@ -191,11 +206,27 @@ class TdmsService
         // Check if the request was successful
         $data = $response->json();
         if ($response->successful()) {
+            Logger::debug('Payment gateway URI retrieved', [
+                'log_file' => config('logging.log_files.payment'),
+                'booking_reference' => $bookingReference,
+                'payment_amount' => $paymentAmount,
+                'action' => 'payment_gateway_uri_success',
+            ]);
+
             return [
                 "success" => true,
                 "data" => $data
             ];
         }
+
+        Logger::debug('Payment gateway URI failed', [
+            'log_file' => config('logging.log_files.payment'),
+            'booking_reference' => $bookingReference,
+            'payment_amount' => $paymentAmount,
+            'action' => 'payment_gateway_uri_failed',
+            'error' => $data['statusText'] ?? 'unknown',
+        ]);
+
         return [
             "success" => false,
             "error" => $data['statusText'],
@@ -280,8 +311,19 @@ class TdmsService
                 extra: [
                     "bookingReference" => $bookingReference,
                     "responseData" => $data
+                ],
+                data: [
+                    'log_file' => config('logging.log_files.tdms'),
+                    'booking_reference' => $bookingReference,
+                    'action' => 'quote_to_order_failed',
                 ]
             );
+        } else {
+            Logger::debug('Quote converted to order', [
+                'log_file' => config('logging.log_files.tdms'),
+                'booking_reference' => $bookingReference,
+                'action' => 'quote_to_order_success',
+            ]);
         }
 
         return ServiceResponse::success();

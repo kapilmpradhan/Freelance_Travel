@@ -78,6 +78,13 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         $userId = $this->data->user_id;
         $user = User::where('uuid', $userId)->first();
 
+        Logger::debug('Processing points earned notification', [
+            'log_file' => config('logging.log_files.notifications'),
+            'user_id' => $userId,
+            'booking_reference' => $bookingReference,
+            'action' => 'points_earned_notification_start',
+        ]);
+
         $agentToken = $this->agentType->agent->access_token;
 
         $getCommissionReportResponse = TdmsService::getCommissionReport(
@@ -88,6 +95,11 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         );
 
         if (!$getCommissionReportResponse) {
+            Logger::debug('No commission report response', [
+                'log_file' => config('logging.log_files.notifications'),
+                'booking_reference' => $bookingReference,
+                'action' => 'points_earned_no_response',
+            ]);
             return;
         }
 
@@ -101,7 +113,11 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         }
 
         if (empty($requiredReport)) {
-            Logger::error("No commission report found for booking reference: {$bookingReference}");
+            Logger::error("No commission report found for booking reference: {$bookingReference}", data: [
+                'log_file' => config('logging.log_files.notifications'),
+                'booking_reference' => $bookingReference,
+                'action' => 'points_earned_no_report',
+            ]);
             return;
         }
 
@@ -147,5 +163,13 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
 
         // Send email notification
         $emailService->sendMail($customerData);
+
+        Logger::debug('Points earned notification sent', [
+            'log_file' => config('logging.log_files.notifications'),
+            'user_id' => $userId,
+            'booking_reference' => $bookingReference,
+            'points' => $balance,
+            'action' => 'points_earned_notification_sent',
+        ]);
     }
 }

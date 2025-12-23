@@ -25,11 +25,20 @@ class CountryLocationsJob implements ShouldQueue
      */
     public function handle()
     {
+        Logger::debug('Country locations job started', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'country_locations_job_start',
+        ]);
+
         try {
             $agentTokenResponse = UserAgentService::getDefaultAgentToken();
             $countries = TdmsService::getCountries($agentTokenResponse->data['access_token'])->data;
             foreach ($countries as &$country) {
-                Logger::info('Fetching states for country: ' . $country['text']);
+                Logger::debug('Fetching states for country', [
+                    'log_file' => config('logging.log_files.products'),
+                    'country' => $country['text'],
+                    'action' => 'fetch_country_states',
+                ]);
                 $states = TdmsService::getCategoriesByTypeAndSubtype(
                     type: 'states',
                     subType: 'countries',
@@ -98,9 +107,16 @@ class CountryLocationsJob implements ShouldQueue
             }
 
             Redis::set('all_countries_states_regions_locations', json_encode($countries));
-            Logger::info('Country locations caching job completed successfully');
+            Logger::debug('Country locations caching job completed', [
+                'log_file' => config('logging.log_files.products'),
+                'countries_count' => count($countries),
+                'action' => 'country_locations_job_complete',
+            ]);
         } catch (Exception $e) {
-            Logger::error('Error in CountryLocationsJob: ' . $e);
+            Logger::error('Error in CountryLocationsJob', $e, data: [
+                'log_file' => config('logging.log_files.products'),
+                'action' => 'country_locations_job_error',
+            ]);
             throw $e;
         }
     }

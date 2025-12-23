@@ -39,7 +39,12 @@ class ShareQuoteJob implements ShouldQueue
      */
     public function handle(IEmailService $emailService, FcmService $fcmService): void
     {
-        Logger::info("ShareQuoteJob started");
+        Logger::debug('Share quote job started', [
+            'log_file' => config('logging.log_files.quote'),
+            'quote_id' => $this->shareQuote->quote_id,
+            'shared_to_email' => $this->shareQuote->shared_to_email,
+            'action' => 'share_quote_started',
+        ]);
 
         $quote = Quote::where('id', $this->shareQuote->quote_id)->first();
         $inviter = User::where('uuid', $this->shareQuote->shared_by_user_id)->first();
@@ -112,7 +117,13 @@ class ShareQuoteJob implements ShouldQueue
             }
         }
 
-        Logger::info("ShareQuoteJob complete");
+        Logger::debug('Share quote job completed', [
+            'log_file' => config('logging.log_files.quote'),
+            'quote_id' => $this->shareQuote->quote_id,
+            'shared_to_email' => $this->shareQuote->shared_to_email,
+            'invitee_registered' => $inviteeRegistered,
+            'action' => 'share_quote_completed',
+        ]);
         return;
     }
 }

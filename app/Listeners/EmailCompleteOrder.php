@@ -24,8 +24,11 @@ class EmailCompleteOrder
      */
     public function handle(CompleteOrderEvent $event): void
     {
-        $className = get_class($this);
-        Logger::debug("[{$className}] Received order created event");
+        Logger::debug('Order complete event received', [
+            'log_file' => config('logging.log_files.order'),
+            'user_order_id' => $event->userOrder->id,
+            'action' => 'order_complete_event_received',
+        ]);
 
         $userOrderId = $event->userOrder->id;
         $userOrder = UserOrder::where('id', $userOrderId)->first()->request_data;
@@ -34,6 +37,11 @@ class EmailCompleteOrder
 
         SendOrderCompleteEmail::dispatch($userOrder, app('platform'), $agentType);
 
-        Logger::debug("[{$className}] Dispatched job to send complete order mail");
+        Logger::debug('Order complete email job dispatched', [
+            'log_file' => config('logging.log_files.order'),
+            'user_id' => $userId,
+            'user_order_id' => $userOrderId,
+            'action' => 'order_complete_email_dispatched',
+        ]);
     }
 }

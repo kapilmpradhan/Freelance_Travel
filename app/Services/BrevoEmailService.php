@@ -11,6 +11,13 @@ class BrevoEmailService implements IEmailService
 {
     public function sendMail(array $data): string
     {
+        Logger::debug('Sending email via Brevo', [
+            'log_file' => config('logging.log_files.email'),
+            'to' => $data['to'] ?? null,
+            'subject' => $data['subject'] ?? null,
+            'action' => 'brevo_send_mail_start',
+        ]);
+
         try {
             // Send request to Brevo API
             $response = Http::withHeaders([
@@ -21,19 +28,43 @@ class BrevoEmailService implements IEmailService
             ->post('https://api.brevo.com/v3/smtp/email', $data);
 
             if ($response->getStatusCode() == 201) {
+                Logger::debug('Email sent successfully via Brevo', [
+                    'log_file' => config('logging.log_files.email'),
+                    'to' => $data['to'] ?? null,
+                    'action' => 'brevo_send_mail_success',
+                ]);
                 return 'Email sent successfully';
             } else {
-                Logger::error('Failed to send email.', extra: ['data' => $data, 'response' => $response->json()]);
+                Logger::error(
+                    message: 'Failed to send email via Brevo',
+                    extra: ['data' => $data, 'response' => $response->json()],
+                    data: [
+                        'log_file' => config('logging.log_files.email'),
+                        'to' => $data['to'] ?? null,
+                        'action' => 'brevo_send_mail_failed',
+                    ]
+                );
                 return 'Failed to send email. Error: ' . $response->json();
             }
         } catch (Exception $e) {
-            Logger::error('Failed to send email. Error: ', $e);
+            Logger::error('Exception sending email via Brevo', $e, data: [
+                'log_file' => config('logging.log_files.email'),
+                'to' => $data['to'] ?? null,
+                'action' => 'brevo_send_mail_exception',
+            ]);
             throw new ServiceException('Failed to send email.');
         }
     }
 
     public function sendMailV2(array $data): ServiceResponse
     {
+        Logger::debug('Sending email V2 via Brevo', [
+            'log_file' => config('logging.log_files.email'),
+            'to' => $data['to'] ?? null,
+            'subject' => $data['subject'] ?? null,
+            'action' => 'brevo_send_mail_v2_start',
+        ]);
+
         try {
             // Send request to Brevo API
             $response = Http::withHeaders([
@@ -44,14 +75,30 @@ class BrevoEmailService implements IEmailService
             ->post('https://api.brevo.com/v3/smtp/email', $data);
 
             if ($response->getStatusCode() == 201) {
-                Logger::info('Send Email', data: ['data' => $data, 'response' => $response->json()]);
+                Logger::debug('Email V2 sent successfully via Brevo', [
+                    'log_file' => config('logging.log_files.email'),
+                    'to' => $data['to'] ?? null,
+                    'action' => 'brevo_send_mail_v2_success',
+                ]);
                 return ServiceResponse::success(message:'Send Email', data: $response->json());
             } else {
-                Logger::error('Send Email', extra: ['data' => $data, 'response' => $response->json()]);
+                Logger::error(
+                    message: 'Failed to send email V2 via Brevo',
+                    extra: ['data' => $data, 'response' => $response->json()],
+                    data: [
+                        'log_file' => config('logging.log_files.email'),
+                        'to' => $data['to'] ?? null,
+                        'action' => 'brevo_send_mail_v2_failed',
+                    ]
+                );
                 return ServiceResponse::badRequest('');
             }
         } catch (Exception $e) {
-            Logger::error('Failed to send email. Error: ', $e);
+            Logger::error('Exception sending email V2 via Brevo', $e, data: [
+                'log_file' => config('logging.log_files.email'),
+                'to' => $data['to'] ?? null,
+                'action' => 'brevo_send_mail_v2_exception',
+            ]);
             throw new ServiceException('Failed to send email.', $e);
         }
     }

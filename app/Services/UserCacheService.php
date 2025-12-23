@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Logging\Logger;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redis;
@@ -38,10 +39,22 @@ class UserCacheService
         $user = app('agentType')->user;
         $session = App::bound('sessionId');
         if (!$user && !$session) {
+            Logger::debug('Unauthorized user for cache write', [
+                'log_file' => config('logging.log_files.cache'),
+                'type' => $type,
+                'action' => 'cache_write_unauthorized',
+            ]);
             throw new ServiceException('Unauthorized user');
         }
 
         $key = $user ? $user->uuid : app('sessionId');
+
+        Logger::debug('Adding user cached data', [
+            'log_file' => config('logging.log_files.cache'),
+            'type' => $type,
+            'expire_in_seconds' => $expireInSeconds,
+            'action' => 'cache_write',
+        ]);
 
         // Atomic save to avoid overwriting
         Redis::watch($key);
@@ -58,6 +71,13 @@ class UserCacheService
             $user = $agentType ? app('agentType')->user : null;
 
             $key = $user ? $user->uuid : app('sessionId');
+
+            Logger::debug('Removing user cached data', [
+                'log_file' => config('logging.log_files.cache'),
+                'type' => $type,
+                'action' => 'cache_delete',
+            ]);
+
             Redis::del("{$key}:{$type}");
         }
     }

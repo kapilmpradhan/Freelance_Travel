@@ -12,6 +12,12 @@ class FavouritesService
 {
     public static function getUserFavouriteProducts($userId)
     {
+        Logger::debug('Fetching user favourite products', [
+            'log_file' => config('logging.log_files.favourites'),
+            'user_id' => $userId,
+            'action' => 'get_user_favourite_products',
+        ]);
+
         $favourites = Favourites::where('user_id', $userId)
                         ->orderBy('created_at', 'desc')
                         ->get();
@@ -35,6 +41,13 @@ class FavouritesService
 
     public static function addFavourite($userId, $tdmsProductId)
     {
+        Logger::debug('Adding favourite product', [
+            'log_file' => config('logging.log_files.favourites'),
+            'user_id' => $userId,
+            'tdms_product_id' => $tdmsProductId,
+            'action' => 'add_favourite',
+        ]);
+
         $product = Product::where('tdms_product_id', $tdmsProductId)->first();
         if (!$product) {
             $agentToken = UserAgentService::getDefaultAgentToken()->data['access_token'] ?? null;
@@ -71,6 +84,13 @@ class FavouritesService
 
     public static function removeFavourite($userId, $tdmsProductId)
     {
+        Logger::debug('Removing favourite product', [
+            'log_file' => config('logging.log_files.favourites'),
+            'user_id' => $userId,
+            'tdms_product_id' => $tdmsProductId,
+            'action' => 'remove_favourite',
+        ]);
+
         try {
             $favourite = Favourites::where('user_id', $userId)
                 ->where('tdms_product_id', $tdmsProductId)

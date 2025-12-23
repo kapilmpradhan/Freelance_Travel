@@ -40,7 +40,13 @@ class SendNotificationToTopic implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info("Sending notification to topic '{$this->topic}'");
+        Logger::debug('Sending notification to topic', [
+            'log_file' => config('logging.log_files.notifications'),
+            'topic' => $this->topic,
+            'title' => $this->title,
+            'action' => 'notification_to_topic_start',
+        ]);
+
         $data = [
             'title' => $this->title,
             'body' => $this->description,
@@ -52,7 +58,11 @@ class SendNotificationToTopic implements ShouldQueue
             data: $data,
         );
 
-        Logger::info("Notification sent successfully to topic '{$this->topic}'");
+        Logger::debug('Notification sent to topic', [
+            'log_file' => config('logging.log_files.notifications'),
+            'topic' => $this->topic,
+            'action' => 'notification_to_topic_sent',
+        ]);
 
         return;
     }

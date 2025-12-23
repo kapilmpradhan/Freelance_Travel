@@ -14,6 +14,11 @@ class ProductController extends BaseController
 {
     public function homeFeedProducts(Request $request)
     {
+        Logger::debug('Fetching home feed products', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_feed_products_request',
+        ]);
+
         try {
             $productResponse = ProductCategoryService::getProductByCategoriesWithLabel();
             return $this->sendResponseFromService($productResponse);
@@ -24,16 +29,28 @@ class ProductController extends BaseController
 
     public function homeTabLocations(Request $request)
     {
+        Logger::debug('Fetching home tab locations', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_tab_locations_request',
+        ]);
+
         try {
             $locations = Redis::get('all_countries_states_regions_locations');
             if (!$locations) {
+                Logger::debug('Locations not cached, dispatching job', [
+                    'log_file' => config('logging.log_files.products'),
+                    'action' => 'home_tab_locations_dispatch_job',
+                ]);
                 CountryLocationsJob::dispatch();
                 return $this->sendError('Locations data not found');
             }
             $locations = json_decode($locations, true);
             return $this->sendResponse('All countries location', $locations);
         } catch (ServiceException $e) {
-            Logger::error('Error fetching home tab locations: ' . $e->getMessage());
+            Logger::error('Error fetching home tab locations', $e, data: [
+                'log_file' => config('logging.log_files.products'),
+                'action' => 'home_tab_locations_error',
+            ]);
             return $this->sendError($e->getMessage(), $e->getCode());
         }
     }
@@ -42,6 +59,13 @@ class ProductController extends BaseController
     {
         $countryId = $request->query('countryId');
         $filterBy = $request->query('filterBy');
+
+        Logger::debug('Fetching home feed products V2', [
+            'log_file' => config('logging.log_files.products'),
+            'country_id' => $countryId,
+            'filter_by' => $filterBy,
+            'action' => 'home_feed_products_v2_request',
+        ]);
 
         if (empty($countryId) || empty($filterBy)) {
             return $this->sendError('country and filterBy are required', 400);
@@ -66,6 +90,11 @@ class ProductController extends BaseController
 
     public function homeFeedSchema(Request $request)
     {
+        Logger::debug('Fetching home feed schema', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_feed_schema_request',
+        ]);
+
         try {
             $productResponse = ProductCategoryService::getProductSchemaByCategoriesWithLabel();
             return $this->sendResponseFromService($productResponse);

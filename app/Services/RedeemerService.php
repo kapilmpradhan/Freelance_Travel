@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\ItemType;
+use App\Logging\Logger;
 use App\Models\CartCustomerDetail;
 use App\Models\Quote;
 
@@ -74,6 +75,14 @@ class RedeemerService
             'country_code' => $user->country_code,
             'phone_number' => $user->phone_number
         ]);
+
+        Logger::debug('Primary redeemer updated', [
+            'log_file' => config('logging.log_files.user_profile'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'primary_redeemer_updated',
+        ]);
+
         return ServiceResponse::success($primaryRedeemer);
     }
 

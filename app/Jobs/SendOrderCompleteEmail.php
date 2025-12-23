@@ -70,6 +70,12 @@ class SendOrderCompleteEmail implements ShouldQueue
 
         $emailService->sendMail($customerData);
 
-        Logger::info('Order complete email sent.');
+        Logger::debug('Order complete email sent', [
+            'log_file' => config('logging.log_files.order'),
+            'booking_reference' => $bookingReference,
+            'user_email' => $this->data['redeemers'][0]['emailAddress'],
+            'platform' => $this->platform,
+            'action' => 'order_complete_email_sent',
+        ]);
     }
 }

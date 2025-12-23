@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\AgentBranchCode;
+use App\Logging\Logger;
 use App\Models\Quote;
 use App\Models\SharedPayment;
 use App\Services\IEmailService;
@@ -40,6 +41,13 @@ class SharePaymentLinkJob implements ShouldQueue
         $email = $this->sharedPayment->email;
         $paymentLink = config('app.url') . "/api/quote/{$this->sharedPayment->quote_id}/payment";
 
+        Logger::debug('Processing share payment link job', [
+            'log_file' => config('logging.log_files.payment'),
+            'quote_id' => $quoteId,
+            'email' => $email,
+            'action' => 'share_payment_link_start',
+        ]);
+
         $quote = Quote::where('id', $quoteId)->first();
 
         $templateIdVarName = $this->platform == AgentBranchCode::PETERPANS
@@ -61,5 +69,12 @@ class SharePaymentLinkJob implements ShouldQueue
         ];
 
         $emailService->sendMail($data);
+
+        Logger::debug('Share payment link email sent', [
+            'log_file' => config('logging.log_files.payment'),
+            'quote_id' => $quoteId,
+            'email' => $email,
+            'action' => 'share_payment_link_sent',
+        ]);
     }
 }

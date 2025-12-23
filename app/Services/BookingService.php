@@ -409,7 +409,15 @@ class BookingService
             $orderData['referralSourceId'] = $referralSourceId;
         }
 
-        Logger::debug('Order request data', $orderData);
+        Logger::debug('Order request data built', [
+            'log_file' => config('logging.log_files.order'),
+            'user_id' => $userId,
+            'action' => 'order_request_data_built',
+            'booking_reference' => $bookingReference,
+            'total_charged' => $totalChargeAmount,
+            'products_count' => count($orderProducts),
+            'redeemers_count' => count($redeemers),
+        ]);
 
         return $orderData;
     }
@@ -688,6 +696,16 @@ class BookingService
             ];
         }
 
+        Logger::debug('Order posted successfully', [
+            'log_file' => config('logging.log_files.order'),
+            'user_id' => $userId,
+            'booking_reference' => $bookingReference,
+            'intent' => $intent,
+            'items_count' => count($cartItemIds),
+            'payment_required' => $isPaymentRequired,
+            'action' => 'order_posted',
+        ]);
+
         event(new OrderPosted(
             userId: $userId,
             userAgentId: $agent->id,
@@ -752,6 +770,12 @@ class BookingService
     {
         $userOrder = UserOrder::where('booking_reference', $bookingReference)->first();
         if (is_null($userOrder)) {
+            Logger::debug('Complete order failed - booking reference not found', [
+                'log_file' => config('logging.log_files.order'),
+                'booking_reference' => $bookingReference,
+                'action' => 'complete_order_not_found',
+            ]);
+
             return ServiceResponse::notFound(message: 'Booking reference not found');
         }
         $cartItemIds = $userOrder->cart_item_ids;
@@ -760,7 +784,7 @@ class BookingService
         $quoteIds = (clone $cartItemQ)->select('quote_id')->distinct()->pluck('quote_id')->filter()->toArray();
         $isDirectPurchase = (clone $cartItemQ)->where('is_direct_purchase', true)->exists();
 
-        DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds, $isDirectPurchase) {
+        DB::transaction(function () use ($userOrder, $cartItemQ, $quoteIds, $isDirectPurchase, $bookingReference) {
             $userOrder->is_paid = true;
             $userOrder->save();
 
@@ -781,6 +805,14 @@ class BookingService
                 ->where('is_direct_purchase', $isDirectPurchase)
                 ->when(empty($quoteIds) && !$isDirectPurchase, fn ($query) => $query->where('is_cart', true))
                 ->update(['user_order_id' => $userOrder->id]);
+
+            Logger::debug('Order marked as paid', [
+                'log_file' => config('logging.log_files.payment'),
+                'user_id' => $userOrder->user_id,
+                'booking_reference' => $bookingReference,
+                'order_id' => $userOrder->id,
+                'action' => 'order_paid',
+            ]);
 
             event(new CompleteOrderEvent(
                 cartItems: $cartItemQ->get(),

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Logging\Logger;
 use Carbon\Carbon;
 use App\Models\AgentToken;
 
@@ -9,6 +10,11 @@ class AgentTokenService
 {
     public static function getDefaultAgentToken()
     {
+        Logger::debug('Fetching default agent token', [
+            'log_file' => config('logging.log_files.agent'),
+            'action' => 'get_default_agent_token',
+        ]);
+
         // TODO: replace it with AgentDetail
         $default_agent_token = AgentToken::where('type', 'default')->first();
 
@@ -25,6 +31,12 @@ class AgentTokenService
 
     public static function getAgentToken(string $username, string $password)
     {
+        Logger::debug('Fetching agent token', [
+            'log_file' => config('logging.log_files.agent'),
+            'username' => $username,
+            'action' => 'get_agent_token',
+        ]);
+
         $url = config('vars.tdms_api_url') . '/agentToken';
 
         $data = [

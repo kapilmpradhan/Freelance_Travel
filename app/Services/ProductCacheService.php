@@ -11,6 +11,12 @@ class ProductCacheService
 {
     public static function cacheProduct($tdmsProductId, $tdms_product_last_update_date, $agentToken)
     {
+        Logger::debug('Caching product', [
+            'log_file' => config('logging.log_files.products'),
+            'tdms_product_id' => $tdmsProductId,
+            'action' => 'cache_product_start',
+        ]);
+
         $getUpdatedProductDetails = ProductService::getProductDetails($agentToken, $tdmsProductId);
         if (!$getUpdatedProductDetails) {
             Logger::error('Unable to get product details. TDMS product ID: ' . $tdmsProductId);

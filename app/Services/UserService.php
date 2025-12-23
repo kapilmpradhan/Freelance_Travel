@@ -20,10 +20,29 @@ class UserService
             $user->update($data);
             $userResource = new UserResource();
             $responseData = $userResource->userDetail($user);
+
+            Logger::debug('User profile updated successfully', [
+                'log_file' => config('logging.log_files.user_profile'),
+                'user_id' => $user->uuid,
+                'user_email' => $user->email,
+                'action' => 'profile_update',
+                'updated_fields' => implode(',', array_keys($data)),
+            ]);
+
             return ServiceResponse::success($responseData);
         } catch (Exception $e) {
             $errorMessage = "User profile update failed";
-            Logger::error(message: $errorMessage, exception: $e, extra: ['data' => $data]);
+            Logger::error(
+                message: $errorMessage,
+                exception: $e,
+                extra: ['data' => $data],
+                data: [
+                    'log_file' => config('logging.log_files.errors'),
+                    'user_id' => $user->uuid,
+                    'user_email' => $user->email,
+                    'action' => 'profile_update_failed',
+                ]
+            );
             throw new ServiceException($errorMessage);
         }
     }
@@ -49,6 +68,14 @@ class UserService
         $user->is_temporarily_deleted = true;
         $user->deletion_date = Carbon::now();
         $user->save();
+
+        Logger::debug('User account marked for deletion', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'account_deletion_requested',
+            'deletion_date' => $user->deletion_date->toDateTimeString(),
+        ]);
 
         SendAccountDeletionEmail::dispatch($user, app('platform'));
 
@@ -77,6 +104,14 @@ class UserService
             'platform' => app('platform')
         ]);
 
+        Logger::debug('FCM token added for user', [
+            'log_file' => config('logging.log_files.fcm_subscription'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'fcm_token_added',
+            'platform' => app('platform'),
+        ]);
+
         SubscribeToFCMTopic::dispatch($user, $token, 'all');
         SubscribeToFCMTopic::dispatch($user, $token, app('platform'));
 
@@ -85,14 +120,22 @@ class UserService
 
     public static function removeFcmToken($user, $token)
     {
-        $token = FirebaseFcmToken::where('user_id', $user->uuid)
+        $fcmToken = FirebaseFcmToken::where('user_id', $user->uuid)
                                 ->where('token', $token)
                                 ->first();
 
-        UnsubscribeFromFCMTopic::dispatch($user, $token->token, 'all');
-        UnsubscribeFromFCMTopic::dispatch($user, $token->token, app('platform'));
+        Logger::debug('FCM token removed for user', [
+            'log_file' => config('logging.log_files.fcm_subscription'),
+            'user_id' => $user->uuid,
+            'user_email' => $user->email,
+            'action' => 'fcm_token_removed',
+            'platform' => app('platform'),
+        ]);
 
-        $token->delete();
+        UnsubscribeFromFCMTopic::dispatch($user, $fcmToken->token, 'all');
+        UnsubscribeFromFCMTopic::dispatch($user, $fcmToken->token, app('platform'));
+
+        $fcmToken->delete();
         return ServiceResponse::success();
     }
 }

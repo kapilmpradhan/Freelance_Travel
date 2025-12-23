@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Logging\Logger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,8 +23,19 @@ class DeleteAccountPermanentlyJob implements ShouldQueue
      */
     public function handle(): void
     {
+        Logger::debug('Processing permanent account deletion job', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'action' => 'delete_account_permanently_start',
+        ]);
+
         $temporarilyDeletedUsers = User::getTemporarilyDeletedUsers();
-        $temporarilyDeletedUsers->where('deletion_date', Carbon::now()->addDays(7)->toDateString())
+        $count = $temporarilyDeletedUsers->where('deletion_date', Carbon::now()->addDays(7)->toDateString())
                     ->update(['is_permanently_deleted' => true]);
+
+        Logger::debug('Permanent account deletion completed', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'deleted_count' => $count,
+            'action' => 'delete_account_permanently_completed',
+        ]);
     }
 }

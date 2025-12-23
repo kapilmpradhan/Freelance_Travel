@@ -26,10 +26,17 @@ class SendNotificationToInactiveUsers implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info('NotificationToInactiveUsers job started');
+        Logger::debug('Notification to inactive users job started', [
+            'log_file' => config('logging.log_files.notifications'),
+            'action' => 'inactive_users_notification_start',
+        ]);
 
         $availableDiscount = DiscountService::getActiveDiscount();
         if ($availableDiscount->isError()) {
+            Logger::debug('No active discount available', [
+                'log_file' => config('logging.log_files.notifications'),
+                'action' => 'inactive_users_no_discount',
+            ]);
             return;
         }
 
@@ -45,15 +52,26 @@ class SendNotificationToInactiveUsers implements ShouldQueue
                                     ->pluck('token')
                                     ->toArray();
         if (count($fcmTokens) < 1) {
-            Logger::info('No inactive users found');
+            Logger::debug('No inactive users found', [
+                'log_file' => config('logging.log_files.notifications'),
+                'action' => 'inactive_users_none_found',
+            ]);
             return;
         } else {
-            Logger::info('Inactive users found. Sending notification');
+            Logger::debug('Inactive users found, sending notification', [
+                'log_file' => config('logging.log_files.notifications'),
+                'users_count' => count($inactiveUserIds),
+                'tokens_count' => count($fcmTokens),
+                'action' => 'inactive_users_sending',
+            ]);
             $fcmService = new FcmService();
 
             $subscribeResponse = $fcmService->subscribeTokensToTopic('inactive_users', $fcmTokens);
             if ($subscribeResponse->isError()) {
-                Logger::error('Error subscribing inactive users to topic');
+                Logger::error('Error subscribing inactive users to topic', data: [
+                    'log_file' => config('logging.log_files.notifications'),
+                    'action' => 'inactive_users_subscribe_error',
+                ]);
             }
 
             $discountData = $availableDiscount->data;
@@ -68,9 +86,12 @@ class SendNotificationToInactiveUsers implements ShouldQueue
                 topic: 'inactive_users',
             );
 
-            Logger::info('Notification sent to inactive users');
+            Logger::debug('Notification sent to inactive users', [
+                'log_file' => config('logging.log_files.notifications'),
+                'users_count' => count($inactiveUserIds),
+                'action' => 'inactive_users_notification_sent',
+            ]);
 
-            Logger::info('Unsubscribing inactive users from topic');
             $fcmService->unsubscribeTokensFromTopic('inactive_users', $fcmTokens);
             return;
         }

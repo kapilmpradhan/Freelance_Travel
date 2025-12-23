@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\ItemType;
+use App\Logging\Logger;
 use App\Models\CartItem;
 use App\Models\Quote;
 use App\Models\UserOrderCommission;
@@ -11,17 +12,24 @@ class UserOrderCommissionService
 {
     public static function getUserOrderCommissionByItemType($userId, ItemType $itemType): ServiceResponse
     {
+        Logger::debug('Fetching user order commission by item type', [
+            'log_file' => config('logging.log_files.discount'),
+            'user_id' => $userId,
+            'item_type' => $itemType->isCart ? 'cart' : ($itemType->isQuote ? 'quote' : 'direct'),
+            'action' => 'get_user_order_commission_by_item_type',
+        ]);
+
         $userOrderCommission = UserOrderCommission::where('user_id', $userId)
-                                    ->where('is_cart', $itemType->isCart)
-                                    ->when(
-                                        $itemType->isQuote,
-                                        fn ($query)
-                                        => $query->where('quote_id', $itemType->typeId)
-                                    )
-                                    ->where('is_direct_purchase', $itemType->isDirect)
-                                    ->where('user_order_id', null)
-                                    ->where('agent_branch', app('agentType')->agent->branch_code)
-                                    ->first();
+            ->where('is_cart', $itemType->isCart)
+            ->when(
+                $itemType->isQuote,
+                fn ($query)
+                => $query->where('quote_id', $itemType->typeId)
+            )
+            ->where('is_direct_purchase', $itemType->isDirect)
+            ->where('user_order_id', null)
+            ->where('agent_branch', app('agentType')->agent->branch_code)
+            ->first();
 
         if ($userOrderCommission) {
             return ServiceResponse::success($userOrderCommission);
@@ -32,6 +40,13 @@ class UserOrderCommissionService
 
     public static function getOrSetCommissionOfUserCartOrQuote($userId, ItemType $itemType, $agentType): ServiceResponse
     {
+        Logger::debug('Getting or setting commission for user cart or quote', [
+            'log_file' => config('logging.log_files.discount'),
+            'user_id' => $userId,
+            'item_type' => $itemType->isCart ? 'cart' : ($itemType->isQuote ? 'quote' : 'direct'),
+            'action' => 'get_or_set_commission',
+        ]);
+
         $commissionResponse = UserOrderCommissionService::getUserOrderCommissionByItemType(
             $userId,
             $itemType
@@ -95,6 +110,12 @@ class UserOrderCommissionService
 
     public static function getCommissionForDry($userId, ItemType $itemType, $agentType): ServiceResponse
     {
+        Logger::debug('Getting commission for dry run', [
+            'log_file' => config('logging.log_files.discount'),
+            'user_id' => $userId,
+            'action' => 'get_commission_for_dry',
+        ]);
+
         $overallCartData = [];
         foreach ($itemType->data as $data) {
             $saveItemsResponse = CartItemServiceV2::saveItems(

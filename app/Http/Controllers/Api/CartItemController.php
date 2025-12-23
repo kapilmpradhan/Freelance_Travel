@@ -65,10 +65,24 @@ class CartItemController extends BaseController
                 itemType: $itemType,
                 isDryRun: $isDryRun,
             );
+
+            if ($saveItemsResponse->isSuccess()) {
+                Logger::debug('Items added to cart', [
+                    'log_file' => config('logging.log_files.cart'),
+                    'user_id' => $request->user ? $request->user->uuid : null,
+                    'tdms_product_id' => $data['tdmsProductId'],
+                    'action' => 'cart_items_added',
+                ]);
+            }
+
             return $this->sendResponseFromService($saveItemsResponse);
         } catch (Exception $e) {
             $errorMessage = 'Failed to add items to cart';
-            Logger::error($errorMessage, $e);
+            Logger::error($errorMessage, $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $request->user ? $request->user->uuid : null,
+                'action' => 'cart_items_add_failed',
+            ]);
             return $this->sendError($errorMessage);
         }
     }
@@ -756,10 +770,24 @@ class CartItemController extends BaseController
                 itemType: $itemType,
                 agentType: app('agentType')
             );
+
+            if ($postOrderResponse->isSuccess()) {
+                Logger::debug('Order submitted successfully', [
+                    'log_file' => config('logging.log_files.order'),
+                    'user_id' => $request->user->uuid,
+                    'payment_type' => $data['paymentType'],
+                    'action' => 'order_submitted',
+                ]);
+            }
+
             return $this->sendResponseFromService($postOrderResponse);
         } catch (ServiceException $e) {
             $errorMessage = "Failed to submit order";
-            Logger::error($errorMessage, $e);
+            Logger::error($errorMessage, $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $request->user->uuid,
+                'action' => 'order_submit_failed',
+            ]);
             return $this->sendResponseFromService($e->toServiceResponse());
         }
     }

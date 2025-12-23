@@ -171,7 +171,11 @@ class CartItemService
 
             return ServiceResponse::success();
         } catch (Exception $e) {
-            Logger::error('Unable to cache product', $e, data: ['tdmsProductId' => $tdmsProductId]);
+            Logger::error('Unable to cache product', $e, data: [
+                'log_file' => config('logging.log_files.cart'),
+                'tdms_product_id' => $tdmsProductId,
+                'action' => 'cache_product_failed',
+            ]);
             throw $e;
         }
     }
@@ -592,9 +596,21 @@ class CartItemService
                 ]
             );
 
+            Logger::debug('Cart items converted to quote', [
+                'log_file' => config('logging.log_files.quote'),
+                'user_id' => $userId,
+                'quote_id' => $quote->id,
+                'action' => 'cart_to_quote_converted',
+                'items_count' => $cartItems->count(),
+            ]);
+
             return ServiceResponse::success();
         } catch (Exception $e) {
-            Logger::error('Failed to convert cart items to quote', $e);
+            Logger::error('Failed to convert cart items to quote', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'cart_to_quote_failed',
+            ]);
             throw new ServiceException(message: 'Failed to convert cart items to quote');
         }
     }
@@ -645,7 +661,16 @@ class CartItemService
             );
         }
 
+        $productId = $cartItem->tdms_product_id;
         $cartItem->delete();
+
+        Logger::debug('Cart item removed', [
+            'log_file' => config('logging.log_files.cart'),
+            'user_id' => $userId,
+            'cart_item_id' => $cartItemId,
+            'tdms_product_id' => $productId,
+            'action' => 'cart_item_removed',
+        ]);
 
         return ServiceResponse::success();
     }
@@ -724,11 +749,23 @@ class CartItemService
             // Commit the transaction
             DB::commit();
 
+            Logger::debug('Quote removed', [
+                'log_file' => config('logging.log_files.quote'),
+                'user_id' => $userId,
+                'quote_id' => $quoteId,
+                'action' => 'quote_removed',
+            ]);
+
             return ServiceResponse::success();
         } catch (Exception $e) {
             DB::rollBack();
 
-            Logger::error('Failed to remove quote.', $e);
+            Logger::error('Failed to remove quote.', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'quote_id' => $quoteId,
+                'action' => 'quote_remove_failed',
+            ]);
             return ServiceResponse::badRequest(
                 message: 'Failed to remove quote.'
             );
@@ -1034,6 +1071,15 @@ class CartItemService
                                 ->when(is_null($quoteId), fn ($query) => $query->where('is_cart', true))
                                 ->update(['user_order_id', $userOrder->id]);
             }
+
+            Logger::debug('Cart items cleaned after order', [
+                'log_file' => config('logging.log_files.order'),
+                'user_id' => $userId,
+                'booking_reference' => $bookingReference,
+                'intent' => $intent,
+                'items_count' => count($cartItemIds),
+                'action' => 'cart_items_cleaned',
+            ]);
         });
     }
 
@@ -1098,9 +1144,22 @@ class CartItemService
             BookingService::completeOrder(
                 bookingReference: $bookingReference,
             );
+
+            Logger::debug('Booking completed successfully', [
+                'log_file' => config('logging.log_files.booking'),
+                'user_id' => $userOrder->user_id,
+                'booking_reference' => $bookingReference,
+                'order_id' => $userOrder->order_id,
+                'action' => 'booking_completed',
+            ]);
+
             return ServiceResponse::success(data: $userOrder);
         } catch (Exception $e) {
-            Logger::error(message: 'Order completion failed', exception: $e);
+            Logger::error(message: 'Order completion failed', exception: $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'booking_reference' => $bookingReference,
+                'action' => 'booking_completion_failed',
+            ]);
             return ServiceResponse::badRequest(message: 'Order completion failed');
         }
     }
@@ -1151,9 +1210,21 @@ class CartItemService
         // Remove items and customers that were addded for direct purchase but are not associated to any order.
         try {
             $items = CartItem::userDirectPurchaseItems($userId);
+            $itemsCount = $items->count();
             $items->each->delete();
+
+            Logger::debug('Direct purchase items cleaned', [
+                'log_file' => config('logging.log_files.cart'),
+                'user_id' => $userId,
+                'items_count' => $itemsCount,
+                'action' => 'direct_purchase_cleaned',
+            ]);
         } catch (Exception $e) {
-            Logger::error('Failed to clean direct purchase items', $e);
+            Logger::error('Failed to clean direct purchase items', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'direct_purchase_clean_failed',
+            ]);
             throw new ServiceException(message: 'Failed to clean direct purchase items');
         }
 

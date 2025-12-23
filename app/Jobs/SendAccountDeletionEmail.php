@@ -64,6 +64,12 @@ class SendAccountDeletionEmail implements ShouldQueue
 
         $emailService->sendMail($emailData);
 
-        Logger::info("Account deletion email sent to {$this->user->email}");
+        Logger::debug('Account deletion email sent', [
+            'log_file' => config('logging.log_files.user_activity'),
+            'user_id' => $this->user->uuid,
+            'user_email' => $this->user->email,
+            'action' => 'account_deletion_email_sent',
+            'platform' => $this->platform,
+        ]);
     }
 }

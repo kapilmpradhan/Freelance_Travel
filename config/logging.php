@@ -131,9 +131,51 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Write Error/Exception to File
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, error and exception level logs will also be written
+    | to CSV files in addition to being reported to Retack.
+    |
+    */
+    'write_errors_to_file' => env('LOG_WRITE_ERRORS_TO_FILE', false),
+
     'log_files' => [
+        // User related
         'account_verification' => 'verify-account.csv',
         'forgot_password' => 'forgot-password.csv',
         'fcm_subscription' => 'fcm-subscription.csv',
+        'user_activity' => 'user-activity.csv',
+        'user_auth' => 'user-auth.csv',
+        'user_otp' => 'user-otp.csv',
+        'user_jwt' => 'user-jwt.csv',
+        'user_profile' => 'user-profile.csv',
+        // Cart and Quote
+        'cart' => 'cart.csv',
+        'quote' => 'quote.csv',
+        // Order and Booking
+        'order' => 'order.csv',
+        'booking' => 'booking.csv',
+        'payment' => 'payment.csv',
+        // External API
+        'tdms' => 'tdms.csv',
+        // Products
+        'products' => 'products.csv',
+        // Agent
+        'agent' => 'agent.csv',
+        // Email
+        'email' => 'email.csv',
+        // Cache
+        'cache' => 'cache.csv',
+        // Discount/Commission
+        'discount' => 'discount.csv',
+        // Favourites
+        'favourites' => 'favourites.csv',
+        // Notifications
+        'notifications' => 'notifications.csv',
+        // Errors
+        'errors' => 'errors.csv',
     ]
 ];

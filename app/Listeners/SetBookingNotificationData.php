@@ -24,7 +24,11 @@ class SetBookingNotificationData
      */
     public function handle(CompleteOrderEvent $event)
     {
-        Logger::debug("Received event to set booking notification data");
+        Logger::debug('Booking notification data event received', [
+            'log_file' => config('logging.log_files.booking'),
+            'user_order_id' => $event->userOrder->id,
+            'action' => 'booking_notification_event_received',
+        ]);
 
         $userId = $event->userOrder->user_id;
         $agentType = UserAgentDTO::getUserAgent(User::find($userId), app('platform'));
@@ -37,7 +41,12 @@ class SetBookingNotificationData
         );
 
         if ($addBookingDataResponse->success()) {
-            Logger::info('Booking data added for notification');
+            Logger::debug('Booking notification data added', [
+                'log_file' => config('logging.log_files.booking'),
+                'user_id' => $userId,
+                'user_order_id' => $event->userOrder->id,
+                'action' => 'booking_notification_data_added',
+            ]);
         }
     }
 }

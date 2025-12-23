@@ -22,13 +22,22 @@ class EmailQuote implements ShouldQueue
      */
     public function handle(OrderPosted $event): void
     {
-        $className = get_class($this);
-        Logger::debug("[{$className}] Received order created event");
+        Logger::debug('Email quote event received', [
+            'log_file' => config('logging.log_files.quote'),
+            'booking_reference' => $event->bookingReference,
+            'intent' => $event->intent,
+            'action' => 'email_quote_event_received',
+        ]);
+
         if ($event->intent !== 'email-quote') {
-            Logger::debug("[{$className}] Ignored sending email. Intent: {$event->intent}");
             return;
         }
         SendShareMailJob::dispatch($event->emailData);
-        Logger::debug("[{$className}] Dispatched job to send quote email");
+
+        Logger::debug('Quote email job dispatched', [
+            'log_file' => config('logging.log_files.quote'),
+            'booking_reference' => $event->bookingReference,
+            'action' => 'quote_email_dispatched',
+        ]);
     }
 }

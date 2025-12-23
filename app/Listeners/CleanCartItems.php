@@ -22,7 +22,13 @@ class CleanCartItems
      */
     public function handle(OrderPosted $event): void
     {
-        Logger::debug("Received event to cache created order");
+        Logger::debug('Order posted event received - cleaning cart', [
+            'log_file' => config('logging.log_files.cart'),
+            'user_id' => $event->userId,
+            'booking_reference' => $event->bookingReference,
+            'action' => 'clean_cart_event_received',
+        ]);
+
         CartItemService::cleanCartItems(
             bookingReference: $event->bookingReference,
             cartItemIds: $event->cartItemIds,
@@ -35,6 +41,12 @@ class CleanCartItems
             quoteId: $event->quoteId,
             sessionId: $event->sessionId
         );
-        Logger::info("Cached orders of user {$event->userId}");
+
+        Logger::debug('Cart items cleaned after order', [
+            'log_file' => config('logging.log_files.cart'),
+            'user_id' => $event->userId,
+            'booking_reference' => $event->bookingReference,
+            'action' => 'cart_cleaned_after_order',
+        ]);
     }
 }

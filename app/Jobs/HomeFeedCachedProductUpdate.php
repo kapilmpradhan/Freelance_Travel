@@ -24,12 +24,19 @@ class HomeFeedCachedProductUpdate implements ShouldQueue
      */
     public function handle(): void
     {
-        Logger::info('Updating home feed cached products');
+        Logger::debug('Updating home feed cached products', [
+            'log_file' => config('logging.log_files.products'),
+            'action' => 'home_feed_cache_update_start',
+        ]);
 
         $keys = Redis::keys('home_feed_product:*');
 
         foreach ($keys as $key) {
-            Logger::info('Processing key: ' . $key);
+            Logger::debug('Processing home feed cache key', [
+                'log_file' => config('logging.log_files.products'),
+                'key' => $key,
+                'action' => 'home_feed_cache_processing_key',
+            ]);
 
             // Extracting parts from the key to create a HomeFeedProductFilter
             // Assuming the key format is 'home_feed_product:<agentBranchCode>_country_<countryId>_<filterBy>'
@@ -47,7 +54,11 @@ class HomeFeedCachedProductUpdate implements ShouldQueue
                 ProductCategoryService::getProductByCategoriesWithLabelV2($productFilter, true);
             }
         }
-        Logger::info('Home feed cached products update completed');
+        Logger::debug('Home feed cached products update completed', [
+            'log_file' => config('logging.log_files.products'),
+            'keys_processed' => count($keys),
+            'action' => 'home_feed_cache_update_complete',
+        ]);
         return;
     }
 }
