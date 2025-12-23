@@ -1133,10 +1133,6 @@ class CartItemController extends BaseController
     {
         $userId = $request->user->uuid;
         $sessionItems = CartItem::userItems(null, ItemType::session($sessionId));
-        $cartItems = CartItem::where('user_id', $userId)
-            ->whereNull('user_order_id')
-            ->whereNull('quote_id')
-            ->select('tdms_product_id', 'product_price_details_id', 'booking_date');
 
         DB::beginTransaction();
         CartCustomerDetail::where('session_id', $sessionId)
@@ -1145,17 +1141,8 @@ class CartItemController extends BaseController
             ]);
 
         foreach ($sessionItems as $item) {
-            $itemExistsInCart = (clone $cartItems)
-                ->where('tdms_product_id', $item->tdms_product_id)
-                ->where('product_price_details_id', $item->product_price_details_id)
-                ->whereDate('booking_date', Carbon::parse($item->booking_date)->format('Y-m-d'))
-                ->exists();
-            if ($itemExistsInCart) {
-                $item->delete();
-            } else {
-                $item->user_id = $userId;
-                $item->save();
-            }
+            $item->user_id = $userId;
+            $item->save();
         }
 
         DB::commit();

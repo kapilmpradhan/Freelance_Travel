@@ -263,6 +263,7 @@ class CartItem extends Model
         return CartItem::query()
             ->when($userId, fn ($query) => $query->where('user_id', $userId))
             ->when($itemType->isSession, fn ($query) => $query->where('session_id', $itemType->typeId))
+            ->when(!$itemType->isSession, fn ($query) => $query->whereNull('session_id'))
             ->where('is_direct_purchase', $itemType->isDirect)
             ->when($itemType->isQuote, fn ($query) => $query->where('quote_id', $itemType->typeId))
             ->when($itemType->isCart, fn ($query) => $query->whereNull('quote_id'))
