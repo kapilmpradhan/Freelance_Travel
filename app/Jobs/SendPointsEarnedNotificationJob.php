@@ -89,8 +89,8 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
 
         $getCommissionReportResponse = TdmsService::getCommissionReport(
             agentToken: $agentToken,
-            startDate: Carbon::now()->subdays(2),
-            endDate: Carbon::now(),
+            startDate: Carbon::now()->subYears(3),
+            endDate: Carbon::now()->addYears(3),
             onlyAvailablePoints: false
         );
 
@@ -103,7 +103,7 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             return;
         }
 
-        $commissionData = $getCommissionReportResponse->data['cashback'];
+        $commissionData = $getCommissionReportResponse->data['commission'];
         $requiredReport = [];
         foreach ($commissionData as $commission) {
             if ($commission['bookingReference'] === $bookingReference) {
@@ -121,7 +121,10 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
             return;
         }
 
-        $balance = (float) $requiredReport['balance'];
+        $commission = (float) $requiredReport['commission'];
+        $balance = $this->agentType->isCommissionAgent ?
+            $commission :
+            $commission * $this->agentType->agent->points_multiplier;
 
         if ($balance <= 0) {
             return;
