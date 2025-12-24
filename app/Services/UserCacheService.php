@@ -206,4 +206,22 @@ class UserCacheService
 
         return ServiceResponse::notFound();
     }
+
+    public static function removeCachedPaymentMethods()
+    {
+        self::removeUserCachedData(self::PAYMENT_METHODS);
+
+        return ServiceResponse::success();
+    }
+
+    public static function removeAllCachedData()
+    {
+        self::removeUserCachedData(self::PRODUCTS);
+        self::removeUserCachedData(self::AVAILABILITIES);
+        self::removeUserCachedData(self::BOOKING_DETAILS);
+        self::removeUserCachedData(self::BOOKING_REFERENCE);
+        self::removeUserCachedData(self::PAYMENT_METHODS);
+
+        return ServiceResponse::success();
+    }
 }

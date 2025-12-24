@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\AgentResource;
 use App\Services\ServiceException;
 use App\Services\UserAgentService;
+use App\Services\UserCacheService;
 use Laravel\Pennant\Feature;
 
 class UserAgentController extends BaseController
@@ -270,6 +271,8 @@ class UserAgentController extends BaseController
             branchCode: $data['agentCode'],
             referralSourceId: $data['referralSourceId'] ?? null
         );
+
+        UserCacheService::removeAllCachedData();
 
         return $this->sendResponseFromService($addUserAgentResponse);
     }
