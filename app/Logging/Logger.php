@@ -38,7 +38,11 @@ class Logger
         $values = [];
         foreach ($logData as $key => $value) {
             $header[] = ucwords(str_replace('_', ' ', $key));
-            $values[] = $value;
+	    // Convert arrays/objects to JSON string for CSV compatibility
+            if (is_array($value) || is_object($value)) {
+                $value = json_encode($value);
+            }
+	    $values[] = $value;
         }
 
         if (!isset($logData['exception'])) {
