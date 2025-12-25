@@ -23,7 +23,18 @@ class UserController extends BaseController
 {
     public function userSignupEmail(Request $request, User $user, UserResource $userResource)
     {
-        $data = $request->all(); // Retrive request data
+        $data = $request->all();
+        $email = $data['email'];
+
+        $storedEmail = User::where('email', $email)->first();
+        if ($storedEmail) {
+            if ($storedEmail->is_email_verified) {
+                return $this->sendError('Email already exists. Please login.');
+            }
+
+            $storedEmail->delete();
+        }
+
         $validate = Validator::make($data, $user->emailSignupRule());
         if ($validate->fails()) {
             return $this->sendError('Validation Error.', $validate->errors());
