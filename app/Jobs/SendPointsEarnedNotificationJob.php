@@ -43,8 +43,10 @@ class SendPointsEarnedNotificationJob implements ShouldQueue
         }
 
         $data = [
-            'title' => 'Points You Will Earn',
-            'body' => "You will earn {$points} points from last order.",
+            'title' => $this->agentType->isPointsAgent ? 'Points' : 'Commission' . ' You Will Earn',
+            'body' => "You will earn {$points}" .
+                $this->agentType->isPointsAgent ? ' points' : '$' .
+                " from last order.",
             'path' => "/pointDetail"
         ];
 
