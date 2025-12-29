@@ -156,7 +156,7 @@ class UserOrderCommissionService
         ]);
     }
 
-    public static function pointsFromCommission(float $commission, int $pointsMultiplier): int
+    public static function pointsFromCommission(float $commission, int $pointsMultiplier): float
     {
         return (float) round($commission * $pointsMultiplier, 2);
     }
