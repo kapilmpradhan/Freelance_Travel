@@ -386,289 +386,370 @@ class CartItemServiceV2
 
     public static function updateItemBookingDataV2($data)
     {
-        $cartItemIds = array_map(function ($item) {
-            return $item['cartItemId'];
-        }, $data);
+        try {
+            $cartItemIds = array_map(function ($item) {
+                return $item['cartItemId'];
+            }, $data);
 
-        $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
+            $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
 
-        $isQuantityChanged = false;
-        DB::beginTransaction();
-        foreach ($data as $item) {
-            $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
+            $isQuantityChanged = false;
+            DB::beginTransaction();
+            foreach ($data as $item) {
+                $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
 
-            $bookingDatas = [];
-            foreach ($item['bookingData'] as $bookingData) {
-                $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
-                $bookingDatas[] = $bookingData;
-            }
+                $bookingDatas = [];
+                foreach ($item['bookingData'] as $bookingData) {
+                    $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                    $bookingDatas[] = $bookingData;
+                }
 
-            if ($cartItem->booking_quantity != $item['quantity']) {
-                $isQuantityChanged = true;
-            }
+                if ($cartItem->booking_quantity != $item['quantity']) {
+                    $isQuantityChanged = true;
+                }
 
-            $cartItem->update([
-                "booking_quantity" => $item['quantity'],
-                "booking_data" => $bookingDatas
+                $cartItem->update([
+                    "booking_quantity" => $item['quantity'],
+                    "booking_data" => $bookingDatas
+                ]);
+            };
+            DB::commit();
+
+            return ServiceResponse::success(
+                message: 'Cart items updated successfully',
+                data: ['isQuantityChanged' => $isQuantityChanged]
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Logger::error('Failed to update item booking data V2', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'action' => 'update_booking_data_v2_failed',
             ]);
-        };
-        DB::commit();
-
-        return ServiceResponse::success(
-            message: 'Cart items updated successfully',
-            data: ['isQuantityChanged' => $isQuantityChanged]
-        );
+            throw new ServiceException(
+                message: 'Failed to update booking data: ' . $e->getMessage()
+            );
+        }
     }
 
     public static function updateItemBookingData($data)
     {
-        $cartItemIds = array_map(function ($item) {
-            return $item['cartItemId'];
-        }, $data);
+        try {
+            $cartItemIds = array_map(function ($item) {
+                return $item['cartItemId'];
+            }, $data);
 
-        $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
+            $cartItems = CartItem::whereIn('id', $cartItemIds)->get();
 
-        $isQuantityChanged = false;
-        DB::beginTransaction();
-        foreach ($data as $item) {
-            $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
+            $isQuantityChanged = false;
+            DB::beginTransaction();
+            foreach ($data as $item) {
+                $cartItem = (clone $cartItems)->where('id', $item['cartItemId'])->first();
 
-            $bookingDatas = [];
-            $numpax = $item['quantity'] / count($item['bookingData']);
-            $quantityIndex = 1;
-            foreach ($item['bookingData'] as $bookingData) {
-                $redeemers = array_slice($bookingData['redeemers'] ?? [], 0, $numpax);
-                if (isset($bookingData['redeemers']) && !empty($bookingData['redeemers'])) {
-                    if ($numpax > 1 && count($redeemers) < $numpax) {
-                        while (count($redeemers) < $numpax) {
-                            $redeemers[] = $redeemers[0];
+                $bookingDatas = [];
+                $numpax = $item['quantity'] / count($item['bookingData']);
+                $quantityIndex = 1;
+                foreach ($item['bookingData'] as $bookingData) {
+                    $redeemers = array_slice($bookingData['redeemers'] ?? [], 0, $numpax);
+                    if (isset($bookingData['redeemers']) && !empty($bookingData['redeemers'])) {
+                        if ($numpax > 1 && count($redeemers) < $numpax) {
+                            while (count($redeemers) < $numpax) {
+                                $redeemers[] = $redeemers[0];
+                            }
                         }
-                    }
-                    foreach ($redeemers as $redeemer) {
+                        foreach ($redeemers as $redeemer) {
+                            $bookingData['quantityIndex'] = $quantityIndex;
+                            $bookingData['redeemers'] = [$redeemer];
+                            $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                            $bookingDatas[] = $bookingData;
+                        }
+                    } else {
                         $bookingData['quantityIndex'] = $quantityIndex;
-                        $bookingData['redeemers'] = [$redeemer];
                         $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
+                        $bookingData['redeemers'] = $redeemers;
                         $bookingDatas[] = $bookingData;
                     }
-                } else {
-                    $bookingData['quantityIndex'] = $quantityIndex;
-                    $bookingData['optionalData'] = $bookingData['optionalData'] ?? [];
-                    $bookingData['redeemers'] = $redeemers;
-                    $bookingDatas[] = $bookingData;
+
+                    $quantityIndex++;
                 }
 
-                $quantityIndex++;
-            }
+                if ($cartItem->booking_quantity != $item['quantity']) {
+                    $isQuantityChanged = true;
+                }
 
-            if ($cartItem->booking_quantity != $item['quantity']) {
-                $isQuantityChanged = true;
-            }
+                $cartItem->update([
+                    "booking_quantity" => $item['quantity'],
+                    "booking_data" => $bookingDatas
+                ]);
+            };
+            DB::commit();
 
-            $cartItem->update([
-                "booking_quantity" => $item['quantity'],
-                "booking_data" => $bookingDatas
+            return ServiceResponse::success(
+                message: 'Cart items updated successfully',
+                data: ['isQuantityChanged' => $isQuantityChanged]
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Logger::error('Failed to update item booking data', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'action' => 'update_booking_data_failed',
             ]);
-        };
-        DB::commit();
-
-        return ServiceResponse::success(
-            message: 'Cart items updated successfully',
-            data: ['isQuantityChanged' => $isQuantityChanged]
-        );
+            throw new ServiceException(
+                message: 'Failed to update booking data: ' . $e->getMessage()
+            );
+        }
     }
 
     public static function shareQuote($sharedByUserId, $sharedToEmail, $quoteId, $agentType)
     {
-        $quote = Quote::where('user_id', $sharedByUserId)
-            ->where('id', $quoteId)
-            ->first();
-        if (!$quote) {
-            return ServiceResponse::notFound(
-                message: 'Quote not found',
-                data: ['quoteId' => $quoteId]
+        try {
+            $quote = Quote::where('user_id', $sharedByUserId)
+                ->where('id', $quoteId)
+                ->first();
+            if (!$quote) {
+                return ServiceResponse::notFound(
+                    message: 'Quote not found',
+                    data: ['quoteId' => $quoteId]
+                );
+            }
+
+            $shareQuote = ShareQuote::updateOrCreate(
+                [
+                    'shared_by_user_id' => $sharedByUserId,
+                    'shared_to_email' => $sharedToEmail,
+                    'quote_id' => $quote->id
+                ],
+                [
+                    'is_accepted' => false,
+                    'is_declined' => false,
+                ]
+            );
+
+            ShareQuoteJob::dispatch(
+                shareQuote: $shareQuote,
+                agentType: $agentType,
+                itemType: ItemType::quote($quoteId)
+            );
+
+            return ServiceResponse::success(data: $shareQuote, message: 'Invitation sent');
+        } catch (\Exception $e) {
+            Logger::error('Failed to share quote', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $sharedByUserId,
+                'quote_id' => $quoteId,
+                'action' => 'share_quote_failed',
+            ]);
+            throw new ServiceException(
+                message: 'Failed to share quote: ' . $e->getMessage()
             );
         }
-
-        $shareQuote = ShareQuote::updateOrCreate(
-            [
-                'shared_by_user_id' => $sharedByUserId,
-                'shared_to_email' => $sharedToEmail,
-                'quote_id' => $quote->id
-            ],
-            [
-                'is_accepted' => false,
-                'is_declined' => false,
-            ]
-        );
-
-        ShareQuoteJob::dispatch(
-            shareQuote: $shareQuote,
-            agentType: $agentType,
-            itemType: ItemType::quote($quoteId)
-        );
-
-        return ServiceResponse::success(data: $shareQuote, message: 'Invitation sent');
     }
 
     public static function getQuotesSharedToMe($user)
     {
-        $sharedQuotes = ShareQuote::query()
-            ->where('shared_to_email', $user->email)
-            ->where('is_accepted', false)
-            ->where('is_declined', false)
-            ->where('is_quote_deleted', false)
-            ->select(
-                DB::raw('MIN(id) as id'),
-                'quote_id',
-                DB::raw('MIN(shared_by_user_id) as shared_by_user_id')
-            )
-            ->groupBy('quote_id');
+        try {
+            $sharedQuotes = ShareQuote::query()
+                ->where('shared_to_email', $user->email)
+                ->where('is_accepted', false)
+                ->where('is_declined', false)
+                ->where('is_quote_deleted', false)
+                ->select(
+                    DB::raw('MIN(id) as id'),
+                    'quote_id',
+                    DB::raw('MIN(shared_by_user_id) as shared_by_user_id')
+                )
+                ->groupBy('quote_id');
 
-        $sharedQuoteIds = (clone $sharedQuotes)->pluck('quote_id')
-            ->toArray();
+            $sharedQuoteIds = (clone $sharedQuotes)->pluck('quote_id')
+                ->toArray();
 
-        $quotesQuery = Quote::query()->whereIn('id', $sharedQuoteIds);
+            $quotesQuery = Quote::query()->whereIn('id', $sharedQuoteIds);
 
-        $result = [];
-        foreach ($sharedQuotes->get() as $sharedQuote) {
-            $sharedByUserEmail = User::where('uuid', $sharedQuote->shared_by_user_id)->first()->email;
-            $quote = (clone $quotesQuery)->where('id', $sharedQuote->quote_id)
-                ->select(['id', 'title', 'created_at', 'updated_at'])
-                ->first();
-            if (!$quote) {
-                $sharedQuote->is_quote_deleted = true;
-                $sharedQuote->save();
-                continue;
+            $result = [];
+            foreach ($sharedQuotes->get() as $sharedQuote) {
+                $sharedByUserEmail = User::where('uuid', $sharedQuote->shared_by_user_id)->first()->email;
+                $quote = (clone $quotesQuery)->where('id', $sharedQuote->quote_id)
+                    ->select(['id', 'title', 'created_at', 'updated_at'])
+                    ->first();
+                if (!$quote) {
+                    $sharedQuote->is_quote_deleted = true;
+                    $sharedQuote->save();
+                    continue;
+                }
+                $noOfItems = CartItem::query()->where('quote_id', $quote->id)
+                    ->count();
+
+                $quote->quote_share_id = $sharedQuote->id;
+                $quote->no_of_items = $noOfItems;
+                $quote->shared_by = $sharedByUserEmail;
+
+                $quoteItems = CartItem::query()->where('quote_id', $quote->id)
+                    ->with('product')
+                    ->get();
+
+                $totalPrice = BookingService::getTotalChargeAmount(cartItems: $quoteItems);
+                $quote->total_rrp = $totalPrice;
+                $result[] = $quote;
             }
-            $noOfItems = CartItem::query()->where('quote_id', $quote->id)
-                ->count();
 
-            $quote->quote_share_id = $sharedQuote->id;
-            $quote->no_of_items = $noOfItems;
-            $quote->shared_by = $sharedByUserEmail;
-
-            $quoteItems = CartItem::query()->where('quote_id', $quote->id)
-                ->with('product')
-                ->get();
-
-            $totalPrice = BookingService::getTotalChargeAmount(cartItems: $quoteItems);
-            $quote->total_rrp = $totalPrice;
-            $result[] = $quote;
+            return ServiceResponse::success(data: $result);
+        } catch (\Exception $e) {
+            Logger::error('Failed to get quotes shared to user', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $user->uuid,
+                'action' => 'get_shared_quotes_failed',
+            ]);
+            throw new ServiceException(
+                message: 'Failed to get shared quotes: ' . $e->getMessage()
+            );
         }
-
-        return ServiceResponse::success(data: $result);
     }
 
     public static function getQuoteSharedUsers($quoteId)
     {
-        $quoteSharedUsers = ShareQuote::query()
-            ->select([
-                'share_quotes.shared_to_email as email',
-                'cart_customer_details.first_name as first_name',
-                'cart_customer_details.last_name as last_name',
-            ])
-            ->leftJoin('cart_customer_details', function ($join) use ($quoteId) {
-                $join->on('cart_customer_details.email', '=', 'share_quotes.shared_to_email')
-                    ->where('cart_customer_details.quote_id', '=', $quoteId);
-            })
-            ->where('share_quotes.quote_id', $quoteId)
-            ->where('share_quotes.is_quote_deleted', false)
-            ->where('share_quotes.is_declined', false)
-            ->get()
-            ->map(function ($item) {
-                if ($item->first_name && $item->last_name) {
-                    $name = $item->first_name . ' ' . $item->last_name;
-                } else {
-                    $name = null;
-                }
-                return [
-                    'email' => $item->email,
-                    'name' => $name,
-                ];
-            })
-            ->toArray();
+        try {
+            $quoteSharedUsers = ShareQuote::query()
+                ->select([
+                    'share_quotes.shared_to_email as email',
+                    'cart_customer_details.first_name as first_name',
+                    'cart_customer_details.last_name as last_name',
+                ])
+                ->leftJoin('cart_customer_details', function ($join) use ($quoteId) {
+                    $join->on('cart_customer_details.email', '=', 'share_quotes.shared_to_email')
+                        ->where('cart_customer_details.quote_id', '=', $quoteId);
+                })
+                ->where('share_quotes.quote_id', $quoteId)
+                ->where('share_quotes.is_quote_deleted', false)
+                ->where('share_quotes.is_declined', false)
+                ->get()
+                ->map(function ($item) {
+                    if ($item->first_name && $item->last_name) {
+                        $name = $item->first_name . ' ' . $item->last_name;
+                    } else {
+                        $name = null;
+                    }
+                    return [
+                        'email' => $item->email,
+                        'name' => $name,
+                    ];
+                })
+                ->toArray();
 
-        return ServiceResponse::success(data: $quoteSharedUsers);
+            return ServiceResponse::success(data: $quoteSharedUsers);
+        } catch (\Exception $e) {
+            Logger::error('Failed to get quote shared users', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'quote_id' => $quoteId,
+                'action' => 'get_quote_shared_users_failed',
+            ]);
+            throw new ServiceException(
+                message: 'Failed to get quote shared users: ' . $e->getMessage()
+            );
+        }
     }
 
     public static function acceptQuoteInvite($user, $quoteShareId)
     {
-        $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
-            ->first();
-        if (!$quoteShareInstance) {
-            return ServiceResponse::notFound(
-                message: 'Shared quote not found',
-                data: ['quoteShareId' => $quoteShareId]
-            );
-        }
-        if ($quoteShareInstance->shared_to_email != $user->email) {
-            return ServiceResponse::unauthorized(
-                message: 'You are not authorized to accept this quote',
-            );
-        }
-        if ($quoteShareInstance->is_accepted) {
-            return ServiceResponse::badRequest(
-                message: 'You have already accepted this quote',
-            );
-        }
-        if ($quoteShareInstance->is_declined) {
-            return ServiceResponse::badRequest(
-                message: 'You have already declined this quote',
-            );
-        }
-
-        $quote = Quote::where('id', $quoteShareInstance->quote_id)
-            ->first();
-
-        if (!$quote) {
-            return ServiceResponse::notFound(message: 'Quote not found');
-        }
-
-        DB::beginTransaction();
-        $newQuote = Quote::create([
-            'user_id' => $user->uuid,
-            'title' => $quote->title,
-            'shared_by_email' => User::where('uuid', $quoteShareInstance->shared_by_user_id)->first()->email
-        ]);
-
-        $cartItems = CartItem::where('quote_id', $quote->id)
-            ->get();
-
-        foreach ($cartItems as $cartItem) {
-            $cartItemData = $cartItem->toArray();
-            unset($cartItemData['id']);
-
-            foreach ($cartItemData['booking_data'] as &$bookingData) {
-                unset($bookingData['redeemers']);
-                $bookingData['optionalData'] = [];
+        try {
+            $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
+                ->first();
+            if (!$quoteShareInstance) {
+                return ServiceResponse::notFound(
+                    message: 'Shared quote not found',
+                    data: ['quoteShareId' => $quoteShareId]
+                );
+            }
+            if ($quoteShareInstance->shared_to_email != $user->email) {
+                return ServiceResponse::unauthorized(
+                    message: 'You are not authorized to accept this quote',
+                );
+            }
+            if ($quoteShareInstance->is_accepted) {
+                return ServiceResponse::badRequest(
+                    message: 'You have already accepted this quote',
+                );
+            }
+            if ($quoteShareInstance->is_declined) {
+                return ServiceResponse::badRequest(
+                    message: 'You have already declined this quote',
+                );
             }
 
-            $cartItemData['user_id'] = $user->uuid;
-            $cartItemData['quote_id'] = $newQuote->id;
-            CartItem::create($cartItemData);
+            $quote = Quote::where('id', $quoteShareInstance->quote_id)
+                ->first();
+
+            if (!$quote) {
+                return ServiceResponse::notFound(message: 'Quote not found');
+            }
+
+            DB::beginTransaction();
+            $newQuote = Quote::create([
+                'user_id' => $user->uuid,
+                'title' => $quote->title,
+                'shared_by_email' => User::where('uuid', $quoteShareInstance->shared_by_user_id)->first()->email
+            ]);
+
+            $cartItems = CartItem::where('quote_id', $quote->id)
+                ->get();
+
+            foreach ($cartItems as $cartItem) {
+                $cartItemData = $cartItem->toArray();
+                unset($cartItemData['id']);
+
+                foreach ($cartItemData['booking_data'] as &$bookingData) {
+                    unset($bookingData['redeemers']);
+                    $bookingData['optionalData'] = [];
+                }
+
+                $cartItemData['user_id'] = $user->uuid;
+                $cartItemData['quote_id'] = $newQuote->id;
+                CartItem::create($cartItemData);
+            }
+
+            $quoteShareInstance->is_accepted = true;
+            $quoteShareInstance->save();
+            DB::commit();
+
+            return ServiceResponse::success(data: $newQuote, message: 'Quote accepted');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Logger::error('Failed to accept quote invite', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $user->uuid,
+                'quote_share_id' => $quoteShareId,
+                'action' => 'accept_quote_invite_failed',
+            ]);
+            throw new ServiceException(
+                message: 'Failed to accept quote invite: ' . $e->getMessage()
+            );
         }
-
-        $quoteShareInstance->is_accepted = true;
-        $quoteShareInstance->save();
-        DB::commit();
-
-        return ServiceResponse::success(data: $newQuote, message: 'Quote accepted');
     }
 
     public static function rejectQuoteInvite($user, $quoteShareId)
     {
-        $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
-            ->first();
-        if (!$quoteShareInstance) {
-            return ServiceResponse::notFound(
-                message: 'Shared quote not found',
-                data: ['quoteShareId' => $quoteShareId]
+        try {
+            $quoteShareInstance = ShareQuote::where('id', $quoteShareId)
+                ->first();
+            if (!$quoteShareInstance) {
+                return ServiceResponse::notFound(
+                    message: 'Shared quote not found',
+                    data: ['quoteShareId' => $quoteShareId]
+                );
+            }
+
+            $quoteShareInstance->is_declined = true;
+            $quoteShareInstance->save();
+
+            return ServiceResponse::success();
+        } catch (\Exception $e) {
+            Logger::error('Failed to reject quote invite', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $user->uuid,
+                'quote_share_id' => $quoteShareId,
+                'action' => 'reject_quote_invite_failed',
+            ]);
+            throw new ServiceException(
+                message: 'Failed to reject quote invite: ' . $e->getMessage()
             );
         }
-
-        $quoteShareInstance->is_declined = true;
-        $quoteShareInstance->save();
-
-        return ServiceResponse::success();
     }
 }

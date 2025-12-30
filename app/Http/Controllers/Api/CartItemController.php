@@ -1103,7 +1103,7 @@ class CartItemController extends BaseController
                     platform: app('agentType')->platform,
                     user: $request->user
                 ), 2),
-                'pointsAvailable' => $commissionResponse->data['pointsAvailable'] ?? 0,
+                'pointsAvailable' => (float) $commissionResponse->data['pointsAvailable'] ?? 0,
             ]
         );
     }

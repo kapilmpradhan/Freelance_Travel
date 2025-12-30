@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\BaseController;
 use App\Logging\Logger;
 use App\Models\CartCustomerDetail;
 use App\Services\RedeemerService;
+use App\Services\ServiceException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Exception;
 
 class RedeemerController extends BaseController
 {
@@ -45,13 +47,30 @@ class RedeemerController extends BaseController
             $itemType = $userId ? ItemType::cart() : ItemType::session($sessionId);
         }
 
-        $addRedeemerResponse = RedeemerService::addNewRedeemer(
-            userId: $userId,
-            redeemerData: $data,
-            itemType: $itemType,
-        );
+        try {
+            $addRedeemerResponse = RedeemerService::addNewRedeemer(
+                userId: $userId,
+                redeemerData: $data,
+                itemType: $itemType,
+            );
 
-        return $this->sendResponseFromService($addRedeemerResponse);
+            return $this->sendResponseFromService($addRedeemerResponse);
+        } catch (ServiceException $e) {
+            Logger::error('Failed to add redeemer', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'add_redeemer_failed',
+            ]);
+            return $this->sendResponseFromService($e->toServiceResponse());
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to add redeemer';
+            Logger::error($errorMessage, $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'add_redeemer_failed',
+            ]);
+            return $this->sendError($errorMessage);
+        }
     }
 
     public function listRedeemers(Request $request)
@@ -81,9 +100,27 @@ class RedeemerController extends BaseController
         }
 
         $userId = $user ? $user->uuid : null;
-        $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
 
-        return $this->sendResponseFromService($listRedeemersResponse);
+        try {
+            $listRedeemersResponse = RedeemerService::listActiveRedeemers($userId, $itemType);
+
+            return $this->sendResponseFromService($listRedeemersResponse);
+        } catch (ServiceException $e) {
+            Logger::error('Failed to list redeemers', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'list_redeemers_failed',
+            ]);
+            return $this->sendResponseFromService($e->toServiceResponse());
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to list redeemers';
+            Logger::error($errorMessage, $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'action' => 'list_redeemers_failed',
+            ]);
+            return $this->sendError($errorMessage);
+        }
     }
 
     public function removeRedeemer(Request $request, $redeemerId)
@@ -102,12 +139,31 @@ class RedeemerController extends BaseController
             return $this->sendError('Unauthenticated user', [], 401);
         }
 
-        $removeRedeemerResponse = RedeemerService::removeRedeemer(
-            userId: $userId,
-            sessionId: $sessionId,
-            redeemerId: $redeemerId
-        );
+        try {
+            $removeRedeemerResponse = RedeemerService::removeRedeemer(
+                userId: $userId,
+                sessionId: $sessionId,
+                redeemerId: $redeemerId
+            );
 
-        return $this->sendResponseFromService($removeRedeemerResponse);
+            return $this->sendResponseFromService($removeRedeemerResponse);
+        } catch (ServiceException $e) {
+            Logger::error('Failed to remove redeemer', $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'redeemer_id' => $redeemerId,
+                'action' => 'remove_redeemer_failed',
+            ]);
+            return $this->sendResponseFromService($e->toServiceResponse());
+        } catch (Exception $e) {
+            $errorMessage = 'Failed to remove redeemer';
+            Logger::error($errorMessage, $e, data: [
+                'log_file' => config('logging.log_files.errors'),
+                'user_id' => $userId,
+                'redeemer_id' => $redeemerId,
+                'action' => 'remove_redeemer_failed',
+            ]);
+            return $this->sendError($errorMessage);
+        }
     }
 }

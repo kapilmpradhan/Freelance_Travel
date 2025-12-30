@@ -6,7 +6,6 @@ use App\Jobs\DeleteAccountPermanentlyJob;
 use App\Jobs\HomeFeedCachedProductUpdate;
 use App\Jobs\HomeFeedProductByCategories;
 use App\Jobs\SendNotificationToInactiveUsers;
-use App\Jobs\ScheduledProductCacheJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Jobs\QUpcomingBookingNotification;
