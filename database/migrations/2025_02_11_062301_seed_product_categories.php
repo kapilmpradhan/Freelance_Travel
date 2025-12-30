@@ -13,6 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip seeding in testing environment (requires external API calls)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         (new ProductCategorySeeder())->run();
     }
 

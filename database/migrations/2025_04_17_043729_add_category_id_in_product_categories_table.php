@@ -22,6 +22,11 @@ return new class extends Migration
             $table->string('category_type')->nullable();
         });
 
+        // Skip API calls in testing environment
+        if (app()->environment('testing')) {
+            return;
+        }
+
         $agent = UserAgentService::getDefaultAgentToken();
         $agentToken = $agent->data['access_token'];
         // Populate the new columns with existing data

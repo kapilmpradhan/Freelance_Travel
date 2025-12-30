@@ -24,6 +24,12 @@ class UserController extends BaseController
     public function userSignupEmail(Request $request, User $user, UserResource $userResource)
     {
         $data = $request->all();
+
+        $validate = Validator::make($data, $user->emailSignupRule());
+        if ($validate->fails()) {
+            return $this->sendError('Validation Error.', $validate->errors());
+        }
+
         $email = $data['email'];
 
         $storedEmail = User::where('email', $email)->first();
@@ -33,11 +39,6 @@ class UserController extends BaseController
             }
 
             $storedEmail->delete();
-        }
-
-        $validate = Validator::make($data, $user->emailSignupRule());
-        if ($validate->fails()) {
-            return $this->sendError('Validation Error.', $validate->errors());
         }
 
         $data['sso_type'] = 'email'; // Add email sso to the array

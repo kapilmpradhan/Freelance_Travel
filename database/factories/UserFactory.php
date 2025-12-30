@@ -2,11 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class UserFactory extends Factory
 {
+    protected $model = User::class;
+
     /**
      * Define the model's default state.
      *
@@ -15,25 +18,80 @@ class UserFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name(),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
             'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            'remember_token' => Str::random(10),
+            'password' => Hash::make('password123'),
+            'is_email_verified' => false,
+            'sso_type' => 'email',
+            'profile_status' => 'success',
+            'is_ops' => false,
+            'is_temporarily_deleted' => false,
+            'is_permanently_deleted' => false,
+            'is_points_displayed' => true,
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * Indicate that the user's email is verified.
      */
-    public function unverified()
+    public function verified(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'email_verified_at' => null,
-            ];
-        });
+        return $this->state(fn (array $attributes) => [
+            'is_email_verified' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user signed up via Google.
+     */
+    public function google(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'sso_type' => 'google',
+            'is_email_verified' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user signed up via Apple.
+     */
+    public function apple(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'sso_type' => 'apple',
+            'is_email_verified' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an admin/ops user.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_ops' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is temporarily deleted.
+     */
+    public function temporarilyDeleted(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_temporarily_deleted' => true,
+            'deletion_date' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user is permanently deleted.
+     */
+    public function permanentlyDeleted(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_permanently_deleted' => true,
+        ]);
     }
 }

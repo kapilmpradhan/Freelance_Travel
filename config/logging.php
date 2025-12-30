@@ -55,7 +55,7 @@ return [
             'with' => [
                 'stream' => 'php://stdout',
             ],
-            'level' => 'debug',
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'retack' => [

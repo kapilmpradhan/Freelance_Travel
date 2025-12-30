@@ -55,7 +55,7 @@ class GoogleLoginController extends BaseController
     public function userLoginGoogle(Request $request, User $user, JwtService $jwtService, GoogleService $googleService)
     {
         $data = $request->all();
-        if (!$data['google_access_token']) {
+        if (empty($data['google_access_token'])) {
             return $this->sendError('Authentication error', null, 401);
         }
 

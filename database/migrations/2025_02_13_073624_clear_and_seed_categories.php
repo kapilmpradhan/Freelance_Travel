@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip seeding in testing environment (requires external API calls)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         DB::table('product_categories')->truncate();
         (new ProductCategorySeeder())->run();
     }

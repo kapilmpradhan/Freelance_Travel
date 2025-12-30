@@ -10,6 +10,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (requires external API calls)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         HomeFeedProductByCategories::dispatch();
     }
 
