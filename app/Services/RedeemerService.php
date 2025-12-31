@@ -116,7 +116,9 @@ class RedeemerService
                 ->where('is_deleted', false);
 
             if ($itemType->isSession) {
-                $redeemers = (clone $query)->where('session_id', $itemType->typeId)->get();
+                $redeemers = (clone $query)->where('session_id', $itemType->typeId)
+                    ->where('is_direct_purchase', $itemType->isDirect)
+                    ->get();
                 return ServiceResponse::success($redeemers);
             }
 
@@ -178,10 +180,10 @@ class RedeemerService
     {
         try {
             $redeemer = CartCustomerDetail::query()
-                                        ->when($userId, fn ($query) => $query->where('user_id', $userId))
-                                        ->when($sessionId, fn ($query) => $query->where('session_id', $sessionId))
-                                        ->where('id', $redeemerId)
-                                        ->first();
+                ->when($userId, fn ($query) => $query->where('user_id', $userId))
+                ->when($sessionId, fn ($query) => $query->where('session_id', $sessionId))
+                ->where('id', $redeemerId)
+                ->first();
             if (!$redeemer) {
                 return ServiceResponse::notFound(message: 'Redeemer not found');
             };

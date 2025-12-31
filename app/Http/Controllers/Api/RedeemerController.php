@@ -43,6 +43,10 @@ class RedeemerController extends BaseController
             $itemType = ItemType::quote($quoteId);
         } elseif ($isDirectPurchase) {
             $itemType = ItemType::direct();
+            if ($sessionId) {
+                $itemType->isSession = true;
+                $itemType->typeId = $sessionId;
+            }
         } else {
             $itemType = $userId ? ItemType::cart() : ItemType::session($sessionId);
         }
@@ -76,7 +80,7 @@ class RedeemerController extends BaseController
     public function listRedeemers(Request $request)
     {
         $user = $request->user;
-        $sessoinId = $request->get('sessionId');
+        $sessionId = $request->get('sessionId');
 
         Logger::debug('List redeemers request', [
             'log_file' => config('logging.log_files.user_profile'),
@@ -84,7 +88,7 @@ class RedeemerController extends BaseController
             'action' => 'list_redeemers_request',
         ]);
 
-        if (!$user && !$sessoinId) {
+        if (!$user && !$sessionId) {
             return $this->sendError('Unauthenticated user', [], 401);
         }
 
@@ -95,8 +99,12 @@ class RedeemerController extends BaseController
             $itemType = ItemType::quote($quoteId);
         } elseif ((int) $isDirectPurchase == 1) {
             $itemType = ItemType::direct();
+            if ($sessionId) {
+                $itemType->isSession = true;
+                $itemType->typeId = $sessionId;
+            }
         } else {
-            $itemType = $user ? ItemType::cart() : ItemType::session($sessoinId);
+            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
         }
 
         $userId = $user ? $user->uuid : null;
