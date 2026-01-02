@@ -64,7 +64,7 @@ class UserOrderCommissionService
 
         $items = CartItem::userItems($userId, $itemType);
         if (count($items) == 0) {
-            return ServiceResponse::success(['commission' => 0]);
+            return ServiceResponse::success(['commission' => 0, 'pointsAvailable' => 0]);
         }
         $itemType->data = $items->toArray();
 
@@ -129,7 +129,7 @@ class UserOrderCommissionService
             );
 
             if (!$saveItemsResponse->isSuccess()) {
-                return ServiceResponse::success(['commission' => 0]);
+                return ServiceResponse::success(['commission' => 0, 'pointsAvailable' => 0]);
             }
             $overallCartData = array_merge($overallCartData, $saveItemsResponse->data);
         }

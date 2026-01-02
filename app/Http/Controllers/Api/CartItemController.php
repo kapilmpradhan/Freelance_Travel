@@ -46,7 +46,7 @@ class CartItemController extends BaseController
             return $this->sendError('Unauthorized user', [], 401);
         }
 
-        if (!$request->user) {
+        if ($sessionId) {
             $itemType = ItemType::session($sessionId);
         } else {
             $itemType = $isDryRun ? ItemType::dry($data) : ItemType::cart();

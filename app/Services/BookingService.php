@@ -748,7 +748,8 @@ class BookingService
             if (
                 config('app.env') == 'staging' &&
                 !Feature::for(User::find($userId))->active('tester') &&
-                !$itemType->forDiscount
+                !$itemType->forDiscount &&
+                !str_contains(User::find($userId)->email, '+qa')
             ) {
                 return ServiceResponse::badRequest('Booking is enabled for testers only');
             }
