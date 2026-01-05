@@ -84,7 +84,7 @@ class Logger
 
     public static function error($message, $exception = null, $extra = null, $data = null)
     {
-        Log::stack(['console', 'retack', 'single'])->error(
+        Log::stack(['console', 'single'])->error(
             $message,
             ['exception' => $exception ?? $message, 'extra' => $extra ?? []]
         );
@@ -99,7 +99,7 @@ class Logger
 
     public static function exception($message, $data = [], $exception = null)
     {
-        Log::stack(['console', 'retack', 'single'])->critical(
+        Log::stack(['console', 'single'])->critical(
             $message,
             ['exception' => $exception, 'data' => $data]
         );

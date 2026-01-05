@@ -9,7 +9,7 @@ The logging system writes activity logs to CSV files organized by date in `stora
 ### Log Levels
 
 - **Debug**: Always written to CSV file when `log_file` key is provided in the data array
-- **Error/Exception**: Written to CSV only when `LOG_WRITE_ERRORS_TO_FILE=true` in `.env`, always reported to Retack
+- **Error/Exception**: Written to CSV only when `LOG_WRITE_ERRORS_TO_FILE=true` in `.env`
 
 ## Log Files and Activities
 

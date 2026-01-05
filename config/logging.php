@@ -1,7 +1,6 @@
 <?php
 
 use Monolog\Handler\NullHandler;
-use App\Logging\RetackHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 
@@ -58,15 +57,17 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
 
-        'retack' => [
-            'driver' => 'monolog',
-            'handler' => RetackHandler::class,
-            'level' => 'error'
+        'loki_json' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/laravel-loki.json'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+            'formatter' => Monolog\Formatter\JsonFormatter::class,
         ],
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single', 'console', 'retack'],
+            'channels' => ['single', 'console'],
             'ignore_exceptions' => false,
         ],
 
@@ -137,7 +138,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | When enabled, error and exception level logs will also be written
-    | to CSV files in addition to being reported to Retack.
+    | to CSV files.
     |
     */
     'write_errors_to_file' => env('LOG_WRITE_ERRORS_TO_FILE', false),

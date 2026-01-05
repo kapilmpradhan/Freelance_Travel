@@ -79,8 +79,6 @@ env:
       TDMS_CUSTOMER_API_PASSWORD: ${{secrets.TDMS_CUSTOMER_API_PASSWORD}}
       TDMS_API_URL: ${{vars.TDMS_API_URL}}
       TDMS_CUSTOMER_API_URL: ${{vars.TDMS_CUSTOMER_API_URL}}
-      RETACK_ERROR_LOGGING_URL: ${{vars.RETACK_ERROR_LOGGING_URL}}
-      RETACK_ENV_KEY: ${{vars.RETACK_ENV_KEY}}
       DEFAULT_AGENT_BRANCH_CODE: ${{vars.DEFAULT_AGENT_BRANCH_CODE}}
       DEFAULT_AGENT_EMAIL: ${{vars.DEFAULT_AGENT_EMAIL}}
       DEFAULT_AGENT_PASSWORD: ${{vars.DEFAULT_AGENT_PASSWORD}}
@@ -136,7 +134,7 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
-      
+
     - name: Deploy api to EC2 instance
       run: |
         # Write the RSA private key to a temporary file
