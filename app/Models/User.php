@@ -96,7 +96,7 @@ class User extends Authenticatable
                 'max:200',
                 'regex:' . config('vars.only_char_with_space_regex')
             ],
-            'email' => 'required|email|unique:users,email|max:100',
+            'email' => 'required|email|max:100',
             'password' => 'required|string|min:8',
             'is_email_verfied' => 'boolean',
         ];
