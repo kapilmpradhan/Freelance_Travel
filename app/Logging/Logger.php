@@ -68,11 +68,13 @@ class Logger
 
     public static function debug($message, $data = null)
     {
-        $logPayload = [
-            "message" => $message,
-            "data" => $data,
-        ];
-        Log::stack(['console', 'single'])->debug(json_encode($logPayload ?? []));
+        if (config('logging.log_debug_to_console', false)) {
+            $logPayload = [
+                "message" => $message,
+                "data" => $data,
+            ];
+            Log::stack(['console', 'single'])->debug(json_encode($logPayload ?? []));
+        }
         // Debug level always writes to file when log_file is provided
         if (\is_array($data) && isset($data['log_file'])) {
             $data['status'] = 'Debug';
