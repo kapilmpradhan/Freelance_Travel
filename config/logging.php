@@ -67,7 +67,7 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['loki_json','single'],
+            'channels' => ['single', 'loki_json' ,'console'],
             'ignore_exceptions' => false,
         ],
 
