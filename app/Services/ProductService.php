@@ -176,7 +176,7 @@ class ProductService
                 return ServiceResponse::success($cachedProductsData);
             }
         }
-	$productIdsFormatted = implode(',', $notCachedProducts);
+        $productIdsFormatted = implode(',', $notCachedProducts);
 
         $requestUrl = config('vars.tdms_api_url') . "/product/{$productIdsFormatted}";
 
