@@ -174,13 +174,9 @@ class ProductService
                     'action' => 'product_details_v2_cache_hit',
                 ]);
                 return ServiceResponse::success($cachedProductsData);
-            } else {
-                $productIds = $notCachedProducts;
             }
         }
-        $productIdsFormatted = is_array($productIds) ?
-            implode(',', $productIds) :
-            $productIds;
+	$productIdsFormatted = implode(',', $notCachedProducts);
 
         $requestUrl = config('vars.tdms_api_url') . "/product/{$productIdsFormatted}";
 

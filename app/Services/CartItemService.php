@@ -99,7 +99,7 @@ class CartItemService
             $productLastUpdate = $productLastUpdateDateResponse->data[$tdmsProductId];
 
             if ($cachedProduct && $productLastUpdate == $cachedProduct->tdms_product_last_update_date) {
-                if (!$cachedFareprice) {
+                if (!$cachedFareprice && isset($cachedProduct->json['faresprices'])) {
                     Fareprice::create([
                         'tdms_product_id' => $tdmsProductId,
                         'json' => $cachedProduct->json['faresprices'],
