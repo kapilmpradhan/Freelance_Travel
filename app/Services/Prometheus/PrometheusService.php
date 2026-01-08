@@ -30,12 +30,6 @@ class PrometheusService
 
     private function createStorageAdapter()
     {
-        // Check if native PHP Redis extension is available
-        if (!extension_loaded('redis')) {
-            Logger::info('PHP Redis extension not available, using InMemory storage for Prometheus metrics');
-            return new InMemory();
-        }
-
         $config = config('prometheus.storage');
 
         return new Redis([
