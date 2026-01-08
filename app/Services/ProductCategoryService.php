@@ -98,11 +98,6 @@ class ProductCategoryService
 
     public static function getProductSchemaByCategoriesWithLabel()
     {
-        Logger::debug('Fetching product schema by categories with label', [
-            'log_file' => config('logging.log_files.products'),
-            'action' => 'get_product_schema_by_categories_with_label',
-        ]);
-
         $resultOrder = [
             'Experiences',
             'Destinations',

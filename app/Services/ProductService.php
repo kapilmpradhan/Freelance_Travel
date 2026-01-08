@@ -147,19 +147,12 @@ class ProductService
 
     public static function getProductDetailsV2($agentToken, int|array $productIds, $getCached = true)
     {
-        $productIdsArray = is_array($productIds) ? $productIds : [$productIds];
+        $productIdsToArray = is_array($productIds) ? $productIds : [$productIds];
 
-        Logger::debug('Getting product details V2', [
-            'log_file' => config('logging.log_files.products'),
-            'product_ids' => implode(',', $productIdsArray),
-            'get_cached' => $getCached,
-            'action' => 'get_product_details_v2_start',
-        ]);
-
-        $cachedProductsData = [];
-        $notCachedProducts = [];
         if ($getCached) {
-            foreach ($productIdsArray as $productId) {
+            $cachedProductsData = [];
+            $notCachedProducts = [];
+            foreach ($productIdsToArray as $productId) {
                 $cachedProductsResponse = UserCacheService::getCachedProductDetails($productId);
                 if ($cachedProductsResponse->isSuccess()) {
                     $cachedProductsData += $cachedProductsResponse->data;
@@ -168,15 +161,12 @@ class ProductService
                 }
             }
             if (empty($notCachedProducts)) {
-                Logger::debug('Product details retrieved from cache', [
-                    'log_file' => config('logging.log_files.products'),
-                    'product_ids' => implode(',', $productIdsArray),
-                    'action' => 'product_details_v2_cache_hit',
-                ]);
                 return ServiceResponse::success($cachedProductsData);
             }
+            $productIdsFormatted = implode(',', $notCachedProducts);
+        } else {
+            $productIdsFormatted = implode(',', $productIdsToArray);
         }
-        $productIdsFormatted = implode(',', $notCachedProducts);
 
         $requestUrl = config('vars.tdms_api_url') . "/product/{$productIdsFormatted}";
 
@@ -185,17 +175,30 @@ class ProductService
             ->acceptJson()
             ->get($requestUrl);
 
+        if ($response->failed()) {
+            Logger::error('Failed to retrieve product details V2', data: [
+                'log_file' => config('logging.log_files.products'),
+                'product_ids' => $productIdsFormatted,
+                'action' => 'product_details_v2_api_failed',
+            ]);
+            return HttpResponse::failed(
+                message: 'Failed to retrieve product details',
+                responseCode: $response->status(),
+                data: $response->json(),
+            );
+        }
+
         // Check if the response is successful
         $data = $response->json()['results'];
-        if ($response->successful() && count($data) > 0) {
+        if (count($data) > 0) {
             Logger::debug('Product details V2 retrieved from API', [
                 'log_file' => config('logging.log_files.products'),
                 'product_ids' => $productIdsFormatted,
                 'action' => 'product_details_v2_api_success',
             ]);
 
-            if ($getCached && !empty($notCachedProductsLastUpdate)) {
-                $cachedProductsData += $response->json();
+            if ($getCached) {
+                $cachedProductsData += $data;
                 return ServiceResponse::success($cachedProductsData);
             }
             return HttpResponse::success(

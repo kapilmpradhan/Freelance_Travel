@@ -90,11 +90,6 @@ class ProductController extends BaseController
 
     public function homeFeedSchema(Request $request)
     {
-        Logger::debug('Fetching home feed schema', [
-            'log_file' => config('logging.log_files.products'),
-            'action' => 'home_feed_schema_request',
-        ]);
-
         try {
             $productResponse = ProductCategoryService::getProductSchemaByCategoriesWithLabel();
             return $this->sendResponseFromService($productResponse);
