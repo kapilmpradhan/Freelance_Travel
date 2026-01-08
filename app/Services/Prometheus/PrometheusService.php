@@ -23,7 +23,7 @@ class PrometheusService
 
     public function __construct()
     {
-	if (extension_loaded('redis')) {
+        if (extension_loaded('redis')) {
             $adapter = $this->createStorageAdapter();
             $this->registry = new CollectorRegistry($adapter);
             $this->namespace = config('prometheus.namespace', 'app');

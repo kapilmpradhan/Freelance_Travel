@@ -237,4 +237,5 @@ return [
         'Socialite' => Laravel\Socialite\Facades\Socialite::class,
     ],
 
+    'upgrade_to_commission_enabled' => env('UPGRADE_TO_COMMISSION_ENABLED', false)
 ];
