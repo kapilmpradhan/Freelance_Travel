@@ -408,7 +408,7 @@ class UserController extends BaseController
             'is_default_agent' => $isDefaultAgent,
             'is_points_agent' => $isPointsAgent,
             'is_commission_agent' => $isCommissionAgent,
-            'is_commission_enabled' => true,
+            'is_commission_enabled' => FeatureService::isFeatureEnabledForUser('commission', $user),
             'is_upgrade_to_commission_enabled' => config('app.upgrade_to_commission_enabled'),
         ];
 

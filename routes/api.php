@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\RedeemerController;
 use App\Http\Controllers\Api\SharedPaymentController;
 use App\Http\Controllers\Api\UserAgentController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Admin\FeatureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +89,14 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::delete('discount/{discountId}/delete', [DiscountController::class, 'deleteDiscount']);
     Route::post('send/notification/topic', [AdminController::class, 'sendNotificationToTopic']);
     Route::post('mobile/minSupportVersion', [AppMetaDataController::class, 'setMobileMinSupportedVersion']);
+
+    // Feature management
+    Route::post('feature/user/activate', [FeatureController::class, 'activateFeatureForUser']);
+    Route::post('feature/user/deactivate', [FeatureController::class, 'deactivateFeatureForUser']);
+    Route::post('feature/all/activate', [FeatureController::class, 'activateFeatureForAll']);
+    Route::post('feature/all/deactivate', [FeatureController::class, 'deactivateFeatureForAll']);
+    Route::get('feature/user', [FeatureController::class, 'getUserFeatures']);
+    Route::post('user/tester', [FeatureController::class, 'setUserTester']);
 });
 
 // Discount Routes (auth optional)
