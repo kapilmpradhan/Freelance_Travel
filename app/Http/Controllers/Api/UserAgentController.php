@@ -374,4 +374,79 @@ class UserAgentController extends BaseController
 
         return $this->sendResponseFromService($upgradeAgent);
     }
+
+    public function upgradeToCommissionAgentWebhook(Request $request): JsonResponse
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'agentEmail' => 'required|email',
+            'bankBsb' => 'required|string',
+            'bankAccount' => 'required|string',
+            'bankCountryShortCode' => 'required|string',
+            'businessNumber' => 'required|string',
+            'tradingName' => 'required|string',
+        ]);
+
+        $validator->after(function ($validator) use ($data) {
+            $bankAccount = $data['bankAccount'] ?? '';
+            $countryCode = strtoupper($data['bankCountryShortCode'] ?? '');
+            $accountLength = strlen($bankAccount);
+
+            if ($countryCode === 'AU') {
+                if ($accountLength < 6 || $accountLength > 9) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 8 digits for AU.');
+                }
+            } elseif ($countryCode === 'NZ') {
+                if ($accountLength < 6 || $accountLength > 10) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 9 digits for NZ.');
+                }
+            } else {
+                if ($accountLength < 6 || $accountLength > 19) {
+                    $validator->errors()->add('bankAccount', 'Account number must be between 6 and 19 digits.');
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return $this->sendError('Error occurred', $validator->errors(), 400);
+        }
+
+        $data = $validator->validated();
+
+        $getAgentResponse = UserAgentService::getUserAgentByEmail($data['agentEmail']);
+
+        if ($getAgentResponse->isError()) {
+            return $this->sendResponseFromService($getAgentResponse);
+        }
+
+        // Update agent bank details in db first
+        $agent = $getAgentResponse->data;
+        try {
+            $updateAgentBankDetailsResponse = UserAgentService::updateAgentBankDetails(
+                agent: $agent,
+                data: $data
+            );
+
+            if ($updateAgentBankDetailsResponse->isError()) {
+                return $this->sendResponseFromService($updateAgentBankDetailsResponse);
+            }
+        } catch (ServiceException $e) {
+            return $this->sendResponseFromService($e->toServiceResponse());
+        }
+
+        // Fetch agent details from TDMS to ensure bank details are up to date
+        $getAgentDetailsResponse = TdmsService::getAgentDetails($agent->access_token);
+
+        if ($getAgentDetailsResponse->isError()) {
+            return $this->sendResponseFromService($getAgentDetailsResponse);
+        }
+
+        $data = $getAgentDetailsResponse->data;
+        UserAgentService::upgradeToCommission(
+            agent: $agent,
+            data: $data
+        );
+
+        return $this->sendResponse('Agent upgraded to commission agent via webhook');
+    }
 }

@@ -39,6 +39,16 @@ class UserAgentService
         return ServiceResponse::notFound();
     }
 
+    public static function getUserAgentByEmail($email)
+    {
+        $agent = UserAgent::where('email', $email)
+            ->first();
+        if ($agent) {
+            return ServiceResponse::success(self::refreshAgent($agent));
+        }
+        return ServiceResponse::notFound();
+    }
+
     public static function getDefaultAgent()
     {
         Logger::debug('Getting default agent', [

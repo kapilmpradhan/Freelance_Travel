@@ -74,5 +74,6 @@ class Kernel extends HttpKernel
         'auth.ifToken' => \App\Http\Middleware\CheckTokenIfAvailable::class,
         'admin' => \App\Http\Middleware\AdminAuthenticate::class,
         'pointsAndCommissionAgentOnly' => \App\Http\Middleware\PointsAndCommissionAgentOnly::class,
+        'tdms.webhook' => \App\Http\Middleware\TdmsWebhookMiddleware::class,
     ];
 }

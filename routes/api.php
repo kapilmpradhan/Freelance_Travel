@@ -194,6 +194,11 @@ Route::prefix('agent')->middleware('auth.jwt')->group(function () {
     Route::post('integration/upgradeToCommissionAgent', [UserAgentController::class, 'upgradeToCommissionAgent']);
 });
 
+// Agent webhooks (FTX authenticated)
+Route::prefix('webhook')->middleware('tdms.webhook')->group(function () {
+    Route::post('agent/upgradeToCommission', [UserAgentController::class, 'upgradeToCommissionAgentWebhook']);
+});
+
 // Favourites Routes
 Route::prefix('favourite')->middleware('auth.jwt')->group(function () {
     Route::get('products/all', [FavouritesController::class, 'getFavouriteProducts']);
