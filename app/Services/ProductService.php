@@ -199,7 +199,11 @@ class ProductService
 
             if ($getCached) {
                 $cachedProductsData += $data;
-                return ServiceResponse::success($cachedProductsData);
+                return ServiceResponse::success(
+                    is_array($productIds) ?
+                    $cachedProductsData :
+                    $cachedProductsData[0]
+                );
             }
             return HttpResponse::success(
                 data: is_array($productIds) ? $data : $data[0],

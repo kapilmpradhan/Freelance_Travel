@@ -99,13 +99,37 @@ class CartItemService
             $productLastUpdate = $productLastUpdateDateResponse->data[$tdmsProductId];
 
             if ($cachedProduct && $productLastUpdate == $cachedProduct->tdms_product_last_update_date) {
-                if (!$cachedFareprice && isset($cachedProduct->json['faresprices'])) {
-                    Fareprice::create([
-                        'tdms_product_id' => $tdmsProductId,
-                        'json' => $cachedProduct->json['faresprices'],
-                        'agent_branch' => $agent->branch_code,
-                        'product_version' => $cachedProduct->version,
-                    ]);
+                $latestProductDetailsResponse = ProductService::getProductDetailsV2(
+                    agentToken: $agent->access_token,
+                    productIds: $tdmsProductId
+                );
+                if ($latestProductDetailsResponse->isError()) {
+                    return $latestProductDetailsResponse;
+                }
+                $latestProductDetails = $latestProductDetailsResponse->data;
+
+                $latestFareprice = $latestProductDetails['faresprices'];
+                if (!$cachedFareprice || $cachedFareprice->json != $latestFareprice) {
+                    if ($cachedFareprice) {
+                        FarepriceHistory::create([
+                            'tdms_product_id' => $tdmsProductId,
+                            'json' => $cachedFareprice->json,
+                            'agent_branch' => $cachedFareprice->agent_branch,
+                            'product_version' => $cachedFareprice->product_version,
+                        ]);
+
+                        $cachedFareprice->update([
+                            'json' => $latestFareprice,
+                            'product_version' => $cachedProduct->version,
+                        ]);
+                    } else {
+                        Fareprice::create([
+                            'tdms_product_id' => $tdmsProductId,
+                            'json' => $latestFareprice,
+                            'agent_branch' => $agent->branch_code,
+                            'product_version' => $cachedProduct->version,
+                        ]);
+                    }
                 }
             } else {
                 if (is_null($latestProductDetails)) {
