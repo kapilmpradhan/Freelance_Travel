@@ -115,16 +115,23 @@ class RedeemerService
             $query = CartCustomerDetail::where('user_order_id', null)
                 ->where('is_deleted', false);
 
+            $primaryRedeemer = null;
+            if ($userId) {
+                $primaryRedeemer = (clone $query)->where('is_primary', true)
+                ->where('user_id', $userId)
+                ->first();
+            }
+
             if ($itemType->isSession) {
                 $redeemers = (clone $query)->where('session_id', $itemType->typeId)
                     ->where('is_direct_purchase', $itemType->isDirect)
                     ->get();
+
+                if ($primaryRedeemer) {
+                    $redeemers->prepend($primaryRedeemer);
+                }
                 return ServiceResponse::success($redeemers);
             }
-
-            $primaryRedeemer = (clone $query)->where('is_primary', true)
-                ->where('user_id', $userId)
-                ->first();
 
             if (!$itemType->isQuote) {
                 $query = $query->where('user_id', $userId);
@@ -136,7 +143,8 @@ class RedeemerService
                 $query->where('is_direct_purchase', true);
             } else {
                 $query->where('quote_id', null)
-                    ->where('is_direct_purchase', false);
+                    ->where('is_direct_purchase', false)
+                    ->where('session_id', null);
             }
 
             $redeemers = $query->where('is_primary', false)->get();
@@ -157,7 +165,6 @@ class RedeemerService
                     }
                 }
             }
-
 
             if ($primaryRedeemer) {
                 $redeemers->prepend($primaryRedeemer);

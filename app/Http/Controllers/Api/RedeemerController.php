@@ -93,18 +93,11 @@ class RedeemerController extends BaseController
         }
 
         $quoteId = $request->get('quoteId');
-        $isDirectPurchase = $request->get('isDirectPurchase', false);
 
         if ($quoteId) {
             $itemType = ItemType::quote($quoteId);
-        } elseif ((int) $isDirectPurchase == 1) {
-            $itemType = ItemType::direct();
-            if ($sessionId) {
-                $itemType->isSession = true;
-                $itemType->typeId = $sessionId;
-            }
         } else {
-            $itemType = $user ? ItemType::cart() : ItemType::session($sessionId);
+            $itemType = $sessionId ? ItemType::session($sessionId) : ItemType::cart();
         }
 
         $userId = $user ? $user->uuid : null;
