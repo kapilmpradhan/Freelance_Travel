@@ -556,7 +556,7 @@ class UserAgentService
             $agent->bank_account = $data['bankAccount'];
             $agent->bank_country_short_code = $data['bankCountryShortCode'];
             $agent->business_number = $data['businessNumber'];
-            $agent->trading_name = $data['tradingName'];
+            $agent->trading_name = $data['tradingName'] ?? null;
             $agent->save();
 
             Logger::debug('Agent bank details updated', [
