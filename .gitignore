@@ -21,3 +21,6 @@ composer.lock
 *credentials.json
 docker-compose.yml
 server_reference.txt
+.amazonq
+.claude
+dump.*

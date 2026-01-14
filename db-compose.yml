@@ -4,7 +4,7 @@ services:
   db:
     image: mysql:9.0
     container_name: freelance-travel-db
-    platform: linux/arm64
+    platform: linux/amd64
     environment:
       MYSQL_DATABASE: travel_db
       MYSQL_USER: freelance_travel
@@ -15,7 +15,7 @@ services:
     networks:
       - laravel
     ports:
-      - "3306:3306"
+      - "3307:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s

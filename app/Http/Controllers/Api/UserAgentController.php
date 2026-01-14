@@ -15,6 +15,7 @@ use App\Http\Resources\AgentResource;
 use App\Services\ServiceException;
 use App\Services\UserAgentService;
 use App\Services\UserCacheService;
+use App\Services\UserService;
 use Laravel\Pennant\Feature;
 
 class UserAgentController extends BaseController
@@ -220,6 +221,12 @@ class UserAgentController extends BaseController
 
         if (Feature::for($user)->active('tester')) {
             return $this->sendError('This test account cannot be upgraded to an agent.');
+        }
+        $profileCheckResponse = UserService::checkIfUserContainsLeadCustomerDetail($user);
+        if ($profileCheckResponse->isError()) {
+            return $this->sendError(
+                'Please complete your profile before upgrading to an agent.'
+            );
         }
 
         $getAgentResponse = UserAgentService::getUserAgentIfExistsElseDefault($user->uuid);
